@@ -6,10 +6,10 @@ rm -f "$MODDIR/system.prop" 2>/dev/null
 resetprop --delete ro.miui.backdrop_sampling_enabled 2>/dev/null
 resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null
 
-resetprop debug.sf.latch_unsignaled 1 2>/dev/null
-resetprop debug.sf.auto_latch_unsignaled false 2>/dev/null
-resetprop debug.sf.disable_backpressure 1 2>/dev/null
-resetprop debug.hwui.use_hint_manager true 2>/dev/null
+# Ensure Mali-G57 never stalls on unsignaled fences when opening new windows
+resetprop --delete debug.sf.latch_unsignaled 2>/dev/null
+resetprop --delete debug.sf.auto_latch_unsignaled 2>/dev/null
+resetprop --delete debug.sf.disable_backpressure 2>/dev/null
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 2
@@ -29,14 +29,7 @@ settings put system min_refresh_rate 90.0 >/dev/null 2>&1
 settings put system user_refresh_rate 90 >/dev/null 2>&1
 settings put secure miui_refresh_rate 90 >/dev/null 2>&1
 settings put global transition_animation_duration_ratio 1.0 >/dev/null 2>&1
-cmd power set-fixed-performance-mode-enabled true >/dev/null 2>&1
 
 if [ -f "$MODDIR/MiragePocoAnimations.apk" ]; then
     pm install -r "$MODDIR/MiragePocoAnimations.apk" >/dev/null 2>&1
 fi
-
-sleep 5
-for p in $(pidof com.mi.android.globallauncher com.miui.home surfaceflinger); do
-    renice -n -20 -p "$p" >/dev/null 2>&1
-    ionice -c 1 -n 0 -p "$p" >/dev/null 2>&1
-done

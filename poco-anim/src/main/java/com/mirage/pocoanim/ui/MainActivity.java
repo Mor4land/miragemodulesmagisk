@@ -31,6 +31,9 @@ public class MainActivity extends Activity {
             "rm -f /data/adb/modules/mirage_poco_animations/system.prop 2>/dev/null; "
             + "resetprop --delete ro.miui.backdrop_sampling_enabled 2>/dev/null; "
             + "resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null; "
+            + "resetprop --delete debug.sf.latch_unsignaled 2>/dev/null; "
+            + "resetprop --delete debug.sf.auto_latch_unsignaled 2>/dev/null; "
+            + "resetprop --delete debug.sf.disable_backpressure 2>/dev/null; "
             + "pm enable com.google.android.webview 2>/dev/null; "
             + "pm unsuspend com.google.android.webview 2>/dev/null; "
             + "pm enable com.android.webview 2>/dev/null; "
@@ -44,14 +47,7 @@ public class MainActivity extends Activity {
             "settings put system peak_refresh_rate 90.0 2>/dev/null; "
             + "settings put system min_refresh_rate 90.0 2>/dev/null; "
             + "settings put system user_refresh_rate 90 2>/dev/null; "
-            + "settings put secure miui_refresh_rate 90 2>/dev/null; "
-            + "resetprop debug.sf.latch_unsignaled 1 2>/dev/null; "
-            + "resetprop debug.sf.auto_latch_unsignaled false 2>/dev/null; "
-            + "resetprop debug.sf.disable_backpressure 1 2>/dev/null; "
-            + "resetprop debug.hwui.use_hint_manager true 2>/dev/null; "
-            + "cmd power set-fixed-performance-mode-enabled true 2>/dev/null; "
-            + "for p in $(pidof com.mi.android.globallauncher com.miui.home surfaceflinger); do "
-            + "renice -n -20 -p $p 2>/dev/null; ionice -c 1 -n 0 -p $p 2>/dev/null; done";
+            + "settings put secure miui_refresh_rate 90 2>/dev/null";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,14 +72,14 @@ public class MainActivity extends Activity {
         root.setPadding(pad, dp(28), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Animations v1.0.5");
+        title.setText("POCO M5 Animations v1.0.6");
         title.setTextColor(Color.parseColor("#F8FAFC"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Физика пружины ColorOS 15 (SpringOperator), параллельный отклик без обрыва анимаций и 90 Гц Буст");
+        subtitle.setText("Чистые флагманские анимации без лагов при открытии, мгновенный запуск после закрытия и честные 90 Гц");
         subtitle.setTextColor(Color.parseColor("#94A3B8"));
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         subtitle.setPadding(0, dp(6), 0, dp(20));
@@ -99,22 +95,15 @@ public class MainActivity extends Activity {
         ));
         addDivider(masterCard);
         masterCard.addView(createSwitchRow(
-                "Физика пружины ColorOS 15 (Aquamorphic Spring)",
-                "Плавная кривая затухания ColorOS (damping 0.94): окно входит в иконку быстро и мягко до самого конца без рывков",
-                AnimPrefs.KEY_NON_STOP_SWIPE,
-                true
-        ));
-        addDivider(masterCard);
-        masterCard.addView(createSwitchRow(
-                "Параллельный запуск (как в ColorOS 15)",
-                "Следующее приложение открывается сразу при нажатии, не обрывая в воздухе анимацию закрытия предыдущего окна",
+                "Без задержки открытия после закрытия",
+                "Снимает блокировку нажатий во время сворачивания окна без нагрузки на поток интерфейса",
                 AnimPrefs.KEY_INSTANT_LAUNCH,
                 true
         ));
         addDivider(masterCard);
         masterCard.addView(createSwitchRow(
-                "Системный 90 Гц Буст + Приоритет лаунчера",
-                "Фиксирует честные 90 Гц и даёт максимальный приоритет CPU/IO лаунчеру и SurfaceFlinger без урезания графики",
+                "Фиксация честных 90 Гц (POCO M5)",
+                "Удерживает 90 Гц на рабочем столе без просадок герцовки",
                 AnimPrefs.KEY_TURBO_OPTIMIZE,
                 true
         ));

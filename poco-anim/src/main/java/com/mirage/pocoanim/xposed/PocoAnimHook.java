@@ -303,7 +303,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         XC_MethodHook forceFalseArgHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && (sInstantLaunch || sNonStopSwipe) && param.args != null && param.args.length == 1 && param.args[0] instanceof Boolean) {
+                if (sEnabled && sInstantLaunch && param.args != null && param.args.length == 1 && param.args[0] instanceof Boolean) {
                     param.args[0] = Boolean.FALSE;
                 }
             }
@@ -312,91 +312,27 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         XC_MethodHook returnFalseWhenInstantHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && (sInstantLaunch || sNonStopSwipe)) {
+                if (sEnabled && sInstantLaunch) {
                     param.setResult(false);
                 }
             }
         };
 
-        // 0. ColorOS 15 Aquamorphic Spring Physics (SpringOperator):
-        // Replace MIUI's sluggish/under-damped spring curve with critically-damped ColorOS 15 parameters
-        // so the window smoothly glides 100% into the icon with zero end-bounce and zero abrupt cancel() snapping.
-        String[] springClasses = new String[]{
-                "com.miui.home.recents.util.SpringOperator",
-                "com.miui.home.launcher.anim.SpringOperator"
-        };
-        for (String springClsName : springClasses) {
-            Class<?> springOpCls = XposedHelpers.findClassIfExists(springClsName, cl);
-            if (springOpCls != null) {
-                try {
-                    XposedBridge.hookAllConstructors(springOpCls, new XC_MethodHook() {
-                        @Override
-                        protected void beforeHookedMethod(MethodHookParam param) {
-                            if (!sEnabled || !sNonStopSwipe || param.args == null || param.args.length < 2) {
-                                return;
-                            }
-                            if (param.args[0] instanceof Float && param.args[1] instanceof Float) {
-                                float origDamping = (Float) param.args[0];
-                                float origResponse = (Float) param.args[1];
-                                // ColorOS 15 critically-damped curve: smooth elastic entry, zero rubbery tail
-                                float colorOsDamping = Math.max(0.93f, Math.min(0.98f, origDamping + 0.12f));
-                                float colorOsResponse = Math.max(0.18f, Math.min(0.34f, origResponse * 0.78f * sAnimSpeedRatio));
-                                param.args[0] = colorOsDamping;
-                                param.args[1] = colorOsResponse;
-                            }
-                        }
-                    });
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-
-        // 1. Dedicated high-priority GesturePriorityThread (enables smooth parallel mFakeAppToHomeAnim)
-        Class<?> tisCls = XposedHelpers.findClassIfExists("com.miui.home.recents.TouchInteractionService", cl);
-        if (tisCls != null) {
-            hookMethodsByReturnType(tisCls, "isUseGesturePriorityThread", boolean.class, new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (sEnabled && (sNonStopSwipe || sInstantLaunch)) {
-                        param.setResult(true);
-                    }
-                }
-            });
-        }
-
-        // 2. ColorOS Parallel Touch Pass-Through: unblock touch dispatch in RecentsContainer while closing anim finishes smoothly
+        // 1. Unblock touch dispatch in RecentsContainer while closing anim finishes
         Class<?> recentsContainerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.views.RecentsContainer", cl);
         if (recentsContainerCls != null) {
             hookMethodsByName(recentsContainerCls, "setIsFsAppToHomeAnimating", forceFalseArgHook);
             hookMethodsByName(recentsContainerCls, "setIsNeedSkipTouch", forceFalseArgHook);
             hookMethodsByName(recentsContainerCls, "setIsExitRecentsAnimating", forceFalseArgHook);
-            hookMethodsByName(recentsContainerCls, "dispatchTouchEvent", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (sEnabled && (sInstantLaunch || sNonStopSwipe) && param.thisObject != null) {
-                        setBooleanFieldSafe(param.thisObject, "mIsFsAppToHomeAnimating", false);
-                        setBooleanFieldSafe(param.thisObject, "mIsNeedSkipTouch", false);
-                        setBooleanFieldSafe(param.thisObject, "mIsExitRecentsAnimating", false);
-                    }
-                }
-            });
         }
 
-        // 3. Unblock touch dispatch in ShortcutMenuLayer
+        // 2. Unblock touch dispatch in ShortcutMenuLayer
         Class<?> shortcutMenuLayerCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.ShortcutMenuLayer", cl);
         if (shortcutMenuLayerCls != null) {
             hookMethodsByName(shortcutMenuLayerCls, "setIsNeedSkipTouch", forceFalseArgHook);
-            hookMethodsByName(shortcutMenuLayerCls, "dispatchTouchEvent", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (sEnabled && (sInstantLaunch || sNonStopSwipe) && param.thisObject != null) {
-                        setBooleanFieldSafe(param.thisObject, "mIsNeedSkipTouch", false);
-                    }
-                }
-            });
         }
 
-        // 4. Disable TimeOutBlocker, FlingBlockCheck, and NavStubView post-task cooldowns
+        // 3. Disable TimeOutBlocker, FlingBlockCheck, and NavStubView post-task cooldowns
         Class<?> timeOutBlockerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.util.TimeOutBlocker", cl);
         if (timeOutBlockerCls != null) {
             hookMethodsByReturnType(timeOutBlockerCls, "isBlocked", boolean.class, returnFalseWhenInstantHook);
@@ -424,97 +360,34 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, returnFalseWhenInstantHook);
         }
 
-        // 5. Synchronously flush RecentsAnimationListenerImpl.finishController so WindowManagerService
-        // immediately exits the RecentsAnimation state instead of waiting for BACKGROUND_EXECUTOR
-        // (which otherwise causes WindowManagerService to skip the next app's opening RemoteAnimation!)
-        Class<?> recentsListenerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.RecentsAnimationListenerImpl", cl);
-        if (recentsListenerCls != null) {
-            try {
-                XposedBridge.hookAllConstructors(recentsListenerCls, new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        if (param.thisObject != null) {
-                            sRecentsListenerRef = new WeakReference<>(param.thisObject);
-                        }
-                    }
-                });
-            } catch (Throwable ignored) {
-            }
-            hookMethodsByName(recentsListenerCls, "finishController", new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
-                        return;
-                    }
-                    flushFinishControllerRunnable(param.thisObject);
-                }
-            });
-        }
-
-        // 6. Cleanly complete any in-flight closing animation BEFORE getActivityLaunchOptions builds the new
-        // opening RemoteAnimationAdapter (and NEVER inside startActivity after getActivityLaunchOptions!).
-        Class<?> qatmCls = XposedHelpers.findClassIfExists("com.miui.home.recents.QuickstepAppTransitionManagerImpl", cl);
-        if (qatmCls != null) {
-            hookMethodsByName(qatmCls, "getActivityLaunchOptions", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
-                        return;
-                    }
-                    prepareCleanStateBeforeOpeningAnim(param.thisObject);
-                }
-            });
-        }
-
+        // 4. Zero-overhead fast launch: ONLY when a closing animation is ACTUALLY in flight (mIsAnimatingToLauncher == true),
+        // cancel the closing anim before Launcher.launch builds the new opening animation.
+        // When opening an app normally from the home screen, this does 0 work and never blocks the UI thread.
         Class<?> launcherCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Launcher", cl);
         if (launcherCls != null) {
             hookMethodsByName(launcherCls, "launch", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
+                    if (!sEnabled || !sInstantLaunch || param.thisObject == null) {
                         return;
                     }
-                    Object atm = getObjectFieldSafe(param.thisObject, "mAppTransitionManager");
-                    prepareCleanStateBeforeOpeningAnim(atm);
+                    Object navStub = sNavStubViewRef.get();
+                    if (navStub != null && getBooleanFieldSafe(navStub, "mIsAnimatingToLauncher")) {
+                        Object atm = getObjectFieldSafe(param.thisObject, "mAppTransitionManager");
+                        if (atm != null) {
+                            callMethodSafe(atm, "cancelAppToHomeAnim");
+                        }
+                    }
                 }
             });
         }
     }
 
-    private static void prepareCleanStateBeforeOpeningAnim(Object appTransitionManager) {
+    private static boolean getBooleanFieldSafe(Object target, String fieldName) {
         try {
-            Object navStub = sNavStubViewRef.get();
-            if (navStub != null) {
-                Object anim2 = getObjectFieldSafe(navStub, "mAppToHomeAnim2");
-                if (anim2 != null) {
-                    callMethodSafe(anim2, "cancel");
-                }
-                Object fakeAnim = getObjectFieldSafe(navStub, "mFakeAppToHomeAnim");
-                if (fakeAnim != null) {
-                    callMethodSafe(fakeAnim, "cancel");
-                }
-                setBooleanFieldSafe(navStub, "mIsAnimatingToLauncher", false);
-                callMethodSafe(navStub, "finishPendingController");
-            }
-            if (appTransitionManager != null) {
-                callMethodSafe(appTransitionManager, "cancelAppToHomeAnim");
-                callMethodSafe(appTransitionManager, "finishPendingGestureController");
-            }
-            Object recentsListener = sRecentsListenerRef.get();
-            if (recentsListener != null) {
-                flushFinishControllerRunnable(recentsListener);
-            }
+            return XposedHelpers.getBooleanField(target, fieldName);
         } catch (Throwable ignored) {
-        }
-    }
-
-    private static void flushFinishControllerRunnable(Object recentsListener) {
-        try {
-            Object r = getObjectFieldSafe(recentsListener, "mFinishControllerRunnable");
-            if (r instanceof Runnable) {
-                ((Runnable) r).run();
-            }
-        } catch (Throwable ignored) {
+            return false;
         }
     }
 
