@@ -34,6 +34,9 @@ public class MainActivity extends Activity {
             + "resetprop --delete debug.sf.latch_unsignaled 2>/dev/null; "
             + "resetprop --delete debug.sf.auto_latch_unsignaled 2>/dev/null; "
             + "resetprop --delete debug.sf.disable_backpressure 2>/dev/null; "
+            + "resetprop --delete debug.hwui.use_hint_manager 2>/dev/null; "
+            + "cmd power set-fixed-performance-mode-enabled false 2>/dev/null; "
+            + "for p in $(pidof surfaceflinger); do renice -n 0 -p $p 2>/dev/null; ionice -c 2 -n 4 -p $p 2>/dev/null; done; "
             + "pm enable com.google.android.webview 2>/dev/null; "
             + "pm unsuspend com.google.android.webview 2>/dev/null; "
             + "pm enable com.android.webview 2>/dev/null; "
@@ -72,7 +75,7 @@ public class MainActivity extends Activity {
         root.setPadding(pad, dp(28), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Animations v1.0.6");
+        title.setText("POCO M5 Animations v1.0.7");
         title.setTextColor(Color.parseColor("#F8FAFC"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);

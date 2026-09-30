@@ -318,21 +318,19 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         };
 
-        // 1. Unblock touch dispatch in RecentsContainer while closing anim finishes
+        // 1. Only unblock touch-skip flags (never touch mIsFsAppToHomeAnimating or mIsExitRecentsAnimating state flags!)
         Class<?> recentsContainerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.views.RecentsContainer", cl);
         if (recentsContainerCls != null) {
-            hookMethodsByName(recentsContainerCls, "setIsFsAppToHomeAnimating", forceFalseArgHook);
             hookMethodsByName(recentsContainerCls, "setIsNeedSkipTouch", forceFalseArgHook);
-            hookMethodsByName(recentsContainerCls, "setIsExitRecentsAnimating", forceFalseArgHook);
         }
 
-        // 2. Unblock touch dispatch in ShortcutMenuLayer
         Class<?> shortcutMenuLayerCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.ShortcutMenuLayer", cl);
         if (shortcutMenuLayerCls != null) {
             hookMethodsByName(shortcutMenuLayerCls, "setIsNeedSkipTouch", forceFalseArgHook);
         }
 
-        // 3. Disable TimeOutBlocker, FlingBlockCheck, and NavStubView post-task cooldowns
+        // 2. Disable post-close cooldown timers (TimeOutBlocker, FlingBlockCheck, NavStubView cooldowns)
+        // without ever calling cancelAppToHomeAnim or resetting animations!
         Class<?> timeOutBlockerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.util.TimeOutBlocker", cl);
         if (timeOutBlockerCls != null) {
             hookMethodsByReturnType(timeOutBlockerCls, "isBlocked", boolean.class, returnFalseWhenInstantHook);
@@ -345,49 +343,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
         Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
         if (navStubViewCls != null) {
-            try {
-                XposedBridge.hookAllConstructors(navStubViewCls, new XC_MethodHook() {
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        if (param.thisObject != null) {
-                            sNavStubViewRef = new WeakReference<>(param.thisObject);
-                        }
-                    }
-                });
-            } catch (Throwable ignored) {
-            }
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterStartNewTask", boolean.class, returnFalseWhenInstantHook);
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, returnFalseWhenInstantHook);
-        }
-
-        // 4. Zero-overhead fast launch: ONLY when a closing animation is ACTUALLY in flight (mIsAnimatingToLauncher == true),
-        // cancel the closing anim before Launcher.launch builds the new opening animation.
-        // When opening an app normally from the home screen, this does 0 work and never blocks the UI thread.
-        Class<?> launcherCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Launcher", cl);
-        if (launcherCls != null) {
-            hookMethodsByName(launcherCls, "launch", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || !sInstantLaunch || param.thisObject == null) {
-                        return;
-                    }
-                    Object navStub = sNavStubViewRef.get();
-                    if (navStub != null && getBooleanFieldSafe(navStub, "mIsAnimatingToLauncher")) {
-                        Object atm = getObjectFieldSafe(param.thisObject, "mAppTransitionManager");
-                        if (atm != null) {
-                            callMethodSafe(atm, "cancelAppToHomeAnim");
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    private static boolean getBooleanFieldSafe(Object target, String fieldName) {
-        try {
-            return XposedHelpers.getBooleanField(target, fieldName);
-        } catch (Throwable ignored) {
-            return false;
         }
     }
 

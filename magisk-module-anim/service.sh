@@ -6,15 +6,18 @@ rm -f "$MODDIR/system.prop" 2>/dev/null
 resetprop --delete ro.miui.backdrop_sampling_enabled 2>/dev/null
 resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null
 
-# Ensure Mali-G57 never stalls on unsignaled fences when opening new windows
+# Clean all experimental SurfaceFlinger / HWUI props
 resetprop --delete debug.sf.latch_unsignaled 2>/dev/null
 resetprop --delete debug.sf.auto_latch_unsignaled 2>/dev/null
 resetprop --delete debug.sf.disable_backpressure 2>/dev/null
+resetprop --delete debug.hwui.use_hint_manager 2>/dev/null
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 2
 done
 sleep 3
+
+cmd power set-fixed-performance-mode-enabled false >/dev/null 2>&1
 
 pm enable com.google.android.webview >/dev/null 2>&1
 pm unsuspend com.google.android.webview >/dev/null 2>&1

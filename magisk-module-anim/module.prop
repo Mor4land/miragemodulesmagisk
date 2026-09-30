@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.6
-versionCode=7
+version=v1.0.7
+versionCode=8
 author=Mirage
-description=Чистые флагманские анимации открытия/закрытия без фризов при запуске, мгновенный отклик после закрытия, честные 90 Гц и защита WebView для POCO M5.
+description=Чистые флагманские анимации открытия/закрытия без сбросов анимаций и без фризов, мгновенный отклик после закрытия, 90 Гц и защита WebView для POCO M5.
