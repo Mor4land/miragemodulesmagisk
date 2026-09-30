@@ -1,3 +1,3 @@
-# Unlock flagship backdrop blur & animation level on POCO M5
-ro.miui.backdrop_sampling_enabled=true
+# Explicitly keep backdrop_sampling_enabled disabled on POCO M5 (Helio G99) to prevent RenderScript / GraphicBuffer crash in POCO Launcher
+ro.miui.backdrop_sampling_enabled=false
 persist.sys.use_miui_optimization=true

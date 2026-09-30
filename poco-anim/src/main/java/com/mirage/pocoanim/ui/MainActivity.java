@@ -112,21 +112,14 @@ public class MainActivity extends Activity {
         LinearLayout effectsCard = createCard();
         effectsCard.addView(createSwitchRow(
                 "Анимация со сторонними иконками",
-                "Включает плавный морфинг иконки при закрытии приложения даже с кастомными паками иконок",
+                "Включает плавный возврат окна в иконку даже при использовании кастомных паков иконок",
                 AnimPrefs.KEY_ICON_ANIM,
                 true
         ));
         addDivider(effectsCard);
         effectsCard.addView(createSwitchRow(
-                "Живые иконки (MAML)",
-                "Разблокирует динамические анимации системных иконок (часы, погода, календарь)",
-                AnimPrefs.KEY_MAML_ANIM,
-                true
-        ));
-        addDivider(effectsCard);
-        effectsCard.addView(createSwitchRow(
-                "Полное размытие (Complete Blur)",
-                "Флагманский блюр фона в меню недавних приложений и на рабочем столе",
+                "Плавное размытие в Недавних (Surface Blur)",
+                "Активирует штатное размытие фона при свайпе и открытии меню недавних приложений (без крашей RenderScript)",
                 AnimPrefs.KEY_COMPLETE_BLUR,
                 true
         ));
@@ -196,7 +189,7 @@ public class MainActivity extends Activity {
         try {
             Runtime.getRuntime().exec(new String[]{
                     "su", "-c",
-                    "killall com.mi.android.globallauncher com.miui.home; am force-stop com.mi.android.globallauncher; am force-stop com.miui.home"
+                    "resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null; killall com.mi.android.globallauncher com.miui.home; am force-stop com.mi.android.globallauncher; am force-stop com.miui.home"
             });
             Toast.makeText(this, "Лаунчер перезапускается...", Toast.LENGTH_SHORT).show();
         } catch (Throwable t) {
