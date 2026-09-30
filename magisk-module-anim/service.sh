@@ -1,19 +1,23 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 
-# Remove any legacy system.prop if present
 rm -f "$MODDIR/system.prop" 2>/dev/null
 
-# Ensure backdrop_sampling_enabled is false so BlurLayerHolder never crashes POCO Launcher
 resetprop --delete ro.miui.backdrop_sampling_enabled 2>/dev/null
 resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null
+
+# SurfaceFlinger & HWUI anti-lag properties for Mali-G57 MC2
+resetprop debug.sf.latch_unsignaled 1 2>/dev/null
+resetprop debug.sf.auto_latch_unsignaled false 2>/dev/null
+resetprop debug.sf.disable_backpressure 1 2>/dev/null
+resetprop debug.hwui.use_hint_manager true 2>/dev/null
 
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 2
 done
 sleep 3
 
-# Repair & verify WebView packages and implementation after boot
+# Repair & verify WebView packages and implementation
 pm enable com.google.android.webview >/dev/null 2>&1
 pm unsuspend com.google.android.webview >/dev/null 2>&1
 pm enable com.android.webview >/dev/null 2>&1
@@ -22,10 +26,22 @@ pm enable com.mi.webkit.core >/dev/null 2>&1
 cmd webviewupdate enable-multiprocess >/dev/null 2>&1
 cmd webviewupdate set-webview-implementation com.google.android.webview >/dev/null 2>&1 || cmd webviewupdate set-webview-implementation com.android.webview >/dev/null 2>&1
 
-# Ensure flagship transition animation duration ratio is initialized
-settings put global transition_animation_duration_ratio 1.0 >/dev/null 2>&1
+# Lock 90Hz refresh rate and snappy transition ratio on POCO M5
+settings put system peak_refresh_rate 90.0 >/dev/null 2>&1
+settings put system min_refresh_rate 90.0 >/dev/null 2>&1
+settings put system user_refresh_rate 90 >/dev/null 2>&1
+settings put secure miui_refresh_rate 90 >/dev/null 2>&1
+settings put global transition_animation_duration_ratio 0.85 >/dev/null 2>&1
+cmd power set-fixed-performance-mode-enabled true >/dev/null 2>&1
 
-# Always install/update the bundled v1.0.2 Xposed APK on boot
+# Always install/update the bundled v1.0.3 Xposed APK on boot
 if [ -f "$MODDIR/MiragePocoAnimations.apk" ]; then
     pm install -r "$MODDIR/MiragePocoAnimations.apk" >/dev/null 2>&1
 fi
+
+# Boost CPU & IO scheduling priority for POCO Launcher, MIUI Home, and SurfaceFlinger
+sleep 5
+for p in $(pidof com.mi.android.globallauncher com.miui.home surfaceflinger); do
+    renice -n -20 -p "$p" >/dev/null 2>&1
+    ionice -c 1 -n 0 -p "$p" >/dev/null 2>&1
+done

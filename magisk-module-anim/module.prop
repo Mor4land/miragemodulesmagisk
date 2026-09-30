@@ -1,6 +1,6 @@
 id=mirage_poco_animations
-name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.2
-versionCode=3
+name=POCO M5 Flagship Animations + 90Hz Turbo (POCO Launcher / MIUI Home)
+version=v1.0.3
+versionCode=4
 author=Mirage
-description=Флагманские анимации открытия/закрытия приложений, мгновенный запуск без задержки после закрытия, полный рестарт оболочки и защита/восстановление WebView для POCO Launcher и MIUI/HyperOS Home.
+description=Флагманские анимации, непрерывные свайпы в полёте (Non-Stop Swipes без ожидания конца доводки), Турбо-оптимизация 90 Гц + GPU/CPU приоритет лаунчера и защита WebView для POCO M5.

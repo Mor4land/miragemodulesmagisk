@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -29,12 +30,14 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
     private static volatile boolean sEnabled = true;
     private static volatile boolean sIconAnim = true;
-    private static volatile boolean sCompleteBlur = true;
+    private static volatile boolean sCompleteBlur = false;
     private static volatile boolean sFolderBlur = false;
     private static volatile boolean sWallpaperDarken = true;
     private static volatile boolean sIgnorePowerSave = true;
     private static volatile boolean sInstantLaunch = true;
-    private static volatile float sAnimSpeedRatio = 1.0f;
+    private static volatile boolean sNonStopSwipe = true;
+    private static volatile boolean sTurboOptimize = true;
+    private static volatile float sAnimSpeedRatio = 0.85f;
 
     private static volatile boolean sReceiverRegistered = false;
 
@@ -50,7 +53,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         loadXSharedPrefs();
 
         XposedBridge.log(TAG + ": Initializing safe animation hooks for " + lpparam.packageName
-                + " (enabled=" + sEnabled + ", instantLaunch=" + sInstantLaunch + ")");
+                + " (enabled=" + sEnabled + ", instant=" + sInstantLaunch + ", nonStop=" + sNonStopSwipe + ")");
 
         hookDeviceLevelUtils(lpparam.classLoader);
         hookCpuLevelUtils(lpparam.classLoader);
@@ -75,6 +78,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sWallpaperDarken = xPrefs.getBoolean(AnimPrefs.KEY_WALLPAPER_DARKEN, sWallpaperDarken);
                 sIgnorePowerSave = xPrefs.getBoolean(AnimPrefs.KEY_IGNORE_POWER_SAVE, sIgnorePowerSave);
                 sInstantLaunch = xPrefs.getBoolean(AnimPrefs.KEY_INSTANT_LAUNCH, sInstantLaunch);
+                sNonStopSwipe = xPrefs.getBoolean(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe);
+                sTurboOptimize = xPrefs.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize);
                 sAnimSpeedRatio = xPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio);
             }
         } catch (Throwable ignored) {
@@ -95,6 +100,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sWallpaperDarken = cache.getBoolean(AnimPrefs.KEY_WALLPAPER_DARKEN, sWallpaperDarken);
                 sIgnorePowerSave = cache.getBoolean(AnimPrefs.KEY_IGNORE_POWER_SAVE, sIgnorePowerSave);
                 sInstantLaunch = cache.getBoolean(AnimPrefs.KEY_INSTANT_LAUNCH, sInstantLaunch);
+                sNonStopSwipe = cache.getBoolean(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe);
+                sTurboOptimize = cache.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize);
                 sAnimSpeedRatio = cache.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio);
             }
         } catch (Throwable ignored) {
@@ -116,6 +123,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     .putBoolean(AnimPrefs.KEY_WALLPAPER_DARKEN, sWallpaperDarken)
                     .putBoolean(AnimPrefs.KEY_IGNORE_POWER_SAVE, sIgnorePowerSave)
                     .putBoolean(AnimPrefs.KEY_INSTANT_LAUNCH, sInstantLaunch)
+                    .putBoolean(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe)
+                    .putBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize)
                     .putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio)
                     .apply();
         } catch (Throwable ignored) {
@@ -249,23 +258,30 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             return;
         }
 
-        XC_MethodHook disableLowBlurHook = new XC_MethodHook() {
+        XC_MethodHook blurModeHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && sCompleteBlur) {
+                if (!sEnabled) {
+                    return;
+                }
+                if (sCompleteBlur && !sTurboOptimize) {
                     param.setResult(false);
+                } else {
+                    // On Mali-G57 MC2 (Helio G99), skipping multi-pass GPU shader blur during window scaling
+                    // eliminates frame drops while preserving flagship window-to-icon morphing at 90 FPS
+                    param.setResult(true);
                 }
             }
         };
 
-        hookMethodsByReturnType(cls, "isUseNoRecentsBlurAnimation", boolean.class, disableLowBlurHook);
-        hookMethodsByReturnType(cls, "isUseBasicBlur", boolean.class, disableLowBlurHook);
+        hookMethodsByReturnType(cls, "isUseNoRecentsBlurAnimation", boolean.class, blurModeHook);
+        hookMethodsByReturnType(cls, "isUseBasicBlur", boolean.class, blurModeHook);
 
         hookMethodsByReturnType(cls, "isUserBlurWhenOpenFolder", boolean.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && sFolderBlur) {
-                    param.setResult(true);
+                if (sEnabled) {
+                    param.setResult(sFolderBlur);
                 }
             }
         });
@@ -291,7 +307,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         XC_MethodHook forceFalseArgHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && sInstantLaunch && param.args != null && param.args.length == 1 && param.args[0] instanceof Boolean) {
+                if (sEnabled && (sInstantLaunch || sNonStopSwipe) && param.args != null && param.args.length == 1 && param.args[0] instanceof Boolean) {
                     param.args[0] = Boolean.FALSE;
                 }
             }
@@ -300,11 +316,25 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         XC_MethodHook returnFalseWhenInstantHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && sInstantLaunch) {
+                if (sEnabled && (sInstantLaunch || sNonStopSwipe)) {
                     param.setResult(false);
                 }
             }
         };
+
+        // 0. Force dedicated high-priority GesturePriorityThread AND interruptible mFakeAppToHomeAnim path
+        // (Xiaomi's bytecode disables GesturePriorityThread when isHighLevelDeviceFromFolme() == true on SDK >= 31)
+        Class<?> tisCls = XposedHelpers.findClassIfExists("com.miui.home.recents.TouchInteractionService", cl);
+        if (tisCls != null) {
+            hookMethodsByReturnType(tisCls, "isUseGesturePriorityThread", boolean.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && (sNonStopSwipe || sInstantLaunch)) {
+                        param.setResult(true);
+                    }
+                }
+            });
+        }
 
         // 1. Unblock touch dispatch in RecentsContainer during closing animation
         Class<?> recentsContainerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.views.RecentsContainer", cl);
@@ -315,7 +345,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(recentsContainerCls, "dispatchTouchEvent", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (sEnabled && sInstantLaunch && param.thisObject != null) {
+                    if (sEnabled && (sInstantLaunch || sNonStopSwipe) && param.thisObject != null) {
                         setBooleanFieldSafe(param.thisObject, "mIsFsAppToHomeAnimating", false);
                         setBooleanFieldSafe(param.thisObject, "mIsNeedSkipTouch", false);
                         setBooleanFieldSafe(param.thisObject, "mIsExitRecentsAnimating", false);
@@ -331,7 +361,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(shortcutMenuLayerCls, "dispatchTouchEvent", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (sEnabled && sInstantLaunch && param.thisObject != null) {
+                    if (sEnabled && (sInstantLaunch || sNonStopSwipe) && param.thisObject != null) {
                         setBooleanFieldSafe(param.thisObject, "mIsNeedSkipTouch", false);
                     }
                 }
@@ -349,43 +379,64 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByReturnType(flingBlockCls, "isBlocked", boolean.class, returnFalseWhenInstantHook);
         }
 
-        // 4. Immediately interrupt closing animation & release Recents controller on new touch in NavStubView
+        // 4. Immediately interrupt closing animation mid-flight on new swipe or touch in NavStubView
         Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
         if (navStubViewCls != null) {
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterStartNewTask", boolean.class, returnFalseWhenInstantHook);
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, returnFalseWhenInstantHook);
-            hookMethodsByName(navStubViewCls, "onInputConsumerEvent", new XC_MethodHook() {
+
+            XC_MethodHook interruptMidFlightHook = new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || !sInstantLaunch || param.thisObject == null || param.args == null || param.args.length == 0) {
+                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
                         return;
                     }
-                    if (param.args[0] instanceof MotionEvent) {
+                    if (param.args != null && param.args.length > 0 && param.args[0] instanceof MotionEvent) {
                         MotionEvent ev = (MotionEvent) param.args[0];
-                        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                            Object anim2 = getObjectFieldSafe(param.thisObject, "mAppToHomeAnim2");
-                            if (anim2 != null) {
-                                callMethodSafe(anim2, "cancel");
-                            }
-                            Object fakeAnim = getObjectFieldSafe(param.thisObject, "mFakeAppToHomeAnim");
-                            if (fakeAnim != null) {
-                                callMethodSafe(fakeAnim, "cancel");
-                            }
-                            setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
-                            callMethodSafe(param.thisObject, "finishPendingController");
+                        int action = ev.getActionMasked();
+                        if (action != MotionEvent.ACTION_DOWN) {
+                            return;
                         }
                     }
+                    interruptClosingAnimations(param.thisObject);
+                }
+            };
+
+            hookMethodsByName(navStubViewCls, "onInputConsumerEvent", interruptMidFlightHook);
+            hookMethodsByName(navStubViewCls, "onTouchEvent", interruptMidFlightHook);
+            hookMethodsByName(navStubViewCls, "actionDownConfig", interruptMidFlightHook);
+        }
+
+        // 5. Cut off the slow sub-pixel tail of RectFSpringAnim so swipes finish and release the controller early
+        Class<?> rectFSpringAnimCls = XposedHelpers.findClassIfExists("com.miui.home.recents.util.RectFSpringAnim", cl);
+        if (rectFSpringAnimCls != null) {
+            hookMethodsByName(rectFSpringAnimCls, "update", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || !sNonStopSwipe || param.thisObject == null) {
+                        return;
+                    }
+                    checkAndCutOffSpringTail(param.thisObject);
+                }
+            });
+            hookMethodsByName(rectFSpringAnimCls, "doOnUpdate", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || !sNonStopSwipe || param.thisObject == null) {
+                        return;
+                    }
+                    checkAndCutOffSpringTail(param.thisObject);
                 }
             });
         }
 
-        // 5. Ensure any lingering gesture/closing controller is finished before launching an app icon
+        // 6. Ensure any lingering gesture/closing controller is finished before launching an app icon
         Class<?> launcherCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Launcher", cl);
         if (launcherCls != null) {
             XC_MethodHook preLaunchHook = new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || !sInstantLaunch || param.thisObject == null) {
+                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
                         return;
                     }
                     Object atm = getObjectFieldSafe(param.thisObject, "mAppTransitionManager");
@@ -397,6 +448,44 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             };
             hookMethodsByName(launcherCls, "launch", preLaunchHook);
             hookMethodsByName(launcherCls, "startActivity", preLaunchHook);
+        }
+    }
+
+    private static void interruptClosingAnimations(Object navStubView) {
+        try {
+            Object anim2 = getObjectFieldSafe(navStubView, "mAppToHomeAnim2");
+            if (anim2 != null) {
+                callMethodSafe(anim2, "cancel");
+            }
+            Object fakeAnim = getObjectFieldSafe(navStubView, "mFakeAppToHomeAnim");
+            if (fakeAnim != null) {
+                callMethodSafe(fakeAnim, "cancel");
+            }
+            setBooleanFieldSafe(navStubView, "mIsAnimatingToLauncher", false);
+            callMethodSafe(navStubView, "finishPendingController");
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void checkAndCutOffSpringTail(Object springAnim) {
+        try {
+            Object curObj = getObjectFieldSafe(springAnim, "mCurrentRect");
+            Object targetObj = getObjectFieldSafe(springAnim, "mTargetRect");
+            Object startObj = getObjectFieldSafe(springAnim, "mStartRect");
+            if (curObj instanceof RectF && targetObj instanceof RectF && startObj instanceof RectF) {
+                RectF cur = (RectF) curObj;
+                RectF target = (RectF) targetObj;
+                RectF start = (RectF) startObj;
+                float totalDist = Math.abs(start.width() - target.width()) + Math.abs(start.centerY() - target.centerY());
+                float remDist = Math.abs(cur.width() - target.width())
+                        + Math.abs(cur.centerX() - target.centerX())
+                        + Math.abs(cur.centerY() - target.centerY());
+                // Once 90%+ of the distance is covered and remaining delta is < 14px, cut off the slow spring tail
+                if (totalDist > 80f && remDist < 14f) {
+                    callMethodSafe(springAnim, "cancel");
+                }
+            }
+        } catch (Throwable ignored) {
         }
     }
 
@@ -464,11 +553,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         sWallpaperDarken = intent.getBooleanExtra(AnimPrefs.KEY_WALLPAPER_DARKEN, sWallpaperDarken);
                         sIgnorePowerSave = intent.getBooleanExtra(AnimPrefs.KEY_IGNORE_POWER_SAVE, sIgnorePowerSave);
                         sInstantLaunch = intent.getBooleanExtra(AnimPrefs.KEY_INSTANT_LAUNCH, sInstantLaunch);
+                        sNonStopSwipe = intent.getBooleanExtra(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe);
+                        sTurboOptimize = intent.getBooleanExtra(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize);
                         sAnimSpeedRatio = intent.getFloatExtra(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio);
                         saveLocalCachePrefs(context);
                         updateRuntimeFieldsPostInit(cl);
                         XposedBridge.log(TAG + ": Live config updated (enabled=" + sEnabled
-                                + ", instantLaunch=" + sInstantLaunch + ", speed=" + sAnimSpeedRatio + ")");
+                                + ", instant=" + sInstantLaunch + ", nonStop=" + sNonStopSwipe + ", speed=" + sAnimSpeedRatio + ")");
                     } catch (Throwable ignored) {
                     }
                 }

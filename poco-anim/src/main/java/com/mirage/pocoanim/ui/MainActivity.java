@@ -40,6 +40,19 @@ public class MainActivity extends Activity {
             + "cmd webviewupdate set-webview-implementation com.google.android.webview 2>/dev/null || "
             + "cmd webviewupdate set-webview-implementation com.android.webview 2>/dev/null";
 
+    private static final String TURBO_M5_CMD =
+            "settings put system peak_refresh_rate 90.0 2>/dev/null; "
+            + "settings put system min_refresh_rate 90.0 2>/dev/null; "
+            + "settings put system user_refresh_rate 90 2>/dev/null; "
+            + "settings put secure miui_refresh_rate 90 2>/dev/null; "
+            + "resetprop debug.sf.latch_unsignaled 1 2>/dev/null; "
+            + "resetprop debug.sf.auto_latch_unsignaled false 2>/dev/null; "
+            + "resetprop debug.sf.disable_backpressure 1 2>/dev/null; "
+            + "resetprop debug.hwui.use_hint_manager true 2>/dev/null; "
+            + "cmd power set-fixed-performance-mode-enabled true 2>/dev/null; "
+            + "for p in $(pidof com.mi.android.globallauncher com.miui.home surfaceflinger); do "
+            + "renice -n -20 -p $p 2>/dev/null; ionice -c 1 -n 0 -p $p 2>/dev/null; done";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,14 +69,14 @@ public class MainActivity extends Activity {
         root.setPadding(pad, dp(28), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Animations v1.0.2");
+        title.setText("POCO M5 Animations v1.0.3");
         title.setTextColor(Color.parseColor("#F8FAFC"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Флагманские анимации открытия/закрытия приложений, мгновенный отклик без задержки и полный контроль перезапуска");
+        subtitle.setText("Флагманские анимации, непрерывные свайпы в полёте (Non-Stop) и Турбо-оптимизация 90 Гц для POCO M5");
         subtitle.setTextColor(Color.parseColor("#94A3B8"));
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         subtitle.setPadding(0, dp(6), 0, dp(20));
@@ -79,9 +92,23 @@ public class MainActivity extends Activity {
         ));
         addDivider(masterCard);
         masterCard.addView(createSwitchRow(
+                "Непрерывные свайпы в полёте (Non-Stop)",
+                "Анимации не нужно доходить до конца: отсекает медленный хвост пружины и включает приоритетный поток жестов GesturePriorityThread",
+                AnimPrefs.KEY_NON_STOP_SWIPE,
+                true
+        ));
+        addDivider(masterCard);
+        masterCard.addView(createSwitchRow(
                 "Без задержки открытия после закрытия",
                 "Убирает блокировку нажатий во время анимации сворачивания — следующее приложение открывается мгновенно",
                 AnimPrefs.KEY_INSTANT_LAUNCH,
+                true
+        ));
+        addDivider(masterCard);
+        masterCard.addView(createSwitchRow(
+                "Турбо-оптимизация POCO M5 (90 Гц + Анти-лаг)",
+                "Фиксирует честные 90 Гц, даёт максимальный приоритет CPU/GPU лаунчеру и отключает тяжёлые шейдеры размытия при свайпе",
+                AnimPrefs.KEY_TURBO_OPTIMIZE,
                 true
         ));
         root.addView(masterCard);
@@ -92,16 +119,16 @@ public class MainActivity extends Activity {
         RadioGroup speedGroup = new RadioGroup(this);
         speedGroup.setOrientation(RadioGroup.VERTICAL);
 
-        final float currentSpeed = mPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 1.0f);
+        final float currentSpeed = mPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 0.85f);
         final float[] speedValues = new float[]{0.6f, 0.85f, 1.0f, 1.25f};
         final String[] speedLabels = new String[]{
                 "Молниеносная (0.6x) — мгновенный отклик",
-                "Быстрая / Динамичная (0.85x)",
+                "Быстрая / Динамичная (0.85x) — рекомендуется без лагов",
                 "Баланс флагмана (1.0x) — стандарт MIUI High-End",
                 "Плавная / Расслабленная (1.25x)"
         };
 
-        int checkedId = 2;
+        int checkedId = 1;
         for (int i = 0; i < speedValues.length; i++) {
             if (Math.abs(currentSpeed - speedValues[i]) < 0.05f) {
                 checkedId = i;
@@ -140,10 +167,10 @@ public class MainActivity extends Activity {
         ));
         addDivider(effectsCard);
         effectsCard.addView(createSwitchRow(
-                "Плавное размытие в Недавних (Surface Blur)",
-                "Активирует штатное размытие фона при свайпе и открытии меню недавних приложений",
+                "Тяжёлое размытие в Недавних (Surface Blur)",
+                "Штатное послойное размытие фона (при включённом Турбо-режиме автоматически заменяется лёгким рендером для 90 FPS)",
                 AnimPrefs.KEY_COMPLETE_BLUR,
-                true
+                false
         ));
         addDivider(effectsCard);
         effectsCard.addView(createSwitchRow(
@@ -171,7 +198,7 @@ public class MainActivity extends Activity {
         addSectionHeader(root, "ПОЛНОЦЕННЫЙ РЕСТАРТ И ВОССТАНОВЛЕНИЕ");
 
         Button restartLauncherBtn = createActionButton(
-                "Перезапустить POCO Launcher / MIUI Home",
+                "Применить Турбо-буст + Перезапустить Лаунчер",
                 "#FF6900",
                 dp(8)
         );
@@ -185,7 +212,7 @@ public class MainActivity extends Activity {
         root.addView(restartLauncherBtn);
 
         Button fullUiRestartBtn = createActionButton(
-                "Полноценный рестарт оболочки (Launcher + SystemUI + WebView)",
+                "Полноценный рестарт оболочки (Launcher + SystemUI + 90 Гц + WebView)",
                 "#2563EB",
                 dp(12)
         );
@@ -212,7 +239,7 @@ public class MainActivity extends Activity {
         root.addView(fullRebootBtn);
 
         TextView footer = new TextView(this);
-        footer.setText("Настройки применяются на лету. При первом включении функций рекомендуется нажать «Полноценный рестарт оболочки».");
+        footer.setText("Настройки применяются на лету. При первом включении функций нажмите синюю кнопку «Полноценный рестарт оболочки».");
         footer.setTextColor(Color.parseColor("#64748B"));
         footer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         footer.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -223,7 +250,7 @@ public class MainActivity extends Activity {
         setContentView(scrollView);
 
         AnimPrefs.broadcastUpdate(this);
-        repairWebViewSilent();
+        repairWebViewAndOptimizeSilent();
     }
 
     private Button createActionButton(String text, String hexColor, int topMarginPx) {
@@ -246,12 +273,22 @@ public class MainActivity extends Activity {
         return btn;
     }
 
-    private void repairWebViewSilent() {
+    private String getOptimizationCmdIfEnabled() {
+        if (mPrefs != null && mPrefs.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, true)) {
+            return "; " + TURBO_M5_CMD;
+        }
+        return "";
+    }
+
+    private void repairWebViewAndOptimizeSilent() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Runtime.getRuntime().exec(new String[]{"su", "-c", WEBVIEW_REPAIR_CMD});
+                    Runtime.getRuntime().exec(new String[]{
+                            "su", "-c",
+                            WEBVIEW_REPAIR_CMD + getOptimizationCmdIfEnabled()
+                    });
                 } catch (Throwable ignored) {
                 }
             }
@@ -263,11 +300,12 @@ public class MainActivity extends Activity {
             Runtime.getRuntime().exec(new String[]{
                     "su", "-c",
                     WEBVIEW_REPAIR_CMD
+                            + getOptimizationCmdIfEnabled()
                             + "; killall com.mi.android.globallauncher com.miui.home 2>/dev/null"
                             + "; am force-stop com.mi.android.globallauncher 2>/dev/null"
                             + "; am force-stop com.miui.home 2>/dev/null"
             });
-            Toast.makeText(this, "POCO Launcher перезапускается...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Турбо-оптимизация применена, лаунчер перезапускается...", Toast.LENGTH_SHORT).show();
         } catch (Throwable t) {
             Toast.makeText(this, "Ошибка Root-доступа: " + t.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -275,11 +313,12 @@ public class MainActivity extends Activity {
 
     private void performFullUiAndWebViewRestart() {
         try {
-            Toast.makeText(this, "Восстановление WebView и полный перезапуск оболочки...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Применение 90 Гц Турбо, восстановление WebView и перезапуск оболочки...", Toast.LENGTH_SHORT).show();
             Runtime.getRuntime().exec(new String[]{
                     "su", "-c",
                     WEBVIEW_REPAIR_CMD
-                            + "; settings put global transition_animation_duration_ratio 1.0 2>/dev/null"
+                            + getOptimizationCmdIfEnabled()
+                            + "; settings put global transition_animation_duration_ratio 0.85 2>/dev/null"
                             + "; am force-stop com.mi.android.globallauncher 2>/dev/null"
                             + "; am force-stop com.miui.home 2>/dev/null"
                             + "; killall com.mi.android.globallauncher com.miui.home com.android.systemui 2>/dev/null"
