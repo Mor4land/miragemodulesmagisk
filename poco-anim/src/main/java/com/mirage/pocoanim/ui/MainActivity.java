@@ -57,6 +57,13 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPrefs = AnimPrefs.getPrefs(this);
+        if (!mPrefs.getBoolean("migrated_v104_coloros", false)) {
+            mPrefs.edit()
+                    .putBoolean(AnimPrefs.KEY_COMPLETE_BLUR, true)
+                    .putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 1.0f)
+                    .putBoolean("migrated_v104_coloros", true)
+                    .commit();
+        }
         AnimPrefs.makeWorldReadable(this);
 
         ScrollView scrollView = new ScrollView(this);
@@ -69,14 +76,14 @@ public class MainActivity extends Activity {
         root.setPadding(pad, dp(28), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Animations v1.0.3");
+        title.setText("POCO M5 Animations v1.0.4");
         title.setTextColor(Color.parseColor("#F8FAFC"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Флагманские анимации, непрерывные свайпы в полёте (Non-Stop) и Турбо-оптимизация 90 Гц для POCO M5");
+        subtitle.setText("Физика пружины ColorOS 15 (SpringOperator), параллельный отклик без обрыва анимаций и 90 Гц Буст");
         subtitle.setTextColor(Color.parseColor("#94A3B8"));
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         subtitle.setPadding(0, dp(6), 0, dp(20));
@@ -92,22 +99,22 @@ public class MainActivity extends Activity {
         ));
         addDivider(masterCard);
         masterCard.addView(createSwitchRow(
-                "Непрерывные свайпы в полёте (Non-Stop)",
-                "Анимации не нужно доходить до конца: отсекает медленный хвост пружины и включает приоритетный поток жестов GesturePriorityThread",
+                "Физика пружины ColorOS 15 (Aquamorphic Spring)",
+                "Плавная кривая затухания ColorOS (damping 0.94): окно входит в иконку быстро и мягко до самого конца без рывков",
                 AnimPrefs.KEY_NON_STOP_SWIPE,
                 true
         ));
         addDivider(masterCard);
         masterCard.addView(createSwitchRow(
-                "Без задержки открытия после закрытия",
-                "Убирает блокировку нажатий во время анимации сворачивания — следующее приложение открывается мгновенно",
+                "Параллельный запуск (как в ColorOS 15)",
+                "Следующее приложение открывается сразу при нажатии, не обрывая в воздухе анимацию закрытия предыдущего окна",
                 AnimPrefs.KEY_INSTANT_LAUNCH,
                 true
         ));
         addDivider(masterCard);
         masterCard.addView(createSwitchRow(
-                "Турбо-оптимизация POCO M5 (90 Гц + Анти-лаг)",
-                "Фиксирует честные 90 Гц, даёт максимальный приоритет CPU/GPU лаунчеру и отключает тяжёлые шейдеры размытия при свайпе",
+                "Системный 90 Гц Буст + Приоритет лаунчера",
+                "Фиксирует честные 90 Гц и даёт максимальный приоритет CPU/IO лаунчеру и SurfaceFlinger без урезания графики",
                 AnimPrefs.KEY_TURBO_OPTIMIZE,
                 true
         ));
@@ -119,16 +126,16 @@ public class MainActivity extends Activity {
         RadioGroup speedGroup = new RadioGroup(this);
         speedGroup.setOrientation(RadioGroup.VERTICAL);
 
-        final float currentSpeed = mPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 0.85f);
+        final float currentSpeed = mPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 1.0f);
         final float[] speedValues = new float[]{0.6f, 0.85f, 1.0f, 1.25f};
         final String[] speedLabels = new String[]{
                 "Молниеносная (0.6x) — мгновенный отклик",
-                "Быстрая / Динамичная (0.85x) — рекомендуется без лагов",
-                "Баланс флагмана (1.0x) — стандарт MIUI High-End",
+                "Быстрая / Динамичная (0.85x)",
+                "Эталон ColorOS 15 / Флагман (1.0x) — рекомендуется",
                 "Плавная / Расслабленная (1.25x)"
         };
 
-        int checkedId = 1;
+        int checkedId = 2;
         for (int i = 0; i < speedValues.length; i++) {
             if (Math.abs(currentSpeed - speedValues[i]) < 0.05f) {
                 checkedId = i;
@@ -167,10 +174,10 @@ public class MainActivity extends Activity {
         ));
         addDivider(effectsCard);
         effectsCard.addView(createSwitchRow(
-                "Тяжёлое размытие в Недавних (Surface Blur)",
-                "Штатное послойное размытие фона (при включённом Турбо-режиме автоматически заменяется лёгким рендером для 90 FPS)",
+                "Плавное размытие фона (Surface Blur)",
+                "Красивое флагманское размытие обоев и фона при свайпах и открытии недавних приложений",
                 AnimPrefs.KEY_COMPLETE_BLUR,
-                false
+                true
         ));
         addDivider(effectsCard);
         effectsCard.addView(createSwitchRow(

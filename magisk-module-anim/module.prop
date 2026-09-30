@@ -1,6 +1,6 @@
 id=mirage_poco_animations
-name=POCO M5 Flagship Animations + 90Hz Turbo (POCO Launcher / MIUI Home)
-version=v1.0.3
-versionCode=4
+name=POCO M5 ColorOS 15 Spring Animations + 90Hz Boost (POCO Launcher / MIUI Home)
+version=v1.0.4
+versionCode=5
 author=Mirage
-description=Флагманские анимации, непрерывные свайпы в полёте (Non-Stop Swipes без ожидания конца доводки), Турбо-оптимизация 90 Гц + GPU/CPU приоритет лаунчера и защита WebView для POCO M5.
+description=Физика пружины ColorOS 15 (SpringOperator Aquamorphic Curve), параллельный запуск без обрыва анимаций, плавный Surface Blur, честные 90 Гц и защита WebView для POCO M5.

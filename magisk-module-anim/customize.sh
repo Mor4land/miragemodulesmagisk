@@ -1,8 +1,8 @@
 SKIPUNZIP=0
 
 ui_print "*********************************************"
-ui_print "  POCO M5 Flagship Animations (v1.0.3 Turbo) "
-ui_print "  Non-Stop Swipes + 90Hz Boost + WebView Fix "
+ui_print "  POCO M5 Animations v1.0.4 (ColorOS Physics)"
+ui_print "  SpringOperator + Parallel Launch + 90Hz    "
 ui_print "*********************************************"
 
 rm -f "$MODPATH/system.prop" 2>/dev/null
@@ -11,7 +11,6 @@ rm -f "/data/adb/modules/mirage_poco_animations/system.prop" 2>/dev/null
 resetprop --delete ro.miui.backdrop_sampling_enabled 2>/dev/null
 resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null
 
-# SurfaceFlinger & HWUI anti-lag tuning for Helio G99 / Mali-G57 MC2
 resetprop debug.sf.latch_unsignaled 1 2>/dev/null
 resetprop debug.sf.auto_latch_unsignaled false 2>/dev/null
 resetprop debug.sf.disable_backpressure 1 2>/dev/null
@@ -25,13 +24,13 @@ pm unsuspend com.android.webview >/dev/null 2>&1
 pm enable com.mi.webkit.core >/dev/null 2>&1
 cmd webviewupdate enable-multiprocess >/dev/null 2>&1
 
-ui_print "- Установка APK модуля v1.0.3..."
+ui_print "- Установка APK модуля v1.0.4..."
 if [ -f "$MODPATH/MiragePocoAnimations.apk" ]; then
-    pm install -r "$MODPATH/MiragePocoAnimations.apk" >/dev/null 2>&1 && ui_print "- APK v1.0.3 успешно установлен!" || ui_print "- APK будет автоматически обновлен после загрузки"
+    pm install -r "$MODPATH/MiragePocoAnimations.apk" >/dev/null 2>&1 && ui_print "- APK v1.0.4 успешно установлен!" || ui_print "- APK будет автоматически обновлен после загрузки"
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 set_perm "$MODPATH/service.sh" 0 0 0755
 
-ui_print "- Готово! Перезагрузите телефон или нажмите кнопку рестарта в приложении."
+ui_print "- Готово! Нажмите кнопку рестарта оболочки в приложении."
 ui_print "*********************************************"
