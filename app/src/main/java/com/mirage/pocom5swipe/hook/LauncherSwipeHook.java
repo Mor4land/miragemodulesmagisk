@@ -51,6 +51,9 @@ public final class LauncherSwipeHook implements IXposedHookLoadPackage {
                 && !"com.mi.android.globallauncher".equals(lpparam.packageName)) {
             return;
         }
+        if (lpparam.processName != null && !lpparam.processName.equals(lpparam.packageName)) {
+            return;
+        }
 
         XposedBridge.log(TAG + "Initializing hooks in package: " + lpparam.packageName);
         initXPrefs();

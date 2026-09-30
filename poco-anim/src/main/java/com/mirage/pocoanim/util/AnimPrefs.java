@@ -17,6 +17,7 @@ public final class AnimPrefs {
     public static final String KEY_FOLDER_BLUR = "folder_blur";
     public static final String KEY_WALLPAPER_DARKEN = "wallpaper_darken";
     public static final String KEY_IGNORE_POWER_SAVE = "ignore_power_save";
+    public static final String KEY_INSTANT_LAUNCH = "instant_launch_after_close";
     public static final String KEY_ANIM_SPEED_RATIO = "anim_speed_ratio";
 
     private AnimPrefs() {}
@@ -59,6 +60,7 @@ public final class AnimPrefs {
         intent.putExtra(KEY_FOLDER_BLUR, prefs.getBoolean(KEY_FOLDER_BLUR, false));
         intent.putExtra(KEY_WALLPAPER_DARKEN, prefs.getBoolean(KEY_WALLPAPER_DARKEN, true));
         intent.putExtra(KEY_IGNORE_POWER_SAVE, prefs.getBoolean(KEY_IGNORE_POWER_SAVE, true));
+        intent.putExtra(KEY_INSTANT_LAUNCH, prefs.getBoolean(KEY_INSTANT_LAUNCH, true));
         intent.putExtra(KEY_ANIM_SPEED_RATIO, prefs.getFloat(KEY_ANIM_SPEED_RATIO, 1.0f));
         context.sendBroadcast(intent);
     }

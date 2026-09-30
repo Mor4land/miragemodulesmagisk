@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.1
-versionCode=2
+version=v1.0.2
+versionCode=3
 author=Mirage
-description=Безопасная разблокировка флагманских анимаций открытия/закрытия приложений, плавного возврата окна в иконку и настройки скорости для POCO Launcher (com.mi.android.globallauncher) и MIUI/HyperOS Home (исправлен вылет на POCO M5).
+description=Флагманские анимации открытия/закрытия приложений, мгновенный запуск без задержки после закрытия, полный рестарт оболочки и защита/восстановление WebView для POCO Launcher и MIUI/HyperOS Home.

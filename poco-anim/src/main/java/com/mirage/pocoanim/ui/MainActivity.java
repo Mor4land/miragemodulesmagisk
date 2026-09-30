@@ -1,6 +1,8 @@
 package com.mirage.pocoanim.ui;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -25,6 +27,19 @@ public class MainActivity extends Activity {
 
     private SharedPreferences mPrefs;
 
+    private static final String WEBVIEW_REPAIR_CMD =
+            "rm -f /data/adb/modules/mirage_poco_animations/system.prop 2>/dev/null; "
+            + "resetprop --delete ro.miui.backdrop_sampling_enabled 2>/dev/null; "
+            + "resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null; "
+            + "pm enable com.google.android.webview 2>/dev/null; "
+            + "pm unsuspend com.google.android.webview 2>/dev/null; "
+            + "pm enable com.android.webview 2>/dev/null; "
+            + "pm unsuspend com.android.webview 2>/dev/null; "
+            + "pm enable com.mi.webkit.core 2>/dev/null; "
+            + "cmd webviewupdate enable-multiprocess 2>/dev/null; "
+            + "cmd webviewupdate set-webview-implementation com.google.android.webview 2>/dev/null || "
+            + "cmd webviewupdate set-webview-implementation com.android.webview 2>/dev/null";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,14 +56,14 @@ public class MainActivity extends Activity {
         root.setPadding(pad, dp(28), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Animations");
+        title.setText("POCO M5 Animations v1.0.2");
         title.setTextColor(Color.parseColor("#F8FAFC"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Флагманские анимации открытия/закрытия приложений, иконок и размытия для POCO Launcher и MIUI Home");
+        subtitle.setText("Флагманские анимации открытия/закрытия приложений, мгновенный отклик без задержки и полный контроль перезапуска");
         subtitle.setTextColor(Color.parseColor("#94A3B8"));
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         subtitle.setPadding(0, dp(6), 0, dp(20));
@@ -60,6 +75,13 @@ public class MainActivity extends Activity {
                 "Флагманские анимации (High-End)",
                 "Разблокирует полный возврат окна в иконку, пружинную физику и плавные переходы",
                 AnimPrefs.KEY_ENABLED,
+                true
+        ));
+        addDivider(masterCard);
+        masterCard.addView(createSwitchRow(
+                "Без задержки открытия после закрытия",
+                "Убирает блокировку нажатий во время анимации сворачивания — следующее приложение открывается мгновенно",
+                AnimPrefs.KEY_INSTANT_LAUNCH,
                 true
         ));
         root.addView(masterCard);
@@ -119,7 +141,7 @@ public class MainActivity extends Activity {
         addDivider(effectsCard);
         effectsCard.addView(createSwitchRow(
                 "Плавное размытие в Недавних (Surface Blur)",
-                "Активирует штатное размытие фона при свайпе и открытии меню недавних приложений (без крашей RenderScript)",
+                "Активирует штатное размытие фона при свайпе и открытии меню недавних приложений",
                 AnimPrefs.KEY_COMPLETE_BLUR,
                 true
         ));
@@ -146,33 +168,51 @@ public class MainActivity extends Activity {
         ));
         root.addView(effectsCard);
 
-        Button restartBtn = new Button(this);
-        restartBtn.setText("Перезапустить POCO Launcher / MIUI Home");
-        restartBtn.setAllCaps(false);
-        restartBtn.setTextColor(Color.WHITE);
-        restartBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(Color.parseColor("#FF6900"));
-        btnBg.setCornerRadius(dp(14));
-        restartBtn.setBackground(btnBg);
+        addSectionHeader(root, "ПОЛНОЦЕННЫЙ РЕСТАРТ И ВОССТАНОВЛЕНИЕ");
 
-        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(52)
+        Button restartLauncherBtn = createActionButton(
+                "Перезапустить POCO Launcher / MIUI Home",
+                "#FF6900",
+                dp(8)
         );
-        btnLp.topMargin = dp(22);
-        restartBtn.setLayoutParams(btnLp);
-        restartBtn.setOnClickListener(new View.OnClickListener() {
+        restartLauncherBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AnimPrefs.broadcastUpdate(MainActivity.this);
-                restartLauncher();
+                restartLauncherOnly();
             }
         });
-        root.addView(restartBtn);
+        root.addView(restartLauncherBtn);
+
+        Button fullUiRestartBtn = createActionButton(
+                "Полноценный рестарт оболочки (Launcher + SystemUI + WebView)",
+                "#2563EB",
+                dp(12)
+        );
+        fullUiRestartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+                performFullUiAndWebViewRestart();
+            }
+        });
+        root.addView(fullUiRestartBtn);
+
+        Button fullRebootBtn = createActionButton(
+                "Полная перезагрузка смартфона (Система)",
+                "#DC2626",
+                dp(12)
+        );
+        fullRebootBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                confirmAndRebootDevice();
+            }
+        });
+        root.addView(fullRebootBtn);
 
         TextView footer = new TextView(this);
-        footer.setText("Настройки применяются на лету. Также доступна плитка «Анимации POCO» в шторке быстрых настроек.");
+        footer.setText("Настройки применяются на лету. При первом включении функций рекомендуется нажать «Полноценный рестарт оболочки».");
         footer.setTextColor(Color.parseColor("#64748B"));
         footer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         footer.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -183,18 +223,92 @@ public class MainActivity extends Activity {
         setContentView(scrollView);
 
         AnimPrefs.broadcastUpdate(this);
+        repairWebViewSilent();
     }
 
-    private void restartLauncher() {
+    private Button createActionButton(String text, String hexColor, int topMarginPx) {
+        Button btn = new Button(this);
+        btn.setText(text);
+        btn.setAllCaps(false);
+        btn.setTextColor(Color.WHITE);
+        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        GradientDrawable btnBg = new GradientDrawable();
+        btnBg.setColor(Color.parseColor(hexColor));
+        btnBg.setCornerRadius(dp(14));
+        btn.setBackground(btnBg);
+
+        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(52)
+        );
+        btnLp.topMargin = topMarginPx;
+        btn.setLayoutParams(btnLp);
+        return btn;
+    }
+
+    private void repairWebViewSilent() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Runtime.getRuntime().exec(new String[]{"su", "-c", WEBVIEW_REPAIR_CMD});
+                } catch (Throwable ignored) {
+                }
+            }
+        }).start();
+    }
+
+    private void restartLauncherOnly() {
         try {
             Runtime.getRuntime().exec(new String[]{
                     "su", "-c",
-                    "resetprop ro.miui.backdrop_sampling_enabled false 2>/dev/null; killall com.mi.android.globallauncher com.miui.home; am force-stop com.mi.android.globallauncher; am force-stop com.miui.home"
+                    WEBVIEW_REPAIR_CMD
+                            + "; killall com.mi.android.globallauncher com.miui.home 2>/dev/null"
+                            + "; am force-stop com.mi.android.globallauncher 2>/dev/null"
+                            + "; am force-stop com.miui.home 2>/dev/null"
             });
-            Toast.makeText(this, "Лаунчер перезапускается...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "POCO Launcher перезапускается...", Toast.LENGTH_SHORT).show();
         } catch (Throwable t) {
-            Toast.makeText(this, "Настройки отправлены в лаунчер!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Ошибка Root-доступа: " + t.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void performFullUiAndWebViewRestart() {
+        try {
+            Toast.makeText(this, "Восстановление WebView и полный перезапуск оболочки...", Toast.LENGTH_SHORT).show();
+            Runtime.getRuntime().exec(new String[]{
+                    "su", "-c",
+                    WEBVIEW_REPAIR_CMD
+                            + "; settings put global transition_animation_duration_ratio 1.0 2>/dev/null"
+                            + "; am force-stop com.mi.android.globallauncher 2>/dev/null"
+                            + "; am force-stop com.miui.home 2>/dev/null"
+                            + "; killall com.mi.android.globallauncher com.miui.home com.android.systemui 2>/dev/null"
+            });
+        } catch (Throwable t) {
+            Toast.makeText(this, "Ошибка Root-доступа: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void confirmAndRebootDevice() {
+        new AlertDialog.Builder(this)
+                .setTitle("Полная перезагрузка смартфона")
+                .setMessage("Перед перезагрузкой будут автоматически проверены службы WebView и сохранены все настройки анимаций. Перезагрузить устройство сейчас?")
+                .setPositiveButton("Перезагрузить", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                        try {
+                            Runtime.getRuntime().exec(new String[]{
+                                    "su", "-c",
+                                    WEBVIEW_REPAIR_CMD + "; sync; svc power reboot || reboot"
+                            });
+                        } catch (Throwable t) {
+                            Toast.makeText(MainActivity.this, "Не удалось выполнить перезагрузку", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 
     private LinearLayout createCard() {
