@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.mirage.pocom5swipe">
+
+    <!-- Queries so the app can check and launch Gemini or list installed apps on Android 11+ -->
+    <queries>
+        <package android:name="com.google.android.apps.bard" />
+        <package android:name="com.google.android.googlequicksearchbox" />
+        <package android:name="com.miui.home" />
+        <package android:name="com.mi.android.globallauncher" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:label="POCO M5 Swipe Gemini"
+        android:icon="@drawable/ic_gemini_launcher"
+        android:roundIcon="@drawable/ic_gemini_launcher"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Кастомизация свайпа вверх на рабочем столе (Классический режим): запуск Gemini, своего приложения или полное отключение шторки поиска (POCO M5 / MIUI / HyperOS)" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="82" />
+        <meta-data
+            android:name="xposedsharedprefs"
+            android:value="true" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:label="Swipe Gemini">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".tile.SwipeModeTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_gemini_tile"
+            android:label="Свайп вверх"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>
