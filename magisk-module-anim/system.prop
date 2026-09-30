@@ -1,0 +1,3 @@
+# Unlock flagship backdrop blur & animation level on POCO M5
+ro.miui.backdrop_sampling_enabled=true
+persist.sys.use_miui_optimization=true

@@ -24,6 +24,12 @@ public final class XposedHelpers {
     public static void setFloatField(Object obj, String fieldName, float value) {}
     public static Object getStaticObjectField(Class<?> clazz, String fieldName) { return null; }
     public static void setStaticObjectField(Class<?> clazz, String fieldName, Object value) {}
+    public static boolean getStaticBooleanField(Class<?> clazz, String fieldName) { return false; }
+    public static void setStaticBooleanField(Class<?> clazz, String fieldName, boolean value) {}
+    public static int getStaticIntField(Class<?> clazz, String fieldName) { return 0; }
+    public static void setStaticIntField(Class<?> clazz, String fieldName, int value) {}
+    public static float getStaticFloatField(Class<?> clazz, String fieldName) { return 0f; }
+    public static void setStaticFloatField(Class<?> clazz, String fieldName, float value) {}
     public static Object callMethod(Object obj, String methodName, Object... args) { return null; }
     public static Object callStaticMethod(Class<?> clazz, String methodName, Object... args) { return null; }
 }
