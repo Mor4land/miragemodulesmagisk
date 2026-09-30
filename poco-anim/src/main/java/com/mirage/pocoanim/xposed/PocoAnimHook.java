@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 import com.mirage.pocoanim.util.AnimPrefs;
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -42,7 +43,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
     private static volatile boolean sReceiverRegistered = false;
     private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
-    private static volatile WeakReference<Object> sRecentsListenerRef = new WeakReference<>(null);
+    private static volatile WeakReference<Object> sTransitionManagerRef = new WeakReference<>(null);
+    private static volatile long sLastOpenAnimStartMs = 0L;
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
@@ -65,6 +67,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         hookBlurUtils(lpparam.classLoader);
         hookTransitionAnimDurationHelper(lpparam.classLoader);
         hookInstantLaunchAfterClose(lpparam.classLoader);
+        hookBreakOpenAnimationInFlight(lpparam.classLoader);
         hookLauncherLifecycle(lpparam.classLoader);
     }
 
@@ -343,9 +346,264 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
         Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
         if (navStubViewCls != null) {
-            hookMethodsByReturnType(navStubViewCls, "isBlockedAfterStartNewTask", boolean.class, returnFalseWhenInstantHook);
-            hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, returnFalseWhenInstantHook);
+            XC_MethodHook unblockNavStubTaskHook = new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && (sInstantLaunch || sNonStopSwipe)) {
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterExitSmallWindowMode", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                        param.setResult(false);
+                    }
+                }
+            };
+            hookMethodsByReturnType(navStubViewCls, "isBlockedAfterStartNewTask", boolean.class, unblockNavStubTaskHook);
+            hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, unblockNavStubTaskHook);
         }
+    }
+
+    private static void hookBreakOpenAnimationInFlight(final ClassLoader cl) {
+        final Class<?> quickstepCls = XposedHelpers.findClassIfExists("com.miui.home.recents.QuickstepAppTransitionManagerImpl", cl);
+        if (quickstepCls != null) {
+            XC_MethodHook markOpenStartHook = new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled) {
+                        return;
+                    }
+                    sTransitionManagerRef = new WeakReference<>(param.thisObject);
+                    sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", true);
+                }
+            };
+            hookMethodsByName(quickstepCls, "startIconLaunchAnimator", markOpenStartHook);
+            hookMethodsByName(quickstepCls, "startOpeningWindowAnimators", markOpenStartHook);
+
+            hookMethodsByName(quickstepCls, "doAnimationFinish", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", false);
+                }
+            });
+
+            Class<?> baseTransitionCls = quickstepCls.getSuperclass();
+            if (baseTransitionCls != null) {
+                hookMethodsByReturnType(baseTransitionCls, "isOpenAnimRunning", boolean.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (sEnabled && sNonStopSwipe && !Boolean.TRUE.equals(param.getResult())) {
+                            if (isOpenAnimActive(param.thisObject, cl)) {
+                                param.setResult(true);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        final Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
+        if (navStubViewCls == null) {
+            return;
+        }
+
+        // 1. Track setIsLaunchingTask(true) as an app-open signal while preventing it from blocking swipe gestures
+        hookMethodsByName(navStubViewCls, "setIsLaunchingTask", new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (param.args != null && param.args.length == 1 && Boolean.TRUE.equals(param.args[0])) {
+                    sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    if (sEnabled && (sNonStopSwipe || sInstantLaunch)) {
+                        param.args[0] = Boolean.FALSE;
+                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                    }
+                }
+            }
+        });
+
+        // 2. Bypass DeviceLevelUtils.isUseSimpleAnim() restriction in NavStubView.needBreakOpenAnim()
+        hookMethodsByReturnType(navStubViewCls, "needBreakOpenAnim", boolean.class, new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (sEnabled && sNonStopSwipe && !Boolean.TRUE.equals(param.getResult())) {
+                    if (isAppCurrentlyOpening(param.thisObject, cl)) {
+                        param.setResult(true);
+                    }
+                }
+            }
+        });
+
+        // 3. Unblock input consumer & pointer events during app opening
+        XC_MethodHook touchEntryHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!sEnabled || (!sNonStopSwipe && !sInstantLaunch)) {
+                    return;
+                }
+                sNavStubViewRef = new WeakReference<>(param.thisObject);
+                setBooleanFieldSafe(param.thisObject, "mDisableTouch", false);
+                setBooleanFieldSafe(param.thisObject, "mIgnoreInputConsumer", false);
+
+                if (param.args != null && param.args.length > 0 && param.args[0] instanceof MotionEvent) {
+                    MotionEvent ev = (MotionEvent) param.args[0];
+                    if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterExitSmallWindowMode", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                        if (sNonStopSwipe && isAppCurrentlyOpening(param.thisObject, cl)) {
+                            setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
+                            setBooleanFieldSafe(param.thisObject, "mIsAnimatingToRecents", false);
+                        }
+                    }
+                }
+            }
+        };
+        hookMethodsByName(navStubViewCls, "onInputConsumerEvent", touchEntryHook);
+        hookMethodsByName(navStubViewCls, "onTouchEvent", touchEntryHook);
+        hookMethodsByName(navStubViewCls, "onPointerEvent", touchEntryHook);
+
+        // 4. Force mWindowMode = 2 (APP_MODE) on ACTION_DOWN if an app is opening in-flight
+        // even when RecentsModel.getRunningTaskContainHome() still reports Launcher as top task
+        hookMethodsByName(navStubViewCls, "startVelocityTracker", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sNonStopSwipe || param.args == null || param.args.length == 0) {
+                    return;
+                }
+                if (!(param.args[0] instanceof MotionEvent)) {
+                    return;
+                }
+                MotionEvent ev = (MotionEvent) param.args[0];
+                if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                    int windowMode = getIntFieldSafe(param.thisObject, "mWindowMode", 0);
+                    if (windowMode == 1 && isAppCurrentlyOpening(param.thisObject, cl)) {
+                        setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsAnimatingToRecents", false);
+                        setIntFieldSafe(param.thisObject, "mWindowMode", 2);
+                        Object stateMachine = getObjectFieldSafe(param.thisObject, "mStateMachine");
+                        if (stateMachine != null) {
+                            try {
+                                XposedHelpers.callMethod(stateMachine, "sendMessage", 1, 101);
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 5. Redirect in-flight opening RectFSpringAnim immediately on ACTION_MOVE before startRecentsActivity IPC finishes
+        hookMethodsByName(navStubViewCls, "actionMoveAppDrag", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sNonStopSwipe) {
+                    return;
+                }
+                boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", true);
+                if (!remoteStarted) {
+                    boolean needBreak = getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
+                    if (needBreak || isBreakableAnimChainActive(cl)) {
+                        Object currentAnim = getBreakableCurrentAnim(cl);
+                        Object curRectObj = callObjectMethodSafe(param.thisObject, "getCurRect");
+                        if (currentAnim != null && curRectObj instanceof RectF) {
+                            RectF curRect = (RectF) curRectObj;
+                            if (!curRect.isEmpty()) {
+                                try {
+                                    XposedHelpers.callMethod(currentAnim, "updateEndRectF", curRect);
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 6. Ensure finishBreakOpenAnimRunnable (doAnimationFinish) runs when a fast flick-up completes before RecentsAnimation starts
+        XC_MethodHook finishBrokenOpenOnCloseHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sNonStopSwipe) {
+                    return;
+                }
+                if (getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false)) {
+                    setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
+                    Object finishRunnable = getObjectFieldSafe(param.thisObject, "finishBreakOpenAnimRunnable");
+                    if (finishRunnable instanceof Runnable) {
+                        try {
+                            ((Runnable) finishRunnable).run();
+                            return;
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                    Object tm = sTransitionManagerRef.get();
+                    if (tm != null) {
+                        callMethodSafe(tm, "doAnimationFinish");
+                    }
+                }
+            }
+        };
+        hookMethodsByName(navStubViewCls, "performAppToHome", finishBrokenOpenOnCloseHook);
+        hookMethodsByName(navStubViewCls, "startAppToHomeInGestureThread", finishBrokenOpenOnCloseHook);
+    }
+
+    private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
+        if (isBreakableAnimChainActive(cl)) {
+            boolean closingToHome = navStubView != null && getBooleanFieldSafe(navStubView, "mIsAnimatingToLauncher", false);
+            if (!closingToHome) {
+                return true;
+            }
+        }
+        Object tm = sTransitionManagerRef.get();
+        if (tm != null && isOpenAnimActive(tm, cl)) {
+            return true;
+        }
+        long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
+        return elapsed >= 0L && elapsed < 450L;
+    }
+
+    private static boolean isOpenAnimActive(Object transitionManager, ClassLoader cl) {
+        if (transitionManager != null) {
+            if (getBooleanFieldHierarchySafe(transitionManager, "mIsOpenAnimRunning", false)) {
+                return true;
+            }
+            Object openSpring = getObjectFieldSafe(transitionManager, "mRectFSpringAnim");
+            if (openSpring != null && callBooleanMethodSafe(openSpring, "isRunning", false)) {
+                return true;
+            }
+        }
+        return isBreakableAnimChainActive(cl);
+    }
+
+    private static boolean isBreakableAnimChainActive(ClassLoader cl) {
+        try {
+            Class<?> mgrCls = XposedHelpers.findClassIfExists("com.miui.home.recents.breakableAnim.IconAndTaskBreakableAnimManager", cl);
+            if (mgrCls != null) {
+                Object instance = XposedHelpers.callStaticMethod(mgrCls, "getInstance");
+                if (instance != null) {
+                    Object res = XposedHelpers.callMethod(instance, "isAnimChainOn");
+                    if (res instanceof Boolean) {
+                        return (Boolean) res;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    private static Object getBreakableCurrentAnim(ClassLoader cl) {
+        try {
+            Class<?> mgrCls = XposedHelpers.findClassIfExists("com.miui.home.recents.breakableAnim.IconAndTaskBreakableAnimManager", cl);
+            if (mgrCls != null) {
+                Object instance = XposedHelpers.callStaticMethod(mgrCls, "getInstance");
+                if (instance != null) {
+                    return XposedHelpers.callMethod(instance, "getCurrentAnim");
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     private static void hookLauncherLifecycle(final ClassLoader cl) {
@@ -436,6 +694,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     }
 
     private static Object getObjectFieldSafe(Object target, String fieldName) {
+        if (target == null) {
+            return null;
+        }
         try {
             return XposedHelpers.getObjectField(target, fieldName);
         } catch (Throwable ignored) {
@@ -443,14 +704,112 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
     }
 
+    private static boolean getBooleanFieldSafe(Object target, String fieldName, boolean fallback) {
+        if (target == null) {
+            return fallback;
+        }
+        try {
+            return XposedHelpers.getBooleanField(target, fieldName);
+        } catch (Throwable ignored) {
+            return fallback;
+        }
+    }
+
+    private static boolean getBooleanFieldHierarchySafe(Object target, String fieldName, boolean fallback) {
+        if (target == null) {
+            return fallback;
+        }
+        Class<?> c = target.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                Field f = c.getDeclaredField(fieldName);
+                f.setAccessible(true);
+                if (f.getBoolean(target)) {
+                    return true;
+                }
+            } catch (Throwable ignored) {
+            }
+            c = c.getSuperclass();
+        }
+        return fallback;
+    }
+
+    private static void setBooleanFieldHierarchySafe(Object target, String fieldName, boolean value) {
+        if (target == null) {
+            return;
+        }
+        Class<?> c = target.getClass();
+        while (c != null && c != Object.class) {
+            try {
+                Field f = c.getDeclaredField(fieldName);
+                f.setAccessible(true);
+                f.setBoolean(target, value);
+            } catch (Throwable ignored) {
+            }
+            c = c.getSuperclass();
+        }
+    }
+
     private static void setBooleanFieldSafe(Object target, String fieldName, boolean value) {
+        if (target == null) {
+            return;
+        }
         try {
             XposedHelpers.setBooleanField(target, fieldName, value);
         } catch (Throwable ignored) {
         }
     }
 
+    private static int getIntFieldSafe(Object target, String fieldName, int fallback) {
+        if (target == null) {
+            return fallback;
+        }
+        try {
+            return XposedHelpers.getIntField(target, fieldName);
+        } catch (Throwable ignored) {
+            return fallback;
+        }
+    }
+
+    private static void setIntFieldSafe(Object target, String fieldName, int value) {
+        if (target == null) {
+            return;
+        }
+        try {
+            XposedHelpers.setIntField(target, fieldName, value);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static boolean callBooleanMethodSafe(Object target, String methodName, boolean fallback) {
+        if (target == null) {
+            return fallback;
+        }
+        try {
+            Object res = XposedHelpers.callMethod(target, methodName);
+            if (res instanceof Boolean) {
+                return (Boolean) res;
+            }
+        } catch (Throwable ignored) {
+        }
+        return fallback;
+    }
+
+    private static Object callObjectMethodSafe(Object target, String methodName) {
+        if (target == null) {
+            return null;
+        }
+        try {
+            return XposedHelpers.callMethod(target, methodName);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     private static void callMethodSafe(Object target, String methodName) {
+        if (target == null) {
+            return;
+        }
         try {
             XposedHelpers.callMethod(target, methodName);
         } catch (Throwable ignored) {
