@@ -1,8 +1,8 @@
 SKIPUNZIP=0
 
 ui_print "*********************************************"
-ui_print "  POCO M5 Animations v1.0.4 (ColorOS Physics)"
-ui_print "  SpringOperator + Parallel Launch + 90Hz    "
+ui_print "  POCO M5 Animations v1.0.5 (ColorOS Physics)"
+ui_print "  Full Open Anim on Fast Tap + 90Hz Boost    "
 ui_print "*********************************************"
 
 rm -f "$MODPATH/system.prop" 2>/dev/null
@@ -24,9 +24,9 @@ pm unsuspend com.android.webview >/dev/null 2>&1
 pm enable com.mi.webkit.core >/dev/null 2>&1
 cmd webviewupdate enable-multiprocess >/dev/null 2>&1
 
-ui_print "- Установка APK модуля v1.0.4..."
+ui_print "- Установка APK модуля v1.0.5..."
 if [ -f "$MODPATH/MiragePocoAnimations.apk" ]; then
-    pm install -r "$MODPATH/MiragePocoAnimations.apk" >/dev/null 2>&1 && ui_print "- APK v1.0.4 успешно установлен!" || ui_print "- APK будет автоматически обновлен после загрузки"
+    pm install -r "$MODPATH/MiragePocoAnimations.apk" >/dev/null 2>&1 && ui_print "- APK v1.0.5 успешно установлен!" || ui_print "- APK будет автоматически обновлен после загрузки"
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644

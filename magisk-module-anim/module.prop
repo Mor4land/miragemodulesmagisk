@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 ColorOS 15 Spring Animations + 90Hz Boost (POCO Launcher / MIUI Home)
-version=v1.0.4
-versionCode=5
+version=v1.0.5
+versionCode=6
 author=Mirage
-description=Физика пружины ColorOS 15 (SpringOperator Aquamorphic Curve), параллельный запуск без обрыва анимаций, плавный Surface Blur, честные 90 Гц и защита WebView для POCO M5.
+description=Физика пружины ColorOS 15 (SpringOperator), мгновенное открытие следующего приложения с полноценной анимацией вылета из иконки, плавный Surface Blur, 90 Гц буст и защита WebView.

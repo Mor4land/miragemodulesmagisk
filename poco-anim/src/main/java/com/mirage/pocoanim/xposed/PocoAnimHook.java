@@ -17,6 +17,7 @@ import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -40,6 +41,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile float sAnimSpeedRatio = 1.0f;
 
     private static volatile boolean sReceiverRegistered = false;
+    private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
+    private static volatile WeakReference<Object> sRecentsListenerRef = new WeakReference<>(null);
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
@@ -406,28 +409,112 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
         Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
         if (navStubViewCls != null) {
+            try {
+                XposedBridge.hookAllConstructors(navStubViewCls, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (param.thisObject != null) {
+                            sNavStubViewRef = new WeakReference<>(param.thisObject);
+                        }
+                    }
+                });
+            } catch (Throwable ignored) {
+            }
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterStartNewTask", boolean.class, returnFalseWhenInstantHook);
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, returnFalseWhenInstantHook);
         }
 
-        // 5. Only transition the gesture controller at the exact moment a new app icon actually launches
-        // (so the previous closing window never vanishes mid-air on mere screen touches)
+        // 5. Synchronously flush RecentsAnimationListenerImpl.finishController so WindowManagerService
+        // immediately exits the RecentsAnimation state instead of waiting for BACKGROUND_EXECUTOR
+        // (which otherwise causes WindowManagerService to skip the next app's opening RemoteAnimation!)
+        Class<?> recentsListenerCls = XposedHelpers.findClassIfExists("com.miui.home.recents.RecentsAnimationListenerImpl", cl);
+        if (recentsListenerCls != null) {
+            try {
+                XposedBridge.hookAllConstructors(recentsListenerCls, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (param.thisObject != null) {
+                            sRecentsListenerRef = new WeakReference<>(param.thisObject);
+                        }
+                    }
+                });
+            } catch (Throwable ignored) {
+            }
+            hookMethodsByName(recentsListenerCls, "finishController", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
+                        return;
+                    }
+                    flushFinishControllerRunnable(param.thisObject);
+                }
+            });
+        }
+
+        // 6. Cleanly complete any in-flight closing animation BEFORE getActivityLaunchOptions builds the new
+        // opening RemoteAnimationAdapter (and NEVER inside startActivity after getActivityLaunchOptions!).
+        Class<?> qatmCls = XposedHelpers.findClassIfExists("com.miui.home.recents.QuickstepAppTransitionManagerImpl", cl);
+        if (qatmCls != null) {
+            hookMethodsByName(qatmCls, "getActivityLaunchOptions", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
+                        return;
+                    }
+                    prepareCleanStateBeforeOpeningAnim(param.thisObject);
+                }
+            });
+        }
+
         Class<?> launcherCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Launcher", cl);
         if (launcherCls != null) {
-            XC_MethodHook preLaunchHook = new XC_MethodHook() {
+            hookMethodsByName(launcherCls, "launch", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
                     if (!sEnabled || (!sInstantLaunch && !sNonStopSwipe) || param.thisObject == null) {
                         return;
                     }
                     Object atm = getObjectFieldSafe(param.thisObject, "mAppTransitionManager");
-                    if (atm != null) {
-                        callMethodSafe(atm, "finishPendingGestureController");
-                    }
+                    prepareCleanStateBeforeOpeningAnim(atm);
                 }
-            };
-            hookMethodsByName(launcherCls, "launch", preLaunchHook);
-            hookMethodsByName(launcherCls, "startActivity", preLaunchHook);
+            });
+        }
+    }
+
+    private static void prepareCleanStateBeforeOpeningAnim(Object appTransitionManager) {
+        try {
+            Object navStub = sNavStubViewRef.get();
+            if (navStub != null) {
+                Object anim2 = getObjectFieldSafe(navStub, "mAppToHomeAnim2");
+                if (anim2 != null) {
+                    callMethodSafe(anim2, "cancel");
+                }
+                Object fakeAnim = getObjectFieldSafe(navStub, "mFakeAppToHomeAnim");
+                if (fakeAnim != null) {
+                    callMethodSafe(fakeAnim, "cancel");
+                }
+                setBooleanFieldSafe(navStub, "mIsAnimatingToLauncher", false);
+                callMethodSafe(navStub, "finishPendingController");
+            }
+            if (appTransitionManager != null) {
+                callMethodSafe(appTransitionManager, "cancelAppToHomeAnim");
+                callMethodSafe(appTransitionManager, "finishPendingGestureController");
+            }
+            Object recentsListener = sRecentsListenerRef.get();
+            if (recentsListener != null) {
+                flushFinishControllerRunnable(recentsListener);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void flushFinishControllerRunnable(Object recentsListener) {
+        try {
+            Object r = getObjectFieldSafe(recentsListener, "mFinishControllerRunnable");
+            if (r instanceof Runnable) {
+                ((Runnable) r).run();
+            }
+        } catch (Throwable ignored) {
         }
     }
 
