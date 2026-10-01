@@ -45,6 +45,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
     private static volatile WeakReference<Object> sTransitionManagerRef = new WeakReference<>(null);
     private static volatile long sLastOpenAnimStartMs = 0L;
+    private static volatile Class<?> sConnectAnimMgrCls = null;
+    private static volatile boolean sConnectAnimMgrClsLookedUp = false;
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
@@ -471,7 +473,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         }
 
-        // Tune RectFSpringAnim physics for crisp ColorOS-style response without ever calling cancel()
+        // Tune RectFSpringAnim physics for crisp, fluid response without ever calling cancel()
         Class<?> rectFSpringCls = XposedHelpers.findClassIfExists("com.miui.home.recents.util.RectFSpringAnim", cl);
         if (rectFSpringCls != null) {
             hookMethodsByName(rectFSpringCls, "setAnimParam", new XC_MethodHook() {
@@ -483,8 +485,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     if (param.args[0] instanceof Float && param.args[1] instanceof Float) {
                         float damping = (Float) param.args[0];
                         float response = (Float) param.args[1];
-                        param.args[0] = Math.max(damping, 0.95f);
-                        param.args[1] = Math.max(0.16f, response * 0.82f * Math.min(1.0f, sAnimSpeedRatio));
+                        // Smooth critical damping (0.84 - 0.90) avoids stiff deceleration stutter during fast exits
+                        param.args[0] = Math.min(0.90f, Math.max(0.84f, damping));
+                        param.args[1] = Math.max(0.22f, response * 0.88f * Math.min(1.0f, sAnimSpeedRatio));
                     }
                 }
             });
@@ -594,8 +597,14 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         });
 
-        // 4b. On desktop HOME_MODE touch down, connect opening animation directly into ConnectAnimManager
-        hookMethodsByName(navStubViewCls, "commonHomeTouchFromDown", new XC_MethodHook() {
+        // Ensure USE_CONNECT_ANIM is enabled in ConnectAnimManager for zero-latency gesture handoff
+        Class<?> connectMgrCls = getConnectAnimManagerClass(cl);
+        if (connectMgrCls != null) {
+            setStaticBooleanFieldSafe(connectMgrCls, "USE_CONNECT_ANIM", true);
+        }
+
+        // 4b. On touch down during app open, connect opening animation directly into ConnectAnimManager
+        XC_MethodHook connectOpeningOnTouchDown = new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
                 if (!sEnabled || !sNonStopSwipe) {
@@ -607,9 +616,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         callMethodSafe(openSpring, "setIsOpenAnim", true);
                         setBooleanFieldSafe(openSpring, "mMoveToTargetRectWhenAnimEnd", false);
 
-                        Class<?> connectMgrCls = XposedHelpers.findClassIfExists("com.miui.home.recents.anim.ConnectAnimManager", cl);
-                        if (connectMgrCls != null) {
-                            Object connectMgr = XposedHelpers.callStaticMethod(connectMgrCls, "getInstance");
+                        Class<?> mgrCls = getConnectAnimManagerClass(cl);
+                        if (mgrCls != null) {
+                            Object connectMgr = XposedHelpers.callStaticMethod(mgrCls, "getInstance");
                             if (connectMgr != null) {
                                 Object calc = getObjectFieldSafe(param.thisObject, "mCalculator");
                                 Object curRect = calc != null ? callObjectMethodSafe(calc, "getCurRect") : null;
@@ -620,41 +629,15 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             }
                         }
                     } catch (Throwable t) {
-                        XposedBridge.log("PocoAnim: Failed to connectOpeningAnim in commonHomeTouchFromDown: " + t);
+                        XposedBridge.log("PocoAnim: Failed to connectOpeningAnim on touch down: " + t);
                     }
                 }
             }
-        });
+        };
+        hookMethodsByName(navStubViewCls, "commonHomeTouchFromDown", connectOpeningOnTouchDown);
+        hookMethodsByName(navStubViewCls, "commonAppTouchFromDown", connectOpeningOnTouchDown);
 
-        // 5. Redirect in-flight opening RectFSpringAnim immediately on ACTION_MOVE before startRecentsActivity IPC finishes
-        hookMethodsByName(navStubViewCls, "actionMoveAppDrag", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                if (!sEnabled || !sNonStopSwipe) {
-                    return;
-                }
-                boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", true);
-                if (!remoteStarted) {
-                    boolean needBreak = getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
-                    if (needBreak && isAppCurrentlyOpening(param.thisObject, cl)) {
-                        Object currentAnim = getBreakableCurrentAnim(cl);
-                        Object curRectObj = callObjectMethodSafe(param.thisObject, "getCurRect");
-                        if (currentAnim != null && curRectObj instanceof RectF) {
-                            RectF curRect = (RectF) curRectObj;
-                            if (!curRect.isEmpty()) {
-                                try {
-                                    setBooleanFieldSafe(currentAnim, "mMoveToTargetRectWhenAnimEnd", false);
-                                    XposedHelpers.callMethod(currentAnim, "updateEndRectF", curRect);
-                                } catch (Throwable ignored) {
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // 6. On ACTION_UP (actionUpAppTouchResolution), if the user flicked up before RecentsAnimation started,
+        // 5. On ACTION_UP (actionUpAppTouchResolution), if the user flicked up before RecentsAnimation started,
         // reverse the in-flight opening RectFSpringAnim back toward its mStartRect (the icon)
         // WITHOUT calling doAnimationFinish() so the window NEVER flashes to 100% fullscreen!
         hookMethodsByName(navStubViewCls, "actionUpAppTouchResolution", new XC_MethodHook() {
@@ -683,38 +666,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         });
 
-        // 7. Ensure finishBreakOpenAnimRunnable only runs if RecentsAnimation has actually started,
-        // preventing the window from snapping to fullscreen when closing mid-flight
-        XC_MethodHook finishBrokenOpenOnCloseHook = new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                if (!sEnabled || !sNonStopSwipe) {
-                    return;
-                }
-                if (getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false)) {
-                    boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", false);
-                    if (remoteStarted) {
-                        setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
-                        Object finishRunnable = getObjectFieldSafe(param.thisObject, "finishBreakOpenAnimRunnable");
-                        if (finishRunnable instanceof Runnable) {
-                            try {
-                                ((Runnable) finishRunnable).run();
-                                return;
-                            } catch (Throwable ignored) {
-                            }
-                        }
-                        Object tm = sTransitionManagerRef.get();
-                        if (tm != null) {
-                            callMethodSafe(tm, "doAnimationFinish");
-                        }
-                    }
-                }
-            }
-        };
-        hookMethodsByName(navStubViewCls, "performAppToHome", finishBrokenOpenOnCloseHook);
-        hookMethodsByName(navStubViewCls, "startAppToHomeInGestureThread", finishBrokenOpenOnCloseHook);
-
-        // 8. When gesture completely finishes returning to home, safely clean up any leftover opening animation state
+        // 6. When gesture completely finishes returning to home, safely clean up any leftover opening animation state
         hookMethodsByName(navStubViewCls, "finishAppToHome", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
@@ -765,19 +717,19 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     }
 
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
-        if (navStubView != null) {
-            boolean launcherOnTop = callBooleanMethodSafe(navStubView, "isLauncherOnTop", true);
-            if (!launcherOnTop) {
-                // When launcher is NOT on top, the user is inside an app. Never hijack in-app navigation!
-                return false;
-            }
-        }
         if (getOpeningRectFSpringAnimSafe(cl) != null) {
             return true;
         }
         Object tm = getAppTransitionManagerSafe(cl);
         if (tm != null && isOpenAnimActive(tm)) {
             return true;
+        }
+        if (navStubView != null) {
+            boolean launcherOnTop = callBooleanMethodSafe(navStubView, "isLauncherOnTop", true);
+            if (!launcherOnTop) {
+                // When launcher is NOT on top, the user is inside an app. Never hijack in-app navigation!
+                return false;
+            }
         }
         long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
         return elapsed >= 0L && elapsed < 350L;
@@ -966,6 +918,24 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             XposedHelpers.setBooleanField(target, fieldName, value);
         } catch (Throwable ignored) {
         }
+    }
+
+    private static void setStaticBooleanFieldSafe(Class<?> clazz, String fieldName, boolean value) {
+        if (clazz == null) {
+            return;
+        }
+        try {
+            XposedHelpers.setStaticBooleanField(clazz, fieldName, value);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static Class<?> getConnectAnimManagerClass(ClassLoader cl) {
+        if (!sConnectAnimMgrClsLookedUp) {
+            sConnectAnimMgrCls = XposedHelpers.findClassIfExists("com.miui.home.recents.anim.ConnectAnimManager", cl);
+            sConnectAnimMgrClsLookedUp = true;
+        }
+        return sConnectAnimMgrCls;
     }
 
     private static int getIntFieldSafe(Object target, String fieldName, int fallback) {
