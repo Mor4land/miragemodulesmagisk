@@ -256,7 +256,7 @@ public class InCallOverlay {
                     ViewGroup.LayoutParams.WRAP_CONTENT
             );
             lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-            lp.bottomMargin = dp(activity, 115); // Integrated cleanly above the End Call button
+            lp.bottomMargin = dp(activity, 280); // Positioned high above in-call controls and End Call button
             bar.setLayoutParams(lp);
 
             GradientDrawable bg = new GradientDrawable();
@@ -313,7 +313,7 @@ public class InCallOverlay {
             bar.addView(label);
             bar.addView(sparkle);
 
-            setupTouchBounce(bar, () -> showBottomSheet(activity));
+            setupDraggableBar(activity, bar, () -> showBottomSheet(activity));
 
             decor.addView(bar);
             Log.i(TAG, "Injected integrated Material You Audio Emoji bar into InCallActivity");
@@ -618,6 +618,42 @@ public class InCallOverlay {
                     break;
             }
             return false;
+        });
+    }
+
+    private static void setupDraggableBar(final Activity activity, final View bar, final Runnable onClick) {
+        bar.setOnTouchListener(new View.OnTouchListener() {
+            private float startY;
+            private float initialTranslationY;
+            private boolean isDragging;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startY = event.getRawY();
+                        initialTranslationY = v.getTranslationY();
+                        isDragging = false;
+                        v.animate().scaleX(0.94f).scaleY(0.94f).setDuration(60).start();
+                        return true;
+                    case MotionEvent.ACTION_MOVE:
+                        float deltaY = event.getRawY() - startY;
+                        if (Math.abs(deltaY) > dp(activity, 6) || isDragging) {
+                            isDragging = true;
+                            v.setTranslationY(initialTranslationY + deltaY);
+                        }
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100).start();
+                        if (!isDragging) {
+                            haptic(activity);
+                            if (onClick != null) onClick.run();
+                        }
+                        return true;
+                }
+                return false;
+            }
         });
     }
 

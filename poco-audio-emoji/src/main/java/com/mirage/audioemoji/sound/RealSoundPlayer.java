@@ -3,26 +3,38 @@ package com.mirage.audioemoji.sound;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
+import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.audiofx.LoudnessEnhancer;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
- * Ultra-high-loudness sound engine for authentic studio-recorded audio emojis:
- * Fart (💩), Applause (👏), Laugh (😂), Party (🎉), Sad Trombone (😢), Drum Roll (🥁).
+ * Ultra-high-loudness in-call sound delivery engine for authentic studio audio emojis.
  *
- * Implements dual-pipeline audio delivery:
- * 1. Telecom Voice Uplink: USAGE_VOICE_COMMUNICATION with LoudnessEnhancer (+30 dB gain)
- *    so the remote party on the phone line hears it loud and clear.
- * 2. Device Loudspeaker: USAGE_MEDIA with LoudnessEnhancer (+25 dB gain)
- *    so the local caller hears the booming sound reaction with zero attenuation.
+ * Solves remote caller inaudibility on MediaTek / HyperOS:
+ * 1. Forced Speakerphone Pulse: Temporarily toggles am.setSpeakerphoneOn(true) during playback
+ *    so the cellular modem uplink pipeline captures the loudspeaker audio at maximum acoustic gain.
+ * 2. Hardware Speaker Output Routing: Targets AudioDeviceInfo.TYPE_BUILTIN_SPEAKER directly next
+ *    to the bottom microphone to bypass earpiece-only attenuation.
+ * 3. USAGE_ALARM Acoustic Blast: Bypasses voice communication AEC ducking filters.
+ * 4. Hardware LoudnessEnhancer: Applies +32 dB digital makeup gain.
+ * 5. State Restoration: Restores previous handset/speaker state immediately upon playback completion.
  */
 public class RealSoundPlayer {
 
     private static final String TAG = "RealSoundPlayer";
     private static final String MODULE_PKG = "com.mirage.audioemoji";
+
+    private static final AtomicInteger activePlaybackCount = new AtomicInteger(0);
+    private static final AtomicBoolean savedSpeakerState = new AtomicBoolean(false);
+    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public enum EmojiType {
         FART("💩", "Пердёж", "emoji_fart"),
@@ -66,31 +78,56 @@ public class RealSoundPlayer {
                     return;
                 }
 
-                // Maximize stream volumes on device for maximum loudness
                 AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-                if (am != null) {
+                boolean wasSpeakerphone = false;
+
+                if (am != null && inCall) {
+                    // Remember original speakerphone state on initial playback trigger
+                    if (activePlaybackCount.get() == 0) {
+                        savedSpeakerState.set(am.isSpeakerphoneOn());
+                    }
+                    wasSpeakerphone = savedSpeakerState.get();
+
                     try {
-                        if (inCall) {
-                            int maxVoice = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
-                            am.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVoice, 0);
-                        }
+                        // Maximize all critical volume streams
+                        int maxAlarm = am.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+                        am.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0);
+
                         int maxMusic = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                        int curMusic = am.getStreamVolume(AudioManager.STREAM_MUSIC);
-                        if (curMusic < (int) (maxMusic * 0.85f)) {
-                            am.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
+                        am.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0);
+
+                        int maxVoice = am.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+                        am.setStreamVolume(AudioManager.STREAM_VOICE_CALL, maxVoice, 0);
+
+                        // Force speakerphone on during sound effect so the modem microphone picks up the bottom speaker
+                        am.setSpeakerphoneOn(true);
+                    } catch (Throwable ignored) {
+                    }
+                }
+
+                activePlaybackCount.incrementAndGet();
+
+                // Find physical bottom loudspeaker device
+                AudioDeviceInfo speakerDevice = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && am != null) {
+                    try {
+                        AudioDeviceInfo[] devices = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS);
+                        for (AudioDeviceInfo d : devices) {
+                            if (d.getType() == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) {
+                                speakerDevice = d;
+                                break;
+                            }
                         }
                     } catch (Throwable ignored) {
                     }
                 }
 
-                // 1. Play into in-call voice communication uplink stream
-                playSingleStream(modCtx, resId, inCall ? AudioAttributes.USAGE_VOICE_COMMUNICATION : AudioAttributes.USAGE_MEDIA,
-                        inCall ? AudioAttributes.CONTENT_TYPE_SPEECH : AudioAttributes.CONTENT_TYPE_MUSIC,
-                        3000); // +30 dB target gain boost
+                // 1. Acoustic blast through bottom loudspeaker directly into the microphone (+32 dB)
+                playStream(modCtx, resId, AudioAttributes.USAGE_ALARM, AudioAttributes.CONTENT_TYPE_SONIFICATION, 3200, speakerDevice, inCall, am);
 
-                // 2. If in-call, also play through media speaker so user hears it loud & clear
+                // 2. Parallel telecom voice communication uplink player (+30 dB)
                 if (inCall) {
-                    playSingleStream(modCtx, resId, AudioAttributes.USAGE_MEDIA, AudioAttributes.CONTENT_TYPE_MUSIC, 2500); // +25 dB target gain
+                    playStream(modCtx, resId, AudioAttributes.USAGE_VOICE_COMMUNICATION, AudioAttributes.CONTENT_TYPE_SPEECH, 3000, null, false, null);
                 }
 
             } catch (Exception e) {
@@ -99,7 +136,7 @@ public class RealSoundPlayer {
         }).start();
     }
 
-    private static void playSingleStream(Context context, int resId, int usage, int contentType, int targetGainMb) {
+    private static void playStream(Context context, int resId, int usage, int contentType, int targetGainMb, AudioDeviceInfo preferredDevice, boolean isPrimary, AudioManager am) {
         MediaPlayer player = null;
         AssetFileDescriptor afd = null;
         LoudnessEnhancer enhancer = null;
@@ -114,6 +151,15 @@ public class RealSoundPlayer {
                     .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
                     .build();
             player.setAudioAttributes(attrs);
+
+            // Direct hardware routing to bottom loudspeaker
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && preferredDevice != null) {
+                try {
+                    player.setPreferredDevice(preferredDevice);
+                } catch (Throwable ignored) {
+                }
+            }
+
             player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             afd.close();
             afd = null;
@@ -121,7 +167,7 @@ public class RealSoundPlayer {
             player.prepare();
             player.setVolume(1.0f, 1.0f);
 
-            // Apply hardware LoudnessEnhancer (+25 to +30 dB digital gain)
+            // Apply hardware LoudnessEnhancer (+30 to +32 dB digital makeup gain)
             try {
                 enhancer = new LoudnessEnhancer(player.getAudioSessionId());
                 enhancer.setTargetGain(targetGainMb);
@@ -132,17 +178,25 @@ public class RealSoundPlayer {
 
             final MediaPlayer finalPlayer = player;
             final LoudnessEnhancer finalEnhancer = enhancer;
+
             player.setOnCompletionListener(mp -> {
                 cleanup(finalPlayer, finalEnhancer);
+                if (isPrimary) {
+                    onPrimaryPlaybackFinished(am);
+                }
             });
+
             player.setOnErrorListener((mp, what, extra) -> {
                 cleanup(finalPlayer, finalEnhancer);
+                if (isPrimary) {
+                    onPrimaryPlaybackFinished(am);
+                }
                 return true;
             });
 
             player.start();
         } catch (Throwable t) {
-            Log.e(TAG, "playSingleStream error", t);
+            Log.e(TAG, "playStream error", t);
             if (afd != null) {
                 try {
                     afd.close();
@@ -150,7 +204,26 @@ public class RealSoundPlayer {
                 }
             }
             cleanup(player, enhancer);
+            if (isPrimary) {
+                onPrimaryPlaybackFinished(am);
+            }
         }
+    }
+
+    private static void onPrimaryPlaybackFinished(AudioManager am) {
+        mainHandler.postDelayed(() -> {
+            int remaining = activePlaybackCount.decrementAndGet();
+            if (remaining <= 0) {
+                activePlaybackCount.set(0);
+                if (am != null) {
+                    try {
+                        // Restore previous speakerphone state (handset earpiece or speaker)
+                        am.setSpeakerphoneOn(savedSpeakerState.get());
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        }, 350); // 350ms delay guarantees the audio acoustic tail clears the cellular buffer
     }
 
     private static void cleanup(MediaPlayer player, LoudnessEnhancer enhancer) {
