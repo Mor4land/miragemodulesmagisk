@@ -133,10 +133,10 @@ public class MainActivity extends Activity {
         LinearLayout infoCard = createCard();
         infoCard.addView(createCardTitle("Как пользоваться в звонке"));
         TextView infoText = new TextView(this);
-        infoText.setText("1. Убедитесь, что модуль включен в LSPosed (область: Телефон и Google Play Services).\n" +
+        infoText.setText("1. Убедитесь, что модуль включен в LSPosed (область: Телефон / Google Dialer).\n" +
                 "2. Сделайте обычный звонок через Google Телефон.\n" +
-                "3. Во время разговора прямо поверх экрана звонка появится кнопка «💩 Звуки в звонке».\n" +
-                "4. Нажмите на нужный эмодзи (пердёж, аплодисменты и др.) — звук пойдет прямо в разговор обоим собеседникам!");
+                "3. Прямо в экране звонка (среди кнопок звонка) появится кнопка «Звук. эмодзи».\n" +
+                "4. При нажатии плавно выезжает шторка реакций Pixel: выберите пердёж, аплодисменты или барабаны — звук на максимальной громкости (+30 dB) услышат оба собеседника!");
         infoText.setTextColor(COLOR_TEXT_MUTED);
         infoText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         infoText.setLineSpacing(dp(4), 1.0f);

@@ -15,6 +15,7 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Locale;
 
 /**
  * LSPosed Hook for Google Dialer (Phone by Google) on POCO M5 (HyperOS).
@@ -22,8 +23,9 @@ import java.lang.reflect.Modifier;
  * 1. Targeted Build spoofing (Pixel 8 Pro) strictly inside dialer process.
  * 2. PackageManager system feature spoofing (PIXEL_2024_EXPERIENCE, dialer.support).
  * 3. Automatic runtime Phenotype flags injection into SQLite phenotype.db.
- * 4. SharedPreferences flag interception.
- * 5. In-call floating UI overlay with guaranteed audio injection.
+ * 4. Locale bypass for AudioEmoji feature gating.
+ * 5. SharedPreferences flag interception.
+ * 6. Pixel Material 3 in-call button and bottom sheet UI integration.
  */
 public class AudioEmojiHook implements IXposedHookLoadPackage {
 
@@ -65,13 +67,16 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
         // 2. Spoof system features in PackageManager
         hookPackageManagerFeatures(lpparam.classLoader);
 
-        // 3. Auto-patch Phenotype database on SQLite open
+        // 3. Selective Locale bypass for AudioEmoji feature checks
+        hookLocaleForAudioEmoji(lpparam.classLoader);
+
+        // 4. Auto-patch Phenotype database on SQLite open
         hookSQLitePhenotypeDatabase(lpparam.classLoader);
 
-        // 4. Hook SharedPreferences flag getters
+        // 5. Hook SharedPreferences flag getters
         hookSharedPreferencesFlags(lpparam.classLoader);
 
-        // 5. In-call Activity hook for overlay and audio injection
+        // 6. In-call Activity hooks for native button injection and Bottom Sheet
         hookInCallActivity(lpparam.classLoader);
     }
 
@@ -155,6 +160,26 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
         }
     }
 
+    private void hookLocaleForAudioEmoji(ClassLoader classLoader) {
+        try {
+            XposedBridge.hookAllMethods(Locale.class, "getDefault", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+                    for (StackTraceElement elem : stack) {
+                        String cls = elem.getClassName().toLowerCase();
+                        if (cls.contains("audioemoji") || cls.contains("phenotype") || cls.contains("experiment")) {
+                            param.setResult(Locale.US);
+                            return;
+                        }
+                    }
+                }
+            });
+        } catch (Throwable t) {
+            Log.w(TAG, "Could not hook Locale.getDefault", t);
+        }
+    }
+
     private void hookSQLitePhenotypeDatabase(ClassLoader classLoader) {
         try {
             Class<?> dbClass = XposedHelpers.findClass("android.database.sqlite.SQLiteDatabase", classLoader);
@@ -211,8 +236,18 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
             insertBoolFlag(db, pkg, "AudioEmoji__audio_emoji_show_in_call_ui", true);
             insertBoolFlag(db, pkg, "AudioEmoji__enable_custom_audio_emoji", true);
             insertBoolFlag(db, pkg, "AudioEmoji__enable_audio_emoji_haptics", true);
+            insertBoolFlag(db, pkg, "AudioEmoji__require_both_parties_pixel", false);
+            insertBoolFlag(db, pkg, "AudioEmoji__require_both_parties_audio_emoji_capable", false);
+            insertBoolFlag(db, pkg, "AudioEmoji__bypass_carrier_check", true);
+            insertBoolFlag(db, pkg, "AudioEmoji__bypass_network_check", true);
+            insertBoolFlag(db, pkg, "AudioEmoji__enable_audio_emoji_download", true);
+            insertBoolFlag(db, pkg, "AudioEmoji__enable_testing_mode", true);
+            insertBoolFlag(db, pkg, "AudioEmoji__enable_debug_menu", true);
             insertBoolFlag(db, pkg, "enable_audio_emoji", true);
             insertBoolFlag(db, pkg, "sound_reaction_enabled", true);
+            insertBoolFlag(db, pkg, "audio_emoji_promo_seen", true);
+            insertBoolFlag(db, pkg, "audio_emoji_enabled", true);
+            insertBoolFlag(db, pkg, "show_audio_emoji_key", true);
 
             insertStringFlag(db, pkg, "AudioEmoji__audio_emoji_enabled_locales", "*");
             insertIntFlag(db, pkg, "AudioEmoji__cooldown_seconds", 0);
@@ -262,6 +297,18 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
                     }
                 }
             });
+
+            XposedBridge.hookAllMethods(spClass, "getString", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (param.args.length > 0 && param.args[0] instanceof String) {
+                        String key = (String) param.args[0];
+                        if ("AudioEmoji__audio_emoji_enabled_locales".equalsIgnoreCase(key)) {
+                            param.setResult("*");
+                        }
+                    }
+                }
+            });
         } catch (Throwable t) {
             Log.w(TAG, "Could not hook SharedPreferences: " + t.getMessage());
         }
@@ -270,35 +317,28 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
     private void hookInCallActivity(ClassLoader classLoader) {
         try {
             Class<?> activityClass = XposedHelpers.findClass("android.app.Activity", classLoader);
-            XposedBridge.hookAllMethods(activityClass, "onPostCreate", new XC_MethodHook() {
+
+            XC_MethodHook attachHook = new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     Activity activity = (Activity) param.thisObject;
                     String className = activity.getClass().getName();
                     if (className.contains("InCall") || className.contains("incall") || className.contains("DialerActivity")) {
-                        Log.i(TAG, "InCall activity detected: " + className + ", attaching Audio Emoji overlay");
                         InCallOverlay.attach(activity);
                     }
                 }
-            });
+            };
 
-            XposedBridge.hookAllMethods(activityClass, "onResume", new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
-                    Activity activity = (Activity) param.thisObject;
-                    String className = activity.getClass().getName();
-                    if (className.contains("InCall") || className.contains("incall")) {
-                        InCallOverlay.attach(activity);
-                    }
-                }
-            });
+            XposedBridge.hookAllMethods(activityClass, "onPostCreate", attachHook);
+            XposedBridge.hookAllMethods(activityClass, "onResume", attachHook);
+            XposedBridge.hookAllMethods(activityClass, "onWindowFocusChanged", attachHook);
+            XposedBridge.hookAllMethods(activityClass, "onAttachedToWindow", attachHook);
         } catch (Throwable t) {
-            Log.w(TAG, "Could not hook Activity onPostCreate: " + t.getMessage());
+            Log.w(TAG, "Could not hook Activity lifecycle: " + t.getMessage());
         }
     }
 
     private void hookGmsPhenotype(XC_LoadPackage.LoadPackageParam lpparam) {
-        // GMS Phenotype SQLite open hook to guarantee dialer flags aren't wiped
         try {
             Class<?> dbClass = XposedHelpers.findClass("android.database.sqlite.SQLiteDatabase", lpparam.classLoader);
             XposedBridge.hookAllMethods(dbClass, "openDatabase", new XC_MethodHook() {

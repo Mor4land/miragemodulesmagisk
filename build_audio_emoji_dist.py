@@ -5,8 +5,8 @@ import zipfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 APK_SRC = os.path.join(ROOT, "poco-audio-emoji", "build", "outputs", "apk", "release", "poco-audio-emoji-release.apk")
 DIST_DIR = os.path.join(ROOT, "dist")
-APK_DEST = os.path.join(DIST_DIR, "MirageAudioEmoji-v1.0.apk")
-ZIP_DEST = os.path.join(DIST_DIR, "MirageAudioEmoji-Magisk-v1.0.zip")
+APK_DEST = os.path.join(DIST_DIR, "MirageAudioEmoji-v1.0.4.apk")
+ZIP_DEST = os.path.join(DIST_DIR, "MirageAudioEmoji-Magisk-v1.0.4.zip")
 
 UPDATE_BINARY = """#!/sbin/sh
 #################
@@ -40,10 +40,10 @@ UPDATER_SCRIPT = "#MAGISK\n"
 
 MODULE_PROP = """id=mirage_poco_audio_emoji
 name=POCO M5 Audio Emoji (Google Dialer)
-version=v1.0.3
-versionCode=4
+version=v1.0.4
+versionCode=5
 author=Mirage
-description=Pixel «Звуковые эмодзи» (пердёж 💩, аплодисменты 👏, барабанная дробь 🥁 и др.) для Google Телефон на POCO M5 (HyperOS). Включает точечный LSPosed-хук, XML-конфиги Pixel и автопатч базы Phenotype.
+description=Pixel «Звуковые эмодзи» (пердёж 💩, аплодисменты 👏, барабанная дробь 🥁 и др.) для Google Телефон на POCO M5 (HyperOS). Включает нативную интеграцию в интерфейс звонка, шторку Pixel, усиление звука +30 dB, точечный LSPosed-хук и XML-конфиги.
 """
 
 CUSTOMIZE_SH = """SKIPUNZIP=0
