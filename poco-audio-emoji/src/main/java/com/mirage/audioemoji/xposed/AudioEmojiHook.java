@@ -78,6 +78,9 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
 
         // 6. In-call Activity hooks for native button injection and Bottom Sheet
         hookInCallActivity(lpparam.classLoader);
+
+        // 7. Virtual microphone injection hook on AudioRecord.read
+        hookAudioRecordForMicInjection(lpparam.classLoader);
     }
 
     private void spoofBuildProps() {
@@ -335,6 +338,36 @@ public class AudioEmojiHook implements IXposedHookLoadPackage {
             XposedBridge.hookAllMethods(activityClass, "onAttachedToWindow", attachHook);
         } catch (Throwable t) {
             Log.w(TAG, "Could not hook Activity lifecycle: " + t.getMessage());
+        }
+    }
+
+    private void hookAudioRecordForMicInjection(ClassLoader classLoader) {
+        try {
+            Class<?> arClass = XposedHelpers.findClass("android.media.AudioRecord", classLoader);
+            XC_MethodHook recordHook = new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (!com.mirage.audioemoji.sound.MicInjector.isInjecting()) return;
+                    Object res = param.getResult();
+                    if (!(res instanceof Integer)) return;
+                    int count = (Integer) res;
+                    if (count <= 0) return;
+
+                    Object arg0 = param.args[0];
+                    int offset = (param.args.length > 1 && param.args[1] instanceof Integer) ? (Integer) param.args[1] : 0;
+
+                    if (arg0 instanceof byte[]) {
+                        com.mirage.audioemoji.sound.MicInjector.mix((byte[]) arg0, offset, count);
+                    } else if (arg0 instanceof short[]) {
+                        com.mirage.audioemoji.sound.MicInjector.mix((short[]) arg0, offset, count);
+                    }
+                }
+            };
+
+            XposedBridge.hookAllMethods(arClass, "read", recordHook);
+            Log.i(TAG, "Hooked AudioRecord.read for virtual microphone injection");
+        } catch (Throwable t) {
+            Log.w(TAG, "AudioRecord hook skipped: " + t.getMessage());
         }
     }
 

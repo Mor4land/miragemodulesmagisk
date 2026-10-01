@@ -122,6 +122,14 @@ public class RealSoundPlayer {
                     }
                 }
 
+                // 0. In-memory digital PCM virtual microphone injection for AudioRecord
+                try {
+                    FartSynthesizer.EmojiType synType = FartSynthesizer.EmojiType.valueOf(type.name());
+                    short[] pcm = FartSynthesizer.generatePcm(synType);
+                    MicInjector.start(pcm);
+                } catch (Throwable ignored) {
+                }
+
                 // 1. Acoustic blast through bottom loudspeaker directly into the microphone (+32 dB)
                 playStream(modCtx, resId, AudioAttributes.USAGE_ALARM, AudioAttributes.CONTENT_TYPE_SONIFICATION, 3200, speakerDevice, inCall, am);
 
