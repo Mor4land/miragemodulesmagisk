@@ -647,6 +647,12 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!sEnabled || !sNonStopSwipe) {
                     return;
                 }
+                // CRITICAL: only intercept when an app-open animation is genuinely in flight.
+                // Without this guard every home swipe from inside any app fires connectOpeningAnim
+                // on the NavStubView state machine, corrupting gesture routing permanently.
+                if (!isAppCurrentlyOpening(param.thisObject, cl)) {
+                    return;
+                }
                 Object openSpring = getBreakableCurrentAnim(cl);
                 if (openSpring != null) {
                     try {
@@ -673,6 +679,31 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                                 Object sm = getObjectFieldSafe(param.thisObject, "mStateMachine");
                                 if (curRect != null && sm != null) {
                                     XposedHelpers.callMethod(connectMgr, "connectOpeningAnim", openSpring, curRect, sm);
+                                }
+                                // Nullify mRemoteAnim after wiring so stale reference can't leak
+                                // into future gestures when no open anim is running.
+                                openSpring.getClass(); // ensure non-null before registering cleanup
+                                final Object finalConnectMgr = connectMgr;
+                                final Object finalSpring = openSpring;
+                                try {
+                                    XposedHelpers.callMethod(finalSpring, "addAnimatorListener", new AnimatorListenerAdapter() {
+                                        private boolean mFired = false;
+                                        @Override
+                                        public void onAnimationEnd(Animator animation) {
+                                            if (!mFired) {
+                                                mFired = true;
+                                                setObjectFieldSafe(finalConnectMgr, "mRemoteAnim", null);
+                                            }
+                                        }
+                                        @Override
+                                        public void onAnimationCancel(Animator animation) {
+                                            if (!mFired) {
+                                                mFired = true;
+                                                setObjectFieldSafe(finalConnectMgr, "mRemoteAnim", null);
+                                            }
+                                        }
+                                    });
+                                } catch (Throwable ignored) {
                                 }
                             }
                         }
@@ -749,9 +780,20 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     if (spring != null && callBooleanMethodSafe(spring, "isRunning", false)) {
                         try {
                             XposedHelpers.callMethod(spring, "addAnimatorListener", new AnimatorListenerAdapter() {
+                                private boolean mFired = false;
                                 @Override
                                 public void onAnimationEnd(Animator animation) {
-                                    callMethodSafe(tm, "doAnimationFinish");
+                                    if (!mFired) {
+                                        mFired = true;
+                                        callMethodSafe(tm, "doAnimationFinish");
+                                    }
+                                }
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
+                                    if (!mFired) {
+                                        mFired = true;
+                                        callMethodSafe(tm, "doAnimationFinish");
+                                    }
                                 }
                             });
                             return;
