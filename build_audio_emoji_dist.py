@@ -40,8 +40,8 @@ UPDATER_SCRIPT = "#MAGISK\n"
 
 MODULE_PROP = """id=mirage_poco_audio_emoji
 name=POCO M5 Audio Emoji (Google Dialer)
-version=v1.0.2
-versionCode=3
+version=v1.0.3
+versionCode=4
 author=Mirage
 description=Pixel «Звуковые эмодзи» (пердёж 💩, аплодисменты 👏, барабанная дробь 🥁 и др.) для Google Телефон на POCO M5 (HyperOS). Включает точечный LSPosed-хук, XML-конфиги Pixel и автопатч базы Phenotype.
 """

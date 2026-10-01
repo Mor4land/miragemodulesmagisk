@@ -84,15 +84,15 @@ public class InCallOverlay {
                 pickerBar.setVisibility(View.GONE);
 
                 // Populate with 6 emoji buttons
-                for (final FartSynthesizer.EmojiType emoji : FartSynthesizer.EmojiType.values()) {
+                for (final com.mirage.audioemoji.sound.RealSoundPlayer.EmojiType emoji : com.mirage.audioemoji.sound.RealSoundPlayer.EmojiType.values()) {
                     TextView emojiBtn = new TextView(activity);
                     emojiBtn.setText(emoji.emoji);
                     emojiBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
                     emojiBtn.setPadding(dp(activity, 10), dp(activity, 4), dp(activity, 10), dp(activity, 4));
 
                     emojiBtn.setOnClickListener(v -> {
-                        // Play into in-call voice stream
-                        FartSynthesizer.play(emoji, true);
+                        // Play authentic studio sound into in-call voice stream
+                        com.mirage.audioemoji.sound.RealSoundPlayer.play(activity, emoji, true);
                         spawnFloatingParticles(activity, particleContainer, emoji.emoji);
                         haptic(activity);
                     });

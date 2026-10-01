@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
         soundCard.addView(soundHeader);
 
         TextView soundDesc = new TextView(this);
-        soundDesc.setText("Нажмите на эмодзи для проверки синтезатора звука:");
+        soundDesc.setText("Оригинальные звуки реакций (настоящий пердёж, овации, барабаны и др.):");
         soundDesc.setTextColor(COLOR_TEXT_MUTED);
         soundDesc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         soundDesc.setPadding(0, dp(4), 0, dp(12));
@@ -86,7 +86,7 @@ public class MainActivity extends Activity {
         grid1.setOrientation(LinearLayout.HORIZONTAL);
         grid1.setGravity(Gravity.CENTER);
 
-        for (final FartSynthesizer.EmojiType type : FartSynthesizer.EmojiType.values()) {
+        for (final com.mirage.audioemoji.sound.RealSoundPlayer.EmojiType type : com.mirage.audioemoji.sound.RealSoundPlayer.EmojiType.values()) {
             Button btn = new Button(this);
             btn.setText(type.emoji + "\n" + type.title);
             btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
@@ -102,8 +102,8 @@ public class MainActivity extends Activity {
             btn.setBackground(btnBg);
 
             btn.setOnClickListener(v -> {
-                FartSynthesizer.play(type, false);
-                Toast.makeText(MainActivity.this, "Воспроизведение: " + type.emoji + " " + type.title, Toast.LENGTH_SHORT).show();
+                com.mirage.audioemoji.sound.RealSoundPlayer.play(MainActivity.this, type, false);
+                Toast.makeText(MainActivity.this, "Звук: " + type.emoji + " " + type.title, Toast.LENGTH_SHORT).show();
             });
 
             grid1.addView(btn);
