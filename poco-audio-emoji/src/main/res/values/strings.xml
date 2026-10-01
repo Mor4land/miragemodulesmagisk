@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">POCO M5 Audio Emoji</string>
+    <string name="xposed_desc">Включение эксклюзивной функции Google Pixel «Звуковые эмодзи» (пердёж, аплодисменты, барабанная дробь и др.) в звонилке Google для POCO M5 (HyperOS).</string>
+</resources>
