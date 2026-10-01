@@ -3,6 +3,5 @@
     <string-array name="xposed_scope">
         <item>com.mirage.audioemoji</item>
         <item>com.google.android.dialer</item>
-        <item>com.google.android.gms</item>
     </string-array>
 </resources>

@@ -16,5 +16,6 @@ dependencyResolutionManagement {
 rootProject.name = "MirageSwipeGemini"
 include(":app")
 include(":poco-anim")
+include(":poco-audio-emoji")
 include(":xposed-stub")
 

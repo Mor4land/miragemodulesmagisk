@@ -40,8 +40,8 @@ UPDATER_SCRIPT = "#MAGISK\n"
 
 MODULE_PROP = """id=mirage_poco_audio_emoji
 name=POCO M5 Audio Emoji (Google Dialer)
-version=v1.0.0
-versionCode=1
+version=v1.0.1
+versionCode=2
 author=Mirage
 description=Pixel «Звуковые эмодзи» (пердёж 💩, аплодисменты 👏, барабанная дробь 🥁 и др.) для Google Телефон на POCO M5 (HyperOS). Включает точечный LSPosed-хук, XML-конфиги Pixel и автопатч базы Phenotype.
 """
@@ -63,7 +63,7 @@ if [ -f "$MODPATH/MirageAudioEmoji.apk" ]; then
 fi
 
 ui_print "- Применение флагов Phenotype для Google Телефон..."
-for db in /data/data/com.google.android.dialer/databases/phenotype.db /data/data/com.google.android.gms/databases/phenotype.db; do
+for db in /data/data/com.google.android.dialer/databases/phenotype.db; do
     if [ -f "$db" ]; then
         which sqlite3 >/dev/null 2>&1 && sqlite3 "$db" "INSERT OR REPLACE INTO Flags (packageName, version, flagType, name, boolVal, committed) VALUES ('com.google.android.dialer#com.google.android.dialer', 0, 1, 'AudioEmoji__enable_audio_emoji', 1, 1);" 2>/dev/null
         which sqlite3 >/dev/null 2>&1 && sqlite3 "$db" "INSERT OR REPLACE INTO Flags (packageName, version, flagType, name, boolVal, committed) VALUES ('com.google.android.dialer#com.google.android.dialer', 0, 1, 'AudioEmoji__audio_emoji_show_in_call_ui', 1, 1);" 2>/dev/null
@@ -71,7 +71,7 @@ for db in /data/data/com.google.android.dialer/databases/phenotype.db /data/data
 done
 
 ui_print "- Готово! Включите модуль в приложении LSPosed"
-ui_print "  (область: Google Телефон и Google Play Services)."
+ui_print "  (область: только «Телефон» / Google Dialer, GMS трогать не нужно)."
 ui_print "*********************************************"
 """
 
