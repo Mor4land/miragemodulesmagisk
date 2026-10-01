@@ -132,7 +132,18 @@ public final class AnimPrefs {
         intent.putExtra(KEY_ICON_CUSTOM_COLOR_2, prefs.getInt(KEY_ICON_CUSTOM_COLOR_2, DEFAULT_COLOR_2));
         intent.putExtra(KEY_ICON_GRADIENT_PRESET, prefs.getInt(KEY_ICON_GRADIENT_PRESET, 0));
         intent.putExtra(KEY_ICON_TINT_INTENSITY, prefs.getFloat(KEY_ICON_TINT_INTENSITY, 0.85f));
-        intent.putExtra(KEY_ICON_BOUNCE_ANIM, prefs.getBoolean(KEY_ICON_BOUNCE_ANIM, true));
         context.sendBroadcast(intent);
+        try {
+            Intent pIntent = new Intent(intent);
+            pIntent.setPackage("com.mi.android.globallauncher");
+            context.sendBroadcast(pIntent);
+        } catch (Throwable ignored) {
+        }
+        try {
+            Intent mIntent = new Intent(intent);
+            mIntent.setPackage("com.miui.home");
+            context.sendBroadcast(mIntent);
+        } catch (Throwable ignored) {
+        }
     }
 }

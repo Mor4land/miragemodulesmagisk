@@ -17,6 +17,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Color;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -25,6 +26,9 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import com.mirage.pocoanim.util.AnimPrefs;
@@ -65,6 +69,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile float sIconTintIntensity = 0.85f;
     private static volatile boolean sIconBounceAnim = true;
     private static volatile WeakReference<Activity> sLauncherActivityRef = new WeakReference<>(null);
+
+    private static final int TAG_BOUNCE_TIME = 0x7F0A8801;
+    private static final int TAG_ORIGINAL_DRAWABLE = 0x7F0A8802;
+    private static final int TAG_THEME_HASH = 0x7F0A8803;
+
+    private static int getThemeConfigHash() {
+        return (sIconThemeEnabled ? 1 : 0) * 31
+                + sIconColorMode * 17
+                + sIconColor1 * 13
+                + sIconColor2 * 7
+                + Float.floatToIntBits(sIconTintIntensity);
+    }
 
     private static volatile boolean sReceiverRegistered = false;
     private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
@@ -990,6 +1006,11 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             sLauncherActivityRef = new WeakReference<>(activity);
                             loadLocalCachePrefs(activity);
                             updateRuntimeFieldsPostInit(cl);
+                            registerConfigReceiver(activity, cl);
+                            View decor = activity.getWindow().getDecorView();
+                            if (decor != null) {
+                                refreshAllIconsInViewTree(decor);
+                            }
                         }
                     } catch (Throwable ignored) {
                     }
@@ -1043,6 +1064,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                                     try {
                                         View decor = launcher.getWindow().getDecorView();
                                         if (decor != null) {
+                                            refreshAllIconsInViewTree(decor);
                                             decor.invalidate();
                                             decor.requestLayout();
                                         }
@@ -1302,19 +1324,22 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             int c1 = sIconColor1;
             int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
 
+            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
+            int c1WithAlpha = Color.argb(alpha, Color.red(c1), Color.green(c1), Color.blue(c1));
+            int c2WithAlpha = Color.argb(alpha, Color.red(c2), Color.green(c2), Color.blue(c2));
+
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
             if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
-                paint.setColor(c1);
+                paint.setColor(c1WithAlpha);
             } else {
                 LinearGradient gradient = new LinearGradient(
                         0, 0, w, h,
-                        c1, c2,
+                        c1WithAlpha, c2WithAlpha,
                         Shader.TileMode.CLAMP
                 );
                 paint.setShader(gradient);
             }
             paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
             paint.setAlpha(alpha);
 
             canvas.drawRect(0, 0, w, h, paint);
@@ -1344,19 +1369,22 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             int c1 = sIconColor1;
             int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
 
+            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
+            int c1WithAlpha = Color.argb(alpha, Color.red(c1), Color.green(c1), Color.blue(c1));
+            int c2WithAlpha = Color.argb(alpha, Color.red(c2), Color.green(c2), Color.blue(c2));
+
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
             if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
-                paint.setColor(c1);
+                paint.setColor(c1WithAlpha);
             } else {
                 LinearGradient gradient = new LinearGradient(
                         0, 0, w, h,
-                        c1, c2,
+                        c1WithAlpha, c2WithAlpha,
                         Shader.TileMode.CLAMP
                 );
                 paint.setShader(gradient);
             }
             paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
             paint.setAlpha(alpha);
 
             canvas.drawRect(0, 0, w, h, paint);
@@ -1366,45 +1394,190 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
     }
 
-    private static void hookIconThemingAndBounce(ClassLoader cl) {
-        String[] iconClassNames = new String[]{
-                "com.miui.home.launcher.ShortcutIcon",
-                "com.miui.home.launcher.ItemIcon",
-                "com.miui.home.launcher.FolderIcon",
-                "com.miui.home.launcher.folder.FolderIcon"
-        };
+    private static void syncShortcutIcon(View iconView) {
+        if (iconView == null) return;
+        try {
+            Drawable current = null;
+            try {
+                Object d = XposedHelpers.getObjectField(iconView, "mIconDrawable");
+                if (d instanceof Drawable) {
+                    current = (Drawable) d;
+                }
+            } catch (Throwable ignored) {
+            }
 
-        final XC_MethodHook iconDrawableHook = new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                if (!sEnabled || !sIconThemeEnabled) {
-                    return;
-                }
-                if (param.args == null || param.args.length == 0) {
-                    return;
-                }
-                if (param.args[0] instanceof Drawable) {
-                    Drawable orig = (Drawable) param.args[0];
-                    if (orig instanceof ThemedGradientDrawable) {
-                        return;
-                    }
-                    Context ctx = null;
-                    if (param.thisObject instanceof View) {
-                        ctx = ((View) param.thisObject).getContext();
-                    }
-                    Drawable themed = applyGradientToDrawable(ctx, orig, sIconGradientPreset, sIconTintIntensity);
-                    if (themed != null) {
-                        param.args[0] = themed;
-                    }
-                } else if (param.args[0] instanceof Bitmap) {
-                    Bitmap orig = (Bitmap) param.args[0];
-                    Bitmap themed = applyGradientToBitmap(orig, sIconGradientPreset, sIconTintIntensity);
-                    if (themed != null) {
-                        param.args[0] = themed;
-                    }
+            if (current == null && iconView instanceof TextView) {
+                Drawable[] compounds = ((TextView) iconView).getCompoundDrawables();
+                if (compounds != null && compounds.length > 1) {
+                    current = compounds[1];
                 }
             }
-        };
+            if (current == null) return;
+
+            if (sEnabled && sIconThemeEnabled) {
+                int currentHash = getThemeConfigHash();
+                Object tagHash = iconView.getTag(TAG_THEME_HASH);
+                if (tagHash instanceof Integer && ((Integer) tagHash) == currentHash && (current instanceof ThemedGradientDrawable)) {
+                    return;
+                }
+
+                Drawable orig = (Drawable) iconView.getTag(TAG_ORIGINAL_DRAWABLE);
+                if (orig == null) {
+                    if (current instanceof ThemedGradientDrawable) {
+                        try {
+                            Object od = XposedHelpers.getObjectField(iconView, "mOriginalDrawable");
+                            if (od instanceof Drawable && !(od instanceof ThemedGradientDrawable)) {
+                                orig = (Drawable) od;
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    } else {
+                        orig = current;
+                    }
+                    if (orig != null) {
+                        iconView.setTag(TAG_ORIGINAL_DRAWABLE, orig);
+                    }
+                }
+
+                if (orig != null) {
+                    Drawable themed = applyGradientToDrawable(iconView.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
+                    if (themed != null) {
+                        try {
+                            XposedHelpers.setObjectField(iconView, "mIconDrawable", themed);
+                        } catch (Throwable ignored) {
+                        }
+                        try {
+                            XposedHelpers.callMethod(iconView, "applyCompoundDrawables", themed);
+                        } catch (Throwable t) {
+                            if (iconView instanceof TextView) {
+                                int w = 0, h = 0;
+                                try {
+                                    w = XposedHelpers.getIntField(iconView, "mLauncherIconWidth");
+                                    h = XposedHelpers.getIntField(iconView, "mLauncherIconHeight");
+                                } catch (Throwable ignored) {
+                                }
+                                if (w <= 0 || h <= 0) {
+                                    w = themed.getIntrinsicWidth();
+                                    h = themed.getIntrinsicHeight();
+                                }
+                                if (w <= 0) w = 192;
+                                if (h <= 0) h = 192;
+                                themed.setBounds(0, 0, w, h);
+                                ((TextView) iconView).setCompoundDrawables(null, themed, null, null);
+                            }
+                        }
+                        iconView.setTag(TAG_THEME_HASH, currentHash);
+                        iconView.invalidate();
+                    }
+                }
+            } else {
+                Drawable orig = (Drawable) iconView.getTag(TAG_ORIGINAL_DRAWABLE);
+                if (orig != null) {
+                    iconView.setTag(TAG_ORIGINAL_DRAWABLE, null);
+                    iconView.setTag(TAG_THEME_HASH, null);
+                    try {
+                        XposedHelpers.setObjectField(iconView, "mIconDrawable", orig);
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        XposedHelpers.callMethod(iconView, "applyCompoundDrawables", orig);
+                    } catch (Throwable t) {
+                        if (iconView instanceof TextView) {
+                            ((TextView) iconView).setCompoundDrawables(null, orig, null, null);
+                        }
+                    }
+                    iconView.invalidate();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void syncImageViewIcon(ImageView iv) {
+        if (iv == null) return;
+        try {
+            Drawable current = iv.getDrawable();
+            if (current == null) return;
+
+            if (sEnabled && sIconThemeEnabled) {
+                int currentHash = getThemeConfigHash();
+                Object tagHash = iv.getTag(TAG_THEME_HASH);
+                if (tagHash instanceof Integer && ((Integer) tagHash) == currentHash && (current instanceof ThemedGradientDrawable)) {
+                    return;
+                }
+
+                Drawable orig = (Drawable) iv.getTag(TAG_ORIGINAL_DRAWABLE);
+                if (orig == null) {
+                    if (!(current instanceof ThemedGradientDrawable)) {
+                        orig = current;
+                        iv.setTag(TAG_ORIGINAL_DRAWABLE, orig);
+                    }
+                }
+
+                if (orig != null) {
+                    Drawable themed = applyGradientToDrawable(iv.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
+                    if (themed != null) {
+                        iv.setImageDrawable(themed);
+                        iv.setTag(TAG_THEME_HASH, currentHash);
+                        iv.invalidate();
+                    }
+                }
+            } else {
+                Drawable orig = (Drawable) iv.getTag(TAG_ORIGINAL_DRAWABLE);
+                if (orig != null) {
+                    iv.setTag(TAG_ORIGINAL_DRAWABLE, null);
+                    iv.setTag(TAG_THEME_HASH, null);
+                    iv.setImageDrawable(orig);
+                    iv.invalidate();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void syncAnyIconView(View v) {
+        if (v == null) return;
+        String clsName = v.getClass().getName();
+        if (clsName.contains("ShortcutIcon")) {
+            syncShortcutIcon(v);
+        } else if (clsName.contains("LauncherIconImageView") || clsName.contains("ItemIconView")) {
+            if (v instanceof ImageView) {
+                syncImageViewIcon((ImageView) v);
+            }
+        } else if (clsName.contains("ItemIcon") || clsName.contains("FolderIcon")) {
+            try {
+                Object imgObj = XposedHelpers.getObjectField(v, "mIconImageView");
+                if (imgObj instanceof ImageView) {
+                    syncImageViewIcon((ImageView) imgObj);
+                }
+            } catch (Throwable ignored) {
+            }
+            try {
+                Object imgObj = XposedHelpers.callMethod(v, "getIconImageView");
+                if (imgObj instanceof ImageView) {
+                    syncImageViewIcon((ImageView) imgObj);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private static void refreshAllIconsInViewTree(View root) {
+        if (root == null) return;
+        syncAnyIconView(root);
+        if (root instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) root;
+            int count = vg.getChildCount();
+            for (int i = 0; i < count; i++) {
+                refreshAllIconsInViewTree(vg.getChildAt(i));
+            }
+        }
+    }
+
+    private static void hookIconThemingAndBounce(ClassLoader cl) {
+        final Class<?> shortcutIconCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.ShortcutIcon", cl);
+        final Class<?> itemIconCls = XposedHelpers.findClassIfExists("com.miui.home.ItemIcon", cl);
+        final Class<?> folderIconCls = XposedHelpers.findClassIfExists("com.miui.home.folder.FolderIcon", cl);
 
         final XC_MethodHook touchBounceHook = new XC_MethodHook() {
             @Override
@@ -1445,11 +1618,11 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
                 if (action == MotionEvent.ACTION_DOWN) {
                     long downTime = ev.getDownTime();
-                    Object tag = animTarget.getTag(0x7F0A0001);
+                    Object tag = animTarget.getTag(TAG_BOUNCE_TIME);
                     if (tag instanceof Long && ((Long) tag) == downTime) {
                         return;
                     }
-                    animTarget.setTag(0x7F0A0001, downTime);
+                    animTarget.setTag(TAG_BOUNCE_TIME, downTime);
 
                     animTarget.setPivotX(animTarget.getWidth() / 2f);
                     animTarget.setPivotY(animTarget.getHeight() / 2f);
@@ -1475,35 +1648,202 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         };
 
-        for (String clsName : iconClassNames) {
-            Class<?> cls = XposedHelpers.findClassIfExists(clsName, cl);
-            if (cls == null) {
-                continue;
+        // 1. Hook ShortcutIcon (Standard desktop & app drawer icons)
+        if (shortcutIconCls != null) {
+            try {
+                XposedHelpers.findAndHookMethod(shortcutIconCls, "setIconDrawable",
+                        Drawable.class, Bitmap.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                if (!sEnabled || !sIconThemeEnabled) return;
+                                if (param.args[0] instanceof Drawable) {
+                                    Drawable orig = (Drawable) param.args[0];
+                                    if (!(orig instanceof ThemedGradientDrawable)) {
+                                        View v = (View) param.thisObject;
+                                        v.setTag(TAG_ORIGINAL_DRAWABLE, orig);
+                                        Drawable themed = applyGradientToDrawable(v.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
+                                        if (themed != null) {
+                                            param.args[0] = themed;
+                                            v.setTag(TAG_THEME_HASH, getThemeConfigHash());
+                                        }
+                                    }
+                                }
+                            }
+                        });
+            } catch (Throwable t) {
+                XposedBridge.log(TAG + ": Failed to hook ShortcutIcon.setIconDrawable: " + t.getMessage());
             }
 
-            for (Method m : cls.getDeclaredMethods()) {
-                String name = m.getName();
-                Class<?>[] pTypes = m.getParameterTypes();
-                if (pTypes.length == 1 && (name.startsWith("set") || name.startsWith("update") || name.equals("icon"))) {
-                    if (Drawable.class.isAssignableFrom(pTypes[0]) || Bitmap.class.isAssignableFrom(pTypes[0])) {
-                        try {
-                            XposedBridge.hookMethod(m, iconDrawableHook);
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                }
+            try {
+                XposedHelpers.findAndHookMethod(shortcutIconCls, "setOriginalDrawableAndRoundedDrawable",
+                        Drawable.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                if (!sEnabled || !sIconThemeEnabled) return;
+                                if (param.args[0] instanceof Drawable) {
+                                    Drawable orig = (Drawable) param.args[0];
+                                    if (!(orig instanceof ThemedGradientDrawable)) {
+                                        View v = (View) param.thisObject;
+                                        v.setTag(TAG_ORIGINAL_DRAWABLE, orig);
+                                        Drawable themed = applyGradientToDrawable(v.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
+                                        if (themed != null) {
+                                            param.args[0] = themed;
+                                            v.setTag(TAG_THEME_HASH, getThemeConfigHash());
+                                        }
+                                    }
+                                }
+                            }
+                        });
+            } catch (Throwable ignored) {
             }
 
-            for (String touchMethod : new String[]{"dispatchTouchEvent", "onTouchEvent"}) {
-                try {
-                    for (Method m : cls.getDeclaredMethods()) {
-                        if (m.getName().equals(touchMethod) && m.getParameterTypes().length == 1 && m.getParameterTypes()[0] == MotionEvent.class) {
-                            XposedBridge.hookMethod(m, touchBounceHook);
-                        }
-                    }
-                } catch (Throwable ignored) {
-                }
+            try {
+                XposedHelpers.findAndHookMethod(shortcutIconCls, "applyCompoundDrawables",
+                        Drawable.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                if (!sEnabled || !sIconThemeEnabled) return;
+                                if (param.args[0] instanceof Drawable) {
+                                    Drawable orig = (Drawable) param.args[0];
+                                    if (!(orig instanceof ThemedGradientDrawable)) {
+                                        View v = (View) param.thisObject;
+                                        v.setTag(TAG_ORIGINAL_DRAWABLE, orig);
+                                        Drawable themed = applyGradientToDrawable(v.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
+                                        if (themed != null) {
+                                            param.args[0] = themed;
+                                            v.setTag(TAG_THEME_HASH, getThemeConfigHash());
+                                        }
+                                    }
+                                }
+                            }
+                        });
+            } catch (Throwable ignored) {
             }
+
+            try {
+                XposedHelpers.findAndHookMethod(shortcutIconCls, "roundedIcon",
+                        Drawable.class, new XC_MethodHook() {
+                            @Override
+                            protected void afterHookedMethod(MethodHookParam param) {
+                                if (!sEnabled || !sIconThemeEnabled) return;
+                                Drawable res = (Drawable) param.getResult();
+                                if (res != null && !(res instanceof ThemedGradientDrawable)) {
+                                    Context ctx = (param.thisObject instanceof View) ? ((View) param.thisObject).getContext() : null;
+                                    Drawable themed = applyGradientToDrawable(ctx, res, sIconGradientPreset, sIconTintIntensity);
+                                    if (themed != null) {
+                                        param.setResult(themed);
+                                    }
+                                }
+                            }
+                        });
+            } catch (Throwable ignored) {
+            }
+
+            try {
+                Class<?> shortcutInfoCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.ShortcutInfo", cl);
+                if (shortcutInfoCls != null) {
+                    XposedHelpers.findAndHookMethod(shortcutIconCls, "roundedBigIcon",
+                            Drawable.class, shortcutInfoCls, float.class, new XC_MethodHook() {
+                                @Override
+                                protected void afterHookedMethod(MethodHookParam param) {
+                                    if (!sEnabled || !sIconThemeEnabled) return;
+                                    Drawable res = (Drawable) param.getResult();
+                                    if (res != null && !(res instanceof ThemedGradientDrawable)) {
+                                        Context ctx = (param.thisObject instanceof View) ? ((View) param.thisObject).getContext() : null;
+                                        Drawable themed = applyGradientToDrawable(ctx, res, sIconGradientPreset, sIconTintIntensity);
+                                        if (themed != null) {
+                                            param.setResult(themed);
+                                        }
+                                    }
+                                }
+                            });
+                }
+            } catch (Throwable ignored) {
+            }
+
+            try {
+                XposedHelpers.findAndHookMethod(shortcutIconCls, "onDraw",
+                        Canvas.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                if (!sEnabled) return;
+                                if (param.thisObject instanceof View) {
+                                    syncShortcutIcon((View) param.thisObject);
+                                }
+                            }
+                        });
+            } catch (Throwable t) {
+                XposedBridge.log(TAG + ": Failed to hook ShortcutIcon.onDraw: " + t.getMessage());
+            }
+
+            try {
+                XposedHelpers.findAndHookMethod(shortcutIconCls, "onTouchEvent",
+                        MotionEvent.class, touchBounceHook);
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // 2. Hook ItemIcon (Base for desktop items and folders)
+        if (itemIconCls != null) {
+            try {
+                XposedHelpers.findAndHookMethod(itemIconCls, "setIconImageView",
+                        Drawable.class, Bitmap.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                if (!sEnabled || !sIconThemeEnabled) return;
+                                if (param.args[0] instanceof Drawable) {
+                                    Drawable orig = (Drawable) param.args[0];
+                                    if (!(orig instanceof ThemedGradientDrawable)) {
+                                        Context ctx = (param.thisObject instanceof View) ? ((View) param.thisObject).getContext() : null;
+                                        Drawable themed = applyGradientToDrawable(ctx, orig, sIconGradientPreset, sIconTintIntensity);
+                                        if (themed != null) {
+                                            param.args[0] = themed;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+            } catch (Throwable ignored) {
+            }
+
+            try {
+                XposedHelpers.findAndHookMethod(itemIconCls, "onTouchEvent",
+                        MotionEvent.class, touchBounceHook);
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // 3. Hook FolderIcon
+        if (folderIconCls != null) {
+            try {
+                XposedHelpers.findAndHookMethod(folderIconCls, "onTouchEvent",
+                        MotionEvent.class, touchBounceHook);
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // 4. Hook ItemInfoWithIconAndMessage.setIconDrawable(Drawable)
+        try {
+            Class<?> itemInfoCls = XposedHelpers.findClassIfExists("com.miui.home.model.api.ItemInfoWithIconAndMessage", cl);
+            if (itemInfoCls != null) {
+                XposedHelpers.findAndHookMethod(itemInfoCls, "setIconDrawable",
+                        Drawable.class, new XC_MethodHook() {
+                            @Override
+                            protected void beforeHookedMethod(MethodHookParam param) {
+                                if (!sEnabled || !sIconThemeEnabled) return;
+                                if (param.args[0] instanceof Drawable) {
+                                    Drawable orig = (Drawable) param.args[0];
+                                    if (!(orig instanceof ThemedGradientDrawable)) {
+                                        Drawable themed = applyGradientToDrawable(null, orig, sIconGradientPreset, sIconTintIntensity);
+                                        if (themed != null) {
+                                            param.args[0] = themed;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+            }
+        } catch (Throwable ignored) {
         }
     }
 }
