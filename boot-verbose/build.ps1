@@ -1,4 +1,4 @@
-# build.ps1 — Compile Java SurfaceControl bootlog.dex and package Magisk zip (v1.1.2)
+# build.ps1 — Compile Java SurfaceControl mirage_bootlog.jar and package Magisk zip (v1.1.3)
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 
@@ -12,31 +12,31 @@ if (-not $sdkRoot -or -not (Test-Path $sdkRoot)) {
 
 $srcDir = "$Root\boot-verbose"
 
-# Remove legacy system/bin/bootanimation override so stock bootanimation initializes SurfaceFlinger display
+# Clean old artifacts from module dir
 Remove-Item "$Root\magisk-module-bootverbose\system" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item "$Root\magisk-module-bootverbose\bootlog.dex" -Force -ErrorAction SilentlyContinue
 
-# 1. Build BootLogMain.java -> bootlog.dex (SurfaceControl + BLASTBufferQueue overlay)
+# 1. Build BootLogMain.java -> system/etc/mirage_bootlog.jar (Domain::kPlatform in ART!)
 $androidJar = "$sdkRoot\platforms\android-34\android.jar"
 $d8Bat      = "$sdkRoot\build-tools\34.0.0\d8.bat"
 $javaOutDir = "$srcDir\build\classes"
-$dexOutDir  = "$srcDir\build\dex"
+$jarDir     = "$Root\magisk-module-bootverbose\system\etc"
+$jarOut     = "$jarDir\mirage_bootlog.jar"
 
 Remove-Item $javaOutDir -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item $dexOutDir  -Recurse -Force -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Force -Path $javaOutDir, $dexOutDir | Out-Null
+New-Item -ItemType Directory -Force -Path $javaOutDir, $jarDir | Out-Null
 
 & javac --release 11 -classpath $androidJar -d $javaOutDir "$srcDir\java\com\mirage\bootlog\BootLogMain.java"
 if ($LASTEXITCODE -ne 0) { Write-Error "javac failed" }
 
 $classFiles = Get-ChildItem $javaOutDir -Recurse -Filter "*.class" | Select-Object -ExpandProperty FullName
-& cmd.exe /c "`"$d8Bat`" --min-api 26 --output `"$dexOutDir`" $($classFiles -join ' ')"
+& cmd.exe /c "`"$d8Bat`" --min-api 26 --output `"$jarOut`" $($classFiles -join ' ')"
 if ($LASTEXITCODE -ne 0) { Write-Error "d8 failed" }
 
-Copy-Item "$dexOutDir\classes.dex" "$Root\magisk-module-bootverbose\bootlog.dex" -Force
-Write-Host "DEX overlay -> $Root\magisk-module-bootverbose\bootlog.dex" -ForegroundColor Green
+Write-Host "Platform JAR -> $jarOut" -ForegroundColor Green
 
 # 2. Ensure pure Unix LF line endings on all Magisk scripts/configs/META-INF
-Get-ChildItem "$Root\magisk-module-bootverbose" -File -Recurse | Where-Object { $_.Extension -ne ".dex" } | ForEach-Object {
+Get-ChildItem "$Root\magisk-module-bootverbose" -File -Recurse | Where-Object { $_.Extension -notin @(".dex", ".jar") } | ForEach-Object {
     $raw = [System.IO.File]::ReadAllText($_.FullName) -replace "`r`n", "`n"
     [System.IO.File]::WriteAllText($_.FullName, $raw, (New-Object System.Text.UTF8Encoding($false)))
 }
@@ -44,7 +44,7 @@ Get-ChildItem "$Root\magisk-module-bootverbose" -File -Recurse | Where-Object { 
 # 3. Package Magisk module ZIP
 $distDir = "$Root\dist"
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
-$zipOut = "$distDir\MirageVerboseBoot-v1.1.2.zip"
+$zipOut = "$distDir\MirageVerboseBoot-v1.1.3.zip"
 Remove-Item $zipOut -ErrorAction SilentlyContinue
 
 Compress-Archive -Path "$Root\magisk-module-bootverbose\*" -DestinationPath $zipOut -CompressionLevel Optimal

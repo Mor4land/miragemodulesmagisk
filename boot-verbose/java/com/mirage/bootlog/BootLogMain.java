@@ -29,15 +29,11 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Standalone root daemon executed via /system/bin/app_process64 during Android boot.
- * Creates a raw SurfaceFlinger overlay (SurfaceControl + BLASTBufferQueue) on layerStack 0
- * above bootanimation (Z = 0x70000000), streams real /dev/kmsg (kernel + init) and logcat
- * (zygote + SystemServer + fatal crashes) in Arch Linux verbose boot format, and
- * automatically saves crash logs + disables offending Magisk modules on bootloop.
+ * Standalone root daemon executed via /system/bin/app_process64 from /system/etc/mirage_bootlog.jar
+ * (Domain::kPlatform in ART so @hide SurfaceControl and BLASTBufferQueue APIs are unrestricted).
  */
 public final class BootLogMain {
 
-    private static final String SELF_MODULE_ID = "MirageVerboseBoot";
     private static final String PERSISTENT_LOG_PATH = "/data/adb/mirage_bootloop_last.log";
     private static final String DEBUG_LOG_PATH = "/data/adb/mirage_bootverbose_debug.log";
     private static final String SDCARD_LOG_PATH = "/sdcard/Download/MirageBootloop_LAST.log";
@@ -57,7 +53,7 @@ public final class BootLogMain {
     private static final int COLOR_RESCUE_BG = 0xFF002B1F; // Pinned rescue recovery banner
 
     private static final int MAX_LINES = 240;
-    private static final long BOOT_HANG_TIMEOUT_MS = 105_000L;
+    private static final long BOOT_HANG_TIMEOUT_MS = 150_000L; // 150s safety timeout
 
     private static final class LogEntry {
         final String prefix;
@@ -86,6 +82,7 @@ public final class BootLogMain {
     private static volatile String sBootloopReason = "";
     private static volatile int sZygoteStarts = 0;
     private static volatile int sSystemServerStarts = 0;
+    private static volatile int sSystemServerCrashes = 0;
     private static volatile boolean sCapturingCrashTrace = false;
     private static volatile int sCrashTraceRemaining = 0;
 
@@ -97,7 +94,23 @@ public final class BootLogMain {
         }
     }
 
+    private static void exemptHiddenApis() {
+        try {
+            Class<?> vmRuntimeCls = Class.forName("dalvik.system.VMRuntime");
+            Method getRuntime = vmRuntimeCls.getDeclaredMethod("getRuntime");
+            getRuntime.setAccessible(true);
+            Object runtime = getRuntime.invoke(null);
+            Method setExemptions = vmRuntimeCls.getDeclaredMethod("setHiddenApiExemptions", String[].class);
+            setExemptions.setAccessible(true);
+            setExemptions.invoke(runtime, new Object[]{new String[]{"L"}});
+            logDebug("VMRuntime.setHiddenApiExemptions(L) succeeded");
+        } catch (Throwable t) {
+            logDebug("VMRuntime.setHiddenApiExemptions note: " + t);
+        }
+    }
+
     public static void main(String[] args) {
+        exemptHiddenApis();
         try {
             if (Looper.getMainLooper() == null) {
                 Looper.prepareMainLooper();
@@ -105,12 +118,11 @@ public final class BootLogMain {
         } catch (Throwable ignored) {
         }
         try {
-            // Try loading android_servers if available so DisplayControl JNI works on Android 14+
             System.loadLibrary("android_servers");
         } catch (Throwable ignored) {
         }
         try {
-            logDebug("BootLogMain starting (uid=" + android.os.Process.myUid() + ")");
+            logDebug("BootLogMain v1.1.3 starting (uid=" + android.os.Process.myUid() + ")");
             runBootLogger();
             logDebug("BootLogMain finished cleanly");
         } catch (Throwable t) {
@@ -123,7 +135,7 @@ public final class BootLogMain {
         checkPreviousRescueBanner();
 
         addLine("[  OK  ]", COLOR_OK,
-                "MirageVerboseBoot v1.1.2 started (uid=" + android.os.Process.myUid() + ")", COLOR_SYSTEM);
+                "MirageVerboseBoot v1.1.3 started (uid=" + android.os.Process.myUid() + ")", COLOR_SYSTEM);
 
         Thread kmsgThread = new Thread(BootLogMain::readKmsgLoop, "MirageKmsgReader");
         kmsgThread.setDaemon(true);
@@ -140,7 +152,7 @@ public final class BootLogMain {
         int width = 1080;
         int height = 2408;
 
-        for (int attempt = 0; attempt < 160 && sRunning; attempt++) {
+        for (int attempt = 0; attempt < 200 && sRunning; attempt++) {
             if (isBootCompleted()) {
                 onBootSuccess();
                 return;
@@ -156,11 +168,12 @@ public final class BootLogMain {
                     try {
                         Class<?> sessCls = Class.forName("android.view.SurfaceSession");
                         session = sessCls.getDeclaredConstructor().newInstance();
-                    } catch (Throwable ignored) {
+                    } catch (Throwable t) {
+                        if (attempt == 0) logDebug("SurfaceSession init: " + t);
                     }
                 }
 
-                // Attempt 1: Android 12-14 BLAST layer (MUST NOT set non-zero bufferSize on Builder!)
+                // Attempt 1: Android 12-14 BLAST layer
                 sc = buildBlastSurfaceControl(session);
                 if (sc != null) {
                     configureTransaction(sc, width, height);
@@ -176,7 +189,7 @@ public final class BootLogMain {
                     }
                 }
 
-                // Attempt 2: Legacy BufferQueue SurfaceControl fallback (Android 9-11)
+                // Attempt 2: Legacy BufferQueue SurfaceControl fallback
                 sc = buildLegacySurfaceControl(session, width, height);
                 if (sc != null) {
                     configureTransaction(sc, width, height);
@@ -195,7 +208,7 @@ public final class BootLogMain {
                     logDebug("Attempt " + attempt + " failed: " + t);
                 }
             }
-            SystemClock.sleep(250);
+            SystemClock.sleep(200);
         }
 
         if (surface == null || sc == null) {
@@ -204,7 +217,7 @@ public final class BootLogMain {
         }
 
         addLine("[  OK  ]", COLOR_OK,
-                "Attached to SurfaceFlinger (" + width + "x" + height + " RGBA_8888 Z=0x70000000)", COLOR_INIT);
+                "Attached to SurfaceFlinger (" + width + "x" + height + " RGBA_8888)", COLOR_INIT);
 
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTypeface(Typeface.MONOSPACE);
@@ -224,7 +237,7 @@ public final class BootLogMain {
                 onBootSuccess();
                 addLine("[  OK  ]", COLOR_OK, "Reached target Android Graphical System (sys.boot_completed=1)", COLOR_OK);
                 renderFrame(surface, width, height, textPaint, bgPaint, lineHeight);
-                SystemClock.sleep(800);
+                SystemClock.sleep(700);
                 break;
             }
 
@@ -251,15 +264,14 @@ public final class BootLogMain {
                 }
             }
 
-            // Re-assert layer Z-order and layerStack periodically during boot transitions
-            if (frameCount % 30 == 0) {
+            if (frameCount % 25 == 0) {
                 try {
                     configureTransaction(sc, width, height);
                 } catch (Throwable ignored) {
                 }
             }
 
-            if (sDirty || frameCount < 5) {
+            if (sDirty || frameCount < 10) {
                 sDirty = false;
                 renderFrame(surface, width, height, textPaint, bgPaint, lineHeight);
                 frameCount++;
@@ -323,7 +335,8 @@ public final class BootLogMain {
         if (session != null) {
             try {
                 Constructor<SurfaceControl.Builder> ctor =
-                        SurfaceControl.Builder.class.getConstructor(session.getClass());
+                        SurfaceControl.Builder.class.getDeclaredConstructor(session.getClass());
+                ctor.setAccessible(true);
                 return ctor.newInstance(session);
             } catch (Throwable ignored) {
             }
@@ -335,9 +348,9 @@ public final class BootLogMain {
         SurfaceControl.Transaction tx = new SurfaceControl.Transaction();
         tx.setVisibility(sc, true);
 
-        // Z-order 0x70000000 sits above stock bootanimation (0x30000000) and above WindowManager
+        // Z = Integer.MAX_VALUE - 100 sits above HyperOS bootanimation and WindowManager
         callMethodSafe(tx, "setLayer", new Class<?>[]{SurfaceControl.class, int.class},
-                new Object[]{sc, 0x70000000});
+                new Object[]{sc, Integer.MAX_VALUE - 100});
         callMethodSafe(tx, "setLayerStack", new Class<?>[]{SurfaceControl.class, int.class},
                 new Object[]{sc, 0});
         callMethodSafe(tx, "setPosition", new Class<?>[]{SurfaceControl.class, float.class, float.class},
@@ -354,7 +367,6 @@ public final class BootLogMain {
                 new Object[]{sc, bounds});
         callMethodSafe(tx, "show", new Class<?>[]{SurfaceControl.class}, new Object[]{sc});
 
-        // Also ensure primary physical display has layerStack 0 assigned
         IBinder displayToken = queryPrimaryDisplayToken();
         if (displayToken != null) {
             callMethodSafe(tx, "setDisplayLayerStack", new Class<?>[]{IBinder.class, int.class},
@@ -370,20 +382,24 @@ public final class BootLogMain {
     private static Object[] createBlastSurface(SurfaceControl sc, int width, int height) {
         try {
             Class<?> bbqCls = Class.forName("android.graphics.BLASTBufferQueue");
-            // Prefer 5-arg constructor (sets updateDestinationFrame = true)
             try {
-                Constructor<?> c5 = bbqCls.getConstructor(
+                Constructor<?> c5 = bbqCls.getDeclaredConstructor(
                         String.class, SurfaceControl.class, int.class, int.class, int.class);
+                c5.setAccessible(true);
                 Object bbq = c5.newInstance("MirageVerboseBoot", sc, width, height, PixelFormat.RGBA_8888);
-                Method createSurface = bbqCls.getMethod("createSurface");
+                Method createSurface = bbqCls.getDeclaredMethod("createSurface");
+                createSurface.setAccessible(true);
                 Surface s = (Surface) createSurface.invoke(bbq);
                 if (s != null && s.isValid()) return new Object[]{s, bbq};
             } catch (NoSuchMethodException ignored) {
-                Constructor<?> c2 = bbqCls.getConstructor(String.class, boolean.class);
+                Constructor<?> c2 = bbqCls.getDeclaredConstructor(String.class, boolean.class);
+                c2.setAccessible(true);
                 Object bbq = c2.newInstance("MirageVerboseBoot", true);
-                Method update = bbqCls.getMethod("update", SurfaceControl.class, int.class, int.class, int.class);
+                Method update = bbqCls.getDeclaredMethod("update", SurfaceControl.class, int.class, int.class, int.class);
+                update.setAccessible(true);
                 update.invoke(bbq, sc, width, height, PixelFormat.RGBA_8888);
-                Method createSurface = bbqCls.getMethod("createSurface");
+                Method createSurface = bbqCls.getDeclaredMethod("createSurface");
+                createSurface.setAccessible(true);
                 Surface s = (Surface) createSurface.invoke(bbq);
                 if (s != null && s.isValid()) return new Object[]{s, bbq};
             }
@@ -403,7 +419,8 @@ public final class BootLogMain {
             Constructor<Surface> noArg = Surface.class.getDeclaredConstructor();
             noArg.setAccessible(true);
             Surface s = noArg.newInstance();
-            Method copyFrom = Surface.class.getMethod("copyFrom", SurfaceControl.class);
+            Method copyFrom = Surface.class.getDeclaredMethod("copyFrom", SurfaceControl.class);
+            copyFrom.setAccessible(true);
             copyFrom.invoke(s, sc);
             if (s.isValid()) return s;
         } catch (Throwable ignored) {
@@ -413,32 +430,34 @@ public final class BootLogMain {
 
     private static IBinder queryPrimaryDisplayToken() {
         try {
-            // Android 14+: DisplayControl.getPhysicalDisplayIds() + getPhysicalDisplayToken(id)
             try {
                 Class<?> dcCls = Class.forName("com.android.server.display.DisplayControl");
-                Method getIds = dcCls.getMethod("getPhysicalDisplayIds");
+                Method getIds = dcCls.getDeclaredMethod("getPhysicalDisplayIds");
+                getIds.setAccessible(true);
                 long[] ids = (long[]) getIds.invoke(null);
                 if (ids != null && ids.length > 0) {
-                    Method getTok = dcCls.getMethod("getPhysicalDisplayToken", long.class);
+                    Method getTok = dcCls.getDeclaredMethod("getPhysicalDisplayToken", long.class);
+                    getTok.setAccessible(true);
                     IBinder tok = (IBinder) getTok.invoke(null, ids[0]);
                     if (tok != null) return tok;
                 }
             } catch (Throwable ignored) {
             }
-            // Android 10-13: SurfaceControl.getPhysicalDisplayIds() + getPhysicalDisplayToken(id)
             try {
-                Method getIds = SurfaceControl.class.getMethod("getPhysicalDisplayIds");
+                Method getIds = SurfaceControl.class.getDeclaredMethod("getPhysicalDisplayIds");
+                getIds.setAccessible(true);
                 long[] ids = (long[]) getIds.invoke(null);
                 if (ids != null && ids.length > 0) {
-                    Method getTok = SurfaceControl.class.getMethod("getPhysicalDisplayToken", long.class);
+                    Method getTok = SurfaceControl.class.getDeclaredMethod("getPhysicalDisplayToken", long.class);
+                    getTok.setAccessible(true);
                     IBinder tok = (IBinder) getTok.invoke(null, ids[0]);
                     if (tok != null) return tok;
                 }
             } catch (Throwable ignored) {
             }
-            // Android 9-11: SurfaceControl.getInternalDisplayToken()
             try {
-                Method getInt = SurfaceControl.class.getMethod("getInternalDisplayToken");
+                Method getInt = SurfaceControl.class.getDeclaredMethod("getInternalDisplayToken");
+                getInt.setAccessible(true);
                 IBinder tok = (IBinder) getInt.invoke(null);
                 if (tok != null) return tok;
             } catch (Throwable ignored) {
@@ -478,6 +497,10 @@ public final class BootLogMain {
         }
     }
 
+    /**
+     * Disables ALL installed Magisk modules (including MirageVerboseBoot itself so it can
+     * never cause a loop) and writes a full crash report to /data/adb/mirage_bootloop_last.log.
+     */
     private static void performBootloopRescue() {
         List<String> disabledModules = new ArrayList<>();
         try {
@@ -487,8 +510,6 @@ public final class BootLogMain {
                 for (File mod : children) {
                     if (!mod.isDirectory()) continue;
                     String modName = mod.getName();
-                    if (SELF_MODULE_ID.equalsIgnoreCase(modName)) continue;
-
                     File disableFile = new File(mod, "disable");
                     if (!disableFile.exists()) {
                         try {
@@ -507,11 +528,11 @@ public final class BootLogMain {
                 ? "none (already disabled)"
                 : String.join(", ", disabledModules);
 
-        recordCrashDetail("Disabled Magisk modules: " + modSummary);
+        recordCrashDetail("Disabled ALL Magisk modules: " + modSummary);
         recordCrashDetail("Saved full log -> " + PERSISTENT_LOG_PATH + " (& /sdcard/Download/)");
         recordCrashDetail("Auto-rebooting into safe state in 8 seconds...");
 
-        addLine("[RESCUE]", COLOR_WARN, "Disabled Magisk modules: " + modSummary, COLOR_WARN);
+        addLine("[RESCUE]", COLOR_WARN, "Disabled ALL Magisk modules: " + modSummary, COLOR_WARN);
         addLine("[RESCUE]", COLOR_WARN, "Saving crash log to " + PERSISTENT_LOG_PATH, COLOR_WARN);
 
         try (FileOutputStream fos = new FileOutputStream(RESCUE_FLAG_PATH, false);
@@ -624,7 +645,7 @@ public final class BootLogMain {
 
             textPaint.setFakeBoldText(true);
             textPaint.setColor(COLOR_INIT);
-            String title = ":: Mirage Verbose Boot v1.1.2 [Arch-Mode + Anti-Bootloop]";
+            String title = ":: Mirage Verbose Boot v1.1.3 [Arch-Mode + Anti-Bootloop]";
             canvas.drawText(title, padX, topY, textPaint);
             textPaint.setFakeBoldText(false);
 
@@ -783,17 +804,18 @@ public final class BootLogMain {
             tsPrefix = "[  KERNEL  ]";
         }
 
+        // Only trigger bootloop if zygote genuinely restarts >= 3 times in a single boot
         if (msg.contains("init: starting service 'zygote'")) {
             sZygoteStarts++;
-            if (sZygoteStarts >= 2) {
+            if (sZygoteStarts >= 3) {
                 triggerBootloop("Zygote restarted (" + sZygoteStarts + "x) — bootloop detected", msg);
             }
             addLine("[  OK  ]", COLOR_OK, tsPrefix + " " + msg, COLOR_INIT);
             return;
         }
         if (msg.contains("init: Service 'zygote'") && msg.contains("exited")) {
-            if (sZygoteStarts >= 2) {
-                triggerBootloop("Zygote process died repeatedly", msg);
+            if (sZygoteStarts >= 3) {
+                triggerBootloop("Zygote process died repeatedly (" + sZygoteStarts + "x)", msg);
             } else {
                 recordCrashDetail(msg);
             }
@@ -812,10 +834,8 @@ public final class BootLogMain {
             return;
         }
 
-        if (level <= 3 || msg.contains("Kernel panic") || msg.contains("BUG:") || msg.contains("hung_task")) {
-            if (msg.contains("Kernel panic") || msg.contains("hung_task")) {
-                triggerBootloop("Kernel panic / hung task", msg);
-            }
+        // NOTE: Do NOT triggerBootloop on normal kernel warnings or "hung_task_timeout_secs"!
+        if (level <= 3 || msg.contains("Kernel panic - not syncing")) {
             addLine("[ ERR! ]", COLOR_ERR, tsPrefix + " " + msg, COLOR_ERR);
         } else if (level == 4 || msg.contains("avc: denied")) {
             addLine("[ WARN ]", COLOR_WARN, tsPrefix + " " + msg, COLOR_WARN);
@@ -828,10 +848,12 @@ public final class BootLogMain {
         while (sRunning && !isBootCompleted()) {
             Process proc = null;
             try {
+                // Use -T 1 so we only read new log lines from this boot, NOT old persisted crash buffers!
                 proc = new ProcessBuilder(
                         "/system/bin/logcat",
                         "-b", "main,system,crash",
-                        "-v", "brief"
+                        "-v", "brief",
+                        "-T", "1"
                 ).redirectErrorStream(true).start();
 
                 try (BufferedReader br = new BufferedReader(
@@ -862,11 +884,15 @@ public final class BootLogMain {
         char prio = raw.length() > 1 && raw.charAt(1) == '/' ? raw.charAt(0) : 'I';
 
         if (raw.contains("FATAL EXCEPTION IN SYSTEM PROCESS")
-                || raw.contains("Watchdog: *** WATCHDOG KILLING SYSTEM PROCESS")
-                || (raw.contains("Fatal signal ") && (raw.contains("system_server") || raw.contains("zygote") || raw.contains("surfaceflinger")))) {
-            triggerBootloop("Fatal crash in system_server / zygote", raw);
+                || raw.contains("Watchdog: *** WATCHDOG KILLING SYSTEM PROCESS")) {
+            sSystemServerCrashes++;
+            recordCrashDetail(raw);
             sCapturingCrashTrace = true;
             sCrashTraceRemaining = 5;
+            // Trigger rescue if system_server crashes >= 2 times in this boot
+            if (sSystemServerCrashes >= 2) {
+                triggerBootloop("Repeated FATAL EXCEPTION IN SYSTEM PROCESS (" + sSystemServerCrashes + "x)", raw);
+            }
             addLine("[FATAL!]", COLOR_ERR, raw, COLOR_ERR);
             return;
         }
@@ -884,7 +910,7 @@ public final class BootLogMain {
 
         if (raw.contains("Entered the Android system server!")) {
             sSystemServerStarts++;
-            if (sSystemServerStarts >= 2) {
+            if (sSystemServerStarts >= 3) {
                 triggerBootloop("SystemServer restarted (" + sSystemServerStarts + "x)", raw);
             }
             addLine("[  OK  ]", COLOR_OK, "SystemServer: Entered the Android system server!", COLOR_INIT);
@@ -957,24 +983,28 @@ public final class BootLogMain {
             long[] ids = null;
             try {
                 Class<?> dcCls = Class.forName("com.android.server.display.DisplayControl");
-                Method m = dcCls.getMethod("getPhysicalDisplayIds");
+                Method m = dcCls.getDeclaredMethod("getPhysicalDisplayIds");
+                m.setAccessible(true);
                 ids = (long[]) m.invoke(null);
             } catch (Throwable ignored) {
             }
             if (ids == null || ids.length == 0) {
-                Method m = SurfaceControl.class.getMethod("getPhysicalDisplayIds");
+                Method m = SurfaceControl.class.getDeclaredMethod("getPhysicalDisplayIds");
+                m.setAccessible(true);
                 ids = (long[]) m.invoke(null);
             }
             if (ids != null && ids.length > 0) {
-                Method getDyn = SurfaceControl.class.getMethod("getDynamicDisplayInfo", long.class);
+                Method getDyn = SurfaceControl.class.getDeclaredMethod("getDynamicDisplayInfo", long.class);
+                getDyn.setAccessible(true);
                 Object dynInfo = getDyn.invoke(null, ids[0]);
                 if (dynInfo != null) {
-                    Field modesField = dynInfo.getClass().getField("supportedDisplayModes");
+                    Field modesField = dynInfo.getClass().getDeclaredField("supportedDisplayModes");
+                    modesField.setAccessible(true);
                     Object[] modes = (Object[]) modesField.get(dynInfo);
                     if (modes != null && modes.length > 0) {
                         Object mode = modes[0];
-                        int w = mode.getClass().getField("width").getInt(mode);
-                        int h = mode.getClass().getField("height").getInt(mode);
+                        int w = mode.getClass().getDeclaredField("width").getInt(mode);
+                        int h = mode.getClass().getDeclaredField("height").getInt(mode);
                         if (w > 0 && h > 0) {
                             return new int[]{w, h};
                         }
@@ -994,7 +1024,8 @@ public final class BootLogMain {
     private static String getSystemProperty(String key) {
         try {
             Class<?> sp = Class.forName("android.os.SystemProperties");
-            Method get = sp.getMethod("get", String.class, String.class);
+            Method get = sp.getDeclaredMethod("get", String.class, String.class);
+            get.setAccessible(true);
             return (String) get.invoke(null, key, "");
         } catch (Throwable ignored) {
             return "";
@@ -1004,11 +1035,17 @@ public final class BootLogMain {
     private static Object callMethodSafe(Object target, String name, Class<?>[] paramTypes, Object[] args) {
         if (target == null) return null;
         try {
-            Method m = target.getClass().getMethod(name, paramTypes);
+            Method m = target.getClass().getDeclaredMethod(name, paramTypes);
             m.setAccessible(true);
             return m.invoke(target, args);
         } catch (Throwable ignored) {
-            return null;
+            try {
+                Method m = target.getClass().getMethod(name, paramTypes);
+                m.setAccessible(true);
+                return m.invoke(target, args);
+            } catch (Throwable ignored2) {
+                return null;
+            }
         }
     }
 }
