@@ -4,7 +4,10 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Surface;
 import android.view.SurfaceControl;
@@ -27,8 +30,8 @@ import java.util.Locale;
 
 /**
  * Standalone root daemon executed via /system/bin/app_process64 during Android boot.
- * Creates a raw SurfaceFlinger overlay (SurfaceControl + BLASTBufferQueue) before
- * WindowManagerService starts, streams real /dev/kmsg (kernel + init) and logcat
+ * Creates a raw SurfaceFlinger overlay (SurfaceControl + BLASTBufferQueue) on layerStack 0
+ * above bootanimation (Z = 0x70000000), streams real /dev/kmsg (kernel + init) and logcat
  * (zygote + SystemServer + fatal crashes) in Arch Linux verbose boot format, and
  * automatically saves crash logs + disables offending Magisk modules on bootloop.
  */
@@ -36,6 +39,7 @@ public final class BootLogMain {
 
     private static final String SELF_MODULE_ID = "MirageVerboseBoot";
     private static final String PERSISTENT_LOG_PATH = "/data/adb/mirage_bootloop_last.log";
+    private static final String DEBUG_LOG_PATH = "/data/adb/mirage_bootverbose_debug.log";
     private static final String SDCARD_LOG_PATH = "/sdcard/Download/MirageBootloop_LAST.log";
     private static final String RESCUE_FLAG_PATH = "/data/adb/mirage_rescue_triggered";
     private static final String BOOT_COUNT_PATH = "/data/adb/mirage_boot_count";
@@ -53,7 +57,7 @@ public final class BootLogMain {
     private static final int COLOR_RESCUE_BG = 0xFF002B1F; // Pinned rescue recovery banner
 
     private static final int MAX_LINES = 240;
-    private static final long BOOT_HANG_TIMEOUT_MS = 105_000L; // 105s without boot_completed -> hang bootloop
+    private static final long BOOT_HANG_TIMEOUT_MS = 105_000L;
 
     private static final class LogEntry {
         final String prefix;
@@ -82,14 +86,35 @@ public final class BootLogMain {
     private static volatile String sBootloopReason = "";
     private static volatile int sZygoteStarts = 0;
     private static volatile int sSystemServerStarts = 0;
-    private static volatile int sFatalSystemCrashes = 0;
     private static volatile boolean sCapturingCrashTrace = false;
     private static volatile int sCrashTraceRemaining = 0;
 
+    private static void logDebug(String msg) {
+        try (FileOutputStream fos = new FileOutputStream(DEBUG_LOG_PATH, true);
+             PrintWriter pw = new PrintWriter(fos)) {
+            pw.println("[" + SystemClock.uptimeMillis() + "ms] " + msg);
+        } catch (Throwable ignored) {
+        }
+    }
+
     public static void main(String[] args) {
         try {
+            if (Looper.getMainLooper() == null) {
+                Looper.prepareMainLooper();
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            // Try loading android_servers if available so DisplayControl JNI works on Android 14+
+            System.loadLibrary("android_servers");
+        } catch (Throwable ignored) {
+        }
+        try {
+            logDebug("BootLogMain starting (uid=" + android.os.Process.myUid() + ")");
             runBootLogger();
+            logDebug("BootLogMain finished cleanly");
         } catch (Throwable t) {
+            logDebug("BootLogMain fatal error: " + t);
             t.printStackTrace(System.err);
         }
     }
@@ -98,7 +123,7 @@ public final class BootLogMain {
         checkPreviousRescueBanner();
 
         addLine("[  OK  ]", COLOR_OK,
-                "MirageVerboseBoot v1.1.0 started (uid=" + android.os.Process.myUid() + ")", COLOR_SYSTEM);
+                "MirageVerboseBoot v1.1.2 started (uid=" + android.os.Process.myUid() + ")", COLOR_SYSTEM);
 
         Thread kmsgThread = new Thread(BootLogMain::readKmsgLoop, "MirageKmsgReader");
         kmsgThread.setDaemon(true);
@@ -108,13 +133,14 @@ public final class BootLogMain {
         logcatThread.setDaemon(true);
         logcatThread.start();
 
+        Object session = null;
         SurfaceControl sc = null;
         Object bbq = null;
         Surface surface = null;
         int width = 1080;
         int height = 2408;
 
-        for (int attempt = 0; attempt < 120 && sRunning; attempt++) {
+        for (int attempt = 0; attempt < 160 && sRunning; attempt++) {
             if (isBootCompleted()) {
                 onBootSuccess();
                 return;
@@ -126,46 +152,59 @@ public final class BootLogMain {
                     height = dims[1];
                 }
 
-                SurfaceControl.Builder builder = new SurfaceControl.Builder()
-                        .setName("MirageVerboseBoot")
-                        .setBufferSize(width, height)
-                        .setFormat(PixelFormat.RGBA_8888);
+                if (session == null) {
+                    try {
+                        Class<?> sessCls = Class.forName("android.view.SurfaceSession");
+                        session = sessCls.getDeclaredConstructor().newInstance();
+                    } catch (Throwable ignored) {
+                    }
+                }
 
-                callMethodSafe(builder, "setOpaque", new Class<?>[]{boolean.class}, new Object[]{true});
-                callMethodSafe(builder, "setBLASTLayer", new Class<?>[]{}, new Object[]{});
-
-                sc = builder.build();
+                // Attempt 1: Android 12-14 BLAST layer (MUST NOT set non-zero bufferSize on Builder!)
+                sc = buildBlastSurfaceControl(session);
                 if (sc != null) {
-                    SurfaceControl.Transaction tx = new SurfaceControl.Transaction();
-                    tx.setVisibility(sc, true);
-                    tx.setBufferSize(sc, width, height);
-                    callMethodSafe(tx, "setLayer", new Class<?>[]{SurfaceControl.class, int.class},
-                            new Object[]{sc, 0x40000000});
-                    callMethodSafe(tx, "setLayerStack", new Class<?>[]{SurfaceControl.class, int.class},
-                            new Object[]{sc, 0});
-                    callMethodSafe(tx, "setOpaque", new Class<?>[]{SurfaceControl.class, boolean.class},
-                            new Object[]{sc, true});
-                    callMethodSafe(tx, "show", new Class<?>[]{SurfaceControl.class}, new Object[]{sc});
-                    tx.apply();
-
-                    Object[] surfPair = createSurfaceFromControl(sc, width, height);
+                    configureTransaction(sc, width, height);
+                    Object[] surfPair = createBlastSurface(sc, width, height);
                     if (surfPair != null && surfPair[0] instanceof Surface) {
                         surface = (Surface) surfPair[0];
                         bbq = surfPair[1];
+                        logDebug("Created BLAST SurfaceControl + Surface (" + width + "x" + height + ") on attempt " + attempt);
                         break;
+                    } else {
+                        try { sc.release(); } catch (Throwable ignored) {}
+                        sc = null;
                     }
                 }
-            } catch (Throwable ignored) {
+
+                // Attempt 2: Legacy BufferQueue SurfaceControl fallback (Android 9-11)
+                sc = buildLegacySurfaceControl(session, width, height);
+                if (sc != null) {
+                    configureTransaction(sc, width, height);
+                    Surface legSurf = createLegacySurface(sc);
+                    if (legSurf != null) {
+                        surface = legSurf;
+                        logDebug("Created Legacy SurfaceControl + Surface (" + width + "x" + height + ") on attempt " + attempt);
+                        break;
+                    } else {
+                        try { sc.release(); } catch (Throwable ignored) {}
+                        sc = null;
+                    }
+                }
+            } catch (Throwable t) {
+                if (attempt % 10 == 0) {
+                    logDebug("Attempt " + attempt + " failed: " + t);
+                }
             }
             SystemClock.sleep(250);
         }
 
         if (surface == null || sc == null) {
+            logDebug("Failed to create Surface after all attempts");
             return;
         }
 
         addLine("[  OK  ]", COLOR_OK,
-                "Attached to SurfaceFlinger (" + width + "x" + height + " RGBA_8888)", COLOR_INIT);
+                "Attached to SurfaceFlinger (" + width + "x" + height + " RGBA_8888 Z=0x70000000)", COLOR_INIT);
 
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTypeface(Typeface.MONOSPACE);
@@ -178,6 +217,7 @@ public final class BootLogMain {
 
         long startMs = SystemClock.uptimeMillis();
         long rescueTriggeredAtMs = 0L;
+        int frameCount = 0;
 
         while (sRunning) {
             if (isBootCompleted()) {
@@ -200,7 +240,6 @@ public final class BootLogMain {
                 performBootloopRescue();
             }
 
-            // If rescue was executed, display countdown for 8 seconds so user can read the crash, then reboot
             if (sRescueExecuted && rescueTriggeredAtMs > 0L) {
                 long sinceRescue = SystemClock.uptimeMillis() - rescueTriggeredAtMs;
                 if (sinceRescue >= 8_000L) {
@@ -212,9 +251,18 @@ public final class BootLogMain {
                 }
             }
 
-            if (sDirty) {
+            // Re-assert layer Z-order and layerStack periodically during boot transitions
+            if (frameCount % 30 == 0) {
+                try {
+                    configureTransaction(sc, width, height);
+                } catch (Throwable ignored) {
+                }
+            }
+
+            if (sDirty || frameCount < 5) {
                 sDirty = false;
                 renderFrame(surface, width, height, textPaint, bgPaint, lineHeight);
+                frameCount++;
             }
 
             SystemClock.sleep(33);
@@ -241,6 +289,165 @@ public final class BootLogMain {
         }
     }
 
+    private static SurfaceControl buildBlastSurfaceControl(Object session) {
+        try {
+            SurfaceControl.Builder builder = createBuilder(session);
+            builder.setName("MirageVerboseBoot")
+                   .setFormat(PixelFormat.RGBA_8888);
+            callMethodSafe(builder, "setOpaque", new Class<?>[]{boolean.class}, new Object[]{true});
+            callMethodSafe(builder, "setHidden", new Class<?>[]{boolean.class}, new Object[]{false});
+            callMethodSafe(builder, "setBLASTLayer", new Class<?>[]{}, new Object[]{});
+            return builder.build();
+        } catch (Throwable t) {
+            logDebug("buildBlastSurfaceControl error: " + t);
+            return null;
+        }
+    }
+
+    private static SurfaceControl buildLegacySurfaceControl(Object session, int width, int height) {
+        try {
+            SurfaceControl.Builder builder = createBuilder(session);
+            builder.setName("MirageVerboseBoot")
+                   .setBufferSize(width, height)
+                   .setFormat(PixelFormat.RGBA_8888);
+            callMethodSafe(builder, "setOpaque", new Class<?>[]{boolean.class}, new Object[]{true});
+            callMethodSafe(builder, "setHidden", new Class<?>[]{boolean.class}, new Object[]{false});
+            return builder.build();
+        } catch (Throwable t) {
+            logDebug("buildLegacySurfaceControl error: " + t);
+            return null;
+        }
+    }
+
+    private static SurfaceControl.Builder createBuilder(Object session) throws Exception {
+        if (session != null) {
+            try {
+                Constructor<SurfaceControl.Builder> ctor =
+                        SurfaceControl.Builder.class.getConstructor(session.getClass());
+                return ctor.newInstance(session);
+            } catch (Throwable ignored) {
+            }
+        }
+        return new SurfaceControl.Builder();
+    }
+
+    private static void configureTransaction(SurfaceControl sc, int width, int height) {
+        SurfaceControl.Transaction tx = new SurfaceControl.Transaction();
+        tx.setVisibility(sc, true);
+
+        // Z-order 0x70000000 sits above stock bootanimation (0x30000000) and above WindowManager
+        callMethodSafe(tx, "setLayer", new Class<?>[]{SurfaceControl.class, int.class},
+                new Object[]{sc, 0x70000000});
+        callMethodSafe(tx, "setLayerStack", new Class<?>[]{SurfaceControl.class, int.class},
+                new Object[]{sc, 0});
+        callMethodSafe(tx, "setPosition", new Class<?>[]{SurfaceControl.class, float.class, float.class},
+                new Object[]{sc, 0f, 0f});
+        callMethodSafe(tx, "setAlpha", new Class<?>[]{SurfaceControl.class, float.class},
+                new Object[]{sc, 1.0f});
+        callMethodSafe(tx, "setOpaque", new Class<?>[]{SurfaceControl.class, boolean.class},
+                new Object[]{sc, true});
+
+        Rect bounds = new Rect(0, 0, width, height);
+        callMethodSafe(tx, "setWindowCrop", new Class<?>[]{SurfaceControl.class, Rect.class},
+                new Object[]{sc, bounds});
+        callMethodSafe(tx, "setCrop", new Class<?>[]{SurfaceControl.class, Rect.class},
+                new Object[]{sc, bounds});
+        callMethodSafe(tx, "show", new Class<?>[]{SurfaceControl.class}, new Object[]{sc});
+
+        // Also ensure primary physical display has layerStack 0 assigned
+        IBinder displayToken = queryPrimaryDisplayToken();
+        if (displayToken != null) {
+            callMethodSafe(tx, "setDisplayLayerStack", new Class<?>[]{IBinder.class, int.class},
+                    new Object[]{displayToken, 0});
+            callMethodSafe(tx, "setDisplayProjection",
+                    new Class<?>[]{IBinder.class, int.class, Rect.class, Rect.class},
+                    new Object[]{displayToken, Surface.ROTATION_0, bounds, bounds});
+        }
+
+        tx.apply();
+    }
+
+    private static Object[] createBlastSurface(SurfaceControl sc, int width, int height) {
+        try {
+            Class<?> bbqCls = Class.forName("android.graphics.BLASTBufferQueue");
+            // Prefer 5-arg constructor (sets updateDestinationFrame = true)
+            try {
+                Constructor<?> c5 = bbqCls.getConstructor(
+                        String.class, SurfaceControl.class, int.class, int.class, int.class);
+                Object bbq = c5.newInstance("MirageVerboseBoot", sc, width, height, PixelFormat.RGBA_8888);
+                Method createSurface = bbqCls.getMethod("createSurface");
+                Surface s = (Surface) createSurface.invoke(bbq);
+                if (s != null && s.isValid()) return new Object[]{s, bbq};
+            } catch (NoSuchMethodException ignored) {
+                Constructor<?> c2 = bbqCls.getConstructor(String.class, boolean.class);
+                Object bbq = c2.newInstance("MirageVerboseBoot", true);
+                Method update = bbqCls.getMethod("update", SurfaceControl.class, int.class, int.class, int.class);
+                update.invoke(bbq, sc, width, height, PixelFormat.RGBA_8888);
+                Method createSurface = bbqCls.getMethod("createSurface");
+                Surface s = (Surface) createSurface.invoke(bbq);
+                if (s != null && s.isValid()) return new Object[]{s, bbq};
+            }
+        } catch (Throwable t) {
+            logDebug("createBlastSurface error: " + t);
+        }
+        return null;
+    }
+
+    private static Surface createLegacySurface(SurfaceControl sc) {
+        try {
+            Surface s = new Surface(sc);
+            if (s.isValid()) return s;
+        } catch (Throwable ignored) {
+        }
+        try {
+            Constructor<Surface> noArg = Surface.class.getDeclaredConstructor();
+            noArg.setAccessible(true);
+            Surface s = noArg.newInstance();
+            Method copyFrom = Surface.class.getMethod("copyFrom", SurfaceControl.class);
+            copyFrom.invoke(s, sc);
+            if (s.isValid()) return s;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static IBinder queryPrimaryDisplayToken() {
+        try {
+            // Android 14+: DisplayControl.getPhysicalDisplayIds() + getPhysicalDisplayToken(id)
+            try {
+                Class<?> dcCls = Class.forName("com.android.server.display.DisplayControl");
+                Method getIds = dcCls.getMethod("getPhysicalDisplayIds");
+                long[] ids = (long[]) getIds.invoke(null);
+                if (ids != null && ids.length > 0) {
+                    Method getTok = dcCls.getMethod("getPhysicalDisplayToken", long.class);
+                    IBinder tok = (IBinder) getTok.invoke(null, ids[0]);
+                    if (tok != null) return tok;
+                }
+            } catch (Throwable ignored) {
+            }
+            // Android 10-13: SurfaceControl.getPhysicalDisplayIds() + getPhysicalDisplayToken(id)
+            try {
+                Method getIds = SurfaceControl.class.getMethod("getPhysicalDisplayIds");
+                long[] ids = (long[]) getIds.invoke(null);
+                if (ids != null && ids.length > 0) {
+                    Method getTok = SurfaceControl.class.getMethod("getPhysicalDisplayToken", long.class);
+                    IBinder tok = (IBinder) getTok.invoke(null, ids[0]);
+                    if (tok != null) return tok;
+                }
+            } catch (Throwable ignored) {
+            }
+            // Android 9-11: SurfaceControl.getInternalDisplayToken()
+            try {
+                Method getInt = SurfaceControl.class.getMethod("getInternalDisplayToken");
+                IBinder tok = (IBinder) getInt.invoke(null);
+                if (tok != null) return tok;
+            } catch (Throwable ignored) {
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
     private static void checkPreviousRescueBanner() {
         try {
             File f = new File(RESCUE_FLAG_PATH);
@@ -253,7 +460,6 @@ public final class BootLogMain {
                         sPreviousRescueInfo = line.trim();
                     }
                 }
-                // Remove flag so it only shows on the first recovery boot
                 //noinspection ResultOfMethodCallIgnored
                 f.delete();
             }
@@ -272,10 +478,6 @@ public final class BootLogMain {
         }
     }
 
-    /**
-     * Disables all installed Magisk modules (except MirageVerboseBoot) by creating
-     * /data/adb/modules/<id>/disable and writes a full crash report to /data/adb/mirage_bootloop_last.log.
-     */
     private static void performBootloopRescue() {
         List<String> disabledModules = new ArrayList<>();
         try {
@@ -312,14 +514,12 @@ public final class BootLogMain {
         addLine("[RESCUE]", COLOR_WARN, "Disabled Magisk modules: " + modSummary, COLOR_WARN);
         addLine("[RESCUE]", COLOR_WARN, "Saving crash log to " + PERSISTENT_LOG_PATH, COLOR_WARN);
 
-        // Write rescue marker for next boot
         try (FileOutputStream fos = new FileOutputStream(RESCUE_FLAG_PATH, false);
              PrintWriter pw = new PrintWriter(fos)) {
             pw.println("Disabled modules: " + modSummary + " | Log: " + SDCARD_LOG_PATH);
         } catch (Throwable ignored) {
         }
 
-        // Write comprehensive crash log
         writePersistentBootloopLog(disabledModules);
     }
 
@@ -357,7 +557,6 @@ public final class BootLogMain {
             pw.println("--- LOGCAT CRASH & SYSTEM TAIL ---");
             pw.flush();
 
-            // Append raw logcat -d -b crash,system,main tail
             try {
                 Process p = new ProcessBuilder(
                         "/system/bin/logcat", "-d", "-b", "crash,system,main", "-v", "time", "-t", "300"
@@ -376,7 +575,6 @@ public final class BootLogMain {
         } catch (Throwable ignored) {
         }
 
-        // Also attempt immediate copy to /sdcard/Download if already mounted
         try {
             File dlDir = new File("/sdcard/Download");
             if (dlDir.isDirectory() && dlDir.canWrite()) {
@@ -421,19 +619,17 @@ public final class BootLogMain {
             float padX = 24f;
             float topY = 64f;
 
-            // Header bar
             bgPaint.setColor(COLOR_HEADER);
             canvas.drawRect(0, 0, width, topY + lineHeight + 16f, bgPaint);
 
             textPaint.setFakeBoldText(true);
             textPaint.setColor(COLOR_INIT);
-            String title = ":: Mirage Verbose Boot v1.1 [Arch-Mode + Anti-Bootloop]";
+            String title = ":: Mirage Verbose Boot v1.1.2 [Arch-Mode + Anti-Bootloop]";
             canvas.drawText(title, padX, topY, textPaint);
             textPaint.setFakeBoldText(false);
 
             float contentTopY = topY + lineHeight + 28f;
 
-            // Show green recovery banner if previous boot was rescued from a bootloop
             if (sRecoveredFromPreviousBootloop && !sBootloopDetected) {
                 float boxHeight = 2 * lineHeight + 24f;
                 bgPaint.setColor(COLOR_RESCUE_BG);
@@ -452,7 +648,6 @@ public final class BootLogMain {
                 contentTopY += lineHeight + 16f;
             }
 
-            // If bootloop or fatal system crash detected, pin red diagnostic banner at top
             if (sBootloopDetected) {
                 List<String> crashSnapshot;
                 synchronized (sLock) {
@@ -669,7 +864,6 @@ public final class BootLogMain {
         if (raw.contains("FATAL EXCEPTION IN SYSTEM PROCESS")
                 || raw.contains("Watchdog: *** WATCHDOG KILLING SYSTEM PROCESS")
                 || (raw.contains("Fatal signal ") && (raw.contains("system_server") || raw.contains("zygote") || raw.contains("surfaceflinger")))) {
-            sFatalSystemCrashes++;
             triggerBootloop("Fatal crash in system_server / zygote", raw);
             sCapturingCrashTrace = true;
             sCrashTraceRemaining = 5;
@@ -756,38 +950,6 @@ public final class BootLogMain {
             sLines.add(new LogEntry(prefix, prefixColor, text, textColor));
             sDirty = true;
         }
-    }
-
-    private static Object[] createSurfaceFromControl(SurfaceControl sc, int width, int height) {
-        try {
-            Class<?> bbqCls = Class.forName("android.graphics.BLASTBufferQueue");
-            try {
-                Constructor<?> c5 = bbqCls.getConstructor(
-                        String.class, SurfaceControl.class, int.class, int.class, int.class);
-                Object bbq = c5.newInstance("MirageVerboseBoot", sc, width, height, PixelFormat.RGBA_8888);
-                Method createSurface = bbqCls.getMethod("createSurface");
-                Surface s = (Surface) createSurface.invoke(bbq);
-                if (s != null) return new Object[]{s, bbq};
-            } catch (NoSuchMethodException ignored) {
-                Constructor<?> c2 = bbqCls.getConstructor(String.class, boolean.class);
-                Object bbq = c2.newInstance("MirageVerboseBoot", true);
-                Method update = bbqCls.getMethod("update", SurfaceControl.class, int.class, int.class, int.class);
-                update.invoke(bbq, sc, width, height, PixelFormat.RGBA_8888);
-                Method createSurface = bbqCls.getMethod("createSurface");
-                Surface s = (Surface) createSurface.invoke(bbq);
-                if (s != null) return new Object[]{s, bbq};
-            }
-        } catch (Throwable ignored) {
-        }
-
-        try {
-            Constructor<Surface> ctor = Surface.class.getConstructor(SurfaceControl.class);
-            Surface s = ctor.newInstance(sc);
-            return new Object[]{s, null};
-        } catch (Throwable ignored) {
-        }
-
-        return null;
     }
 
     private static int[] queryDisplaySize() {

@@ -2,7 +2,10 @@
 MODDIR=${0%/*}
 COUNT_FILE="/data/adb/mirage_boot_count"
 LOG_FILE="/data/adb/mirage_bootloop_last.log"
+DEBUG_LOG="/data/adb/mirage_bootverbose_debug.log"
 RESCUE_FLAG="/data/adb/mirage_rescue_triggered"
+
+echo "=== post-fs-data started at $(date) ===" > "$DEBUG_LOG"
 
 # 1. Early Boot-Attempt Counter (catches early kernel/init/zygote hard bootloops)
 COUNT=0
@@ -14,9 +17,9 @@ if [ -f "$COUNT_FILE" ]; then
 fi
 COUNT=$((COUNT + 1))
 echo "$COUNT" > "$COUNT_FILE"
+echo "boot_count=$COUNT" >> "$DEBUG_LOG"
 
 if [ "$COUNT" -ge 3 ]; then
-    # 2 consecutive boots failed to reach sys.boot_completed=1 -> disable other Magisk modules now!
     DISABLED_LIST=""
     for mod in /data/adb/modules/*; do
         [ -d "$mod" ] || continue
@@ -50,21 +53,3 @@ if [ "$COUNT" -ge 3 ]; then
     echo "Disabled modules:${DISABLED_LIST:- none} | Log: /sdcard/Download/MirageBootloop_LAST.log" > "$RESCUE_FLAG"
     echo "0" > "$COUNT_FILE"
 fi
-
-# 2. Start background watcher so we attach to SurfaceFlinger the instant it comes online
-(
-    i=0
-    while [ $i -lt 120 ]; do
-        sf_state=$(getprop init.svc.surfaceflinger)
-        if [ "$sf_state" = "running" ]; then
-            break
-        fi
-        sleep 0.25
-        i=$((i + 1))
-    done
-
-    if [ "$(getprop sys.boot_completed)" != "1" ]; then
-        export CLASSPATH="$MODDIR/bootlog.dex"
-        /system/bin/app_process64 /system/bin --nice-name=mirage_bootlog com.mirage.bootlog.BootLogMain >/dev/null 2>&1 &
-    fi
-) &

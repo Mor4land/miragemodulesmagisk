@@ -1,6 +1,6 @@
 id=MirageVerboseBoot
 name=Mirage Verbose Boot + Anti-Bootloop
-version=v1.1.0
-versionCode=2
+version=v1.1.2
+versionCode=4
 author=Mor4land
 description=Arch Linux style real-time kernel (/dev/kmsg) + Android init + system boot logger via SurfaceFlinger BLAST overlay. Auto-detects bootloops, disables offending Magisk modules, and saves full crash logs to /sdcard/Download/MirageBootloop_LAST.log.
