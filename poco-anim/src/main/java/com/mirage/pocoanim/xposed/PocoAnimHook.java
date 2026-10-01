@@ -417,14 +417,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(quickstepCls, "startIconLaunchAnimator", markOpenStartHook);
             hookMethodsByName(quickstepCls, "startOpeningWindowAnimators", markOpenStartHook);
 
-            // CRITICAL: When breakOpenAnim() is called on ACTION_DOWN, immediately invoke doAnimationFinish()
-            // so WindowManagerService releases the opening RemoteAnimationController lock right away.
-            // Without this, WMS blocks startRecentsActivity until the opening animation reaches 100%!
+            // In breakOpenAnim(), NEVER invoke doAnimationFinish()! Calling doAnimationFinish() mid-launch
+            // fires animationResult.finish(), which forces WindowManagerService to immediately drop the
+            // RemoteAnimation leash and snap the app window to 100% fullscreen before the close gesture can catch it.
+            // Instead, guarantee mMoveToTargetRectWhenAnimEnd is false so mRectFSpringAnim never snaps to fullscreen.
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     if (sEnabled && sNonStopSwipe) {
-                        callMethodSafe(param.thisObject, "doAnimationFinish");
+                        Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
+                        if (spring != null) {
+                            setBooleanFieldSafe(spring, "mMoveToTargetRectWhenAnimEnd", false);
+                        }
                     }
                 }
             });
@@ -531,8 +535,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         hookMethodsByName(navStubViewCls, "onTouchEvent", touchEntryHook);
         hookMethodsByName(navStubViewCls, "onPointerEvent", touchEntryHook);
 
-        // 4. Force mWindowMode = 2 (APP_MODE) on ACTION_DOWN if an app is opening in-flight
-        // even when RecentsModel.getRunningTaskContainHome() still reports Launcher as top task
+        // 4. On ACTION_DOWN, reset animation flags so touch is never blocked,
+        // without forcing APP_MODE (mWindowMode=2) so HOME_MODE (mWindowMode=1)
+        // routes to commonHomeTouchFromDown -> ConnectAnimManager.connectOpeningAnim()!
         hookMethodsByName(navStubViewCls, "startVelocityTracker", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
@@ -544,18 +549,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
                 MotionEvent ev = (MotionEvent) param.args[0];
                 if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
-                    int windowMode = getIntFieldSafe(param.thisObject, "mWindowMode", 0);
-                    if (windowMode == 1 && isAppCurrentlyOpening(param.thisObject, cl)) {
+                    if (isAppCurrentlyOpening(param.thisObject, cl)) {
                         setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
                         setBooleanFieldSafe(param.thisObject, "mIsAnimatingToRecents", false);
-                        setIntFieldSafe(param.thisObject, "mWindowMode", 2);
-                        Object stateMachine = getObjectFieldSafe(param.thisObject, "mStateMachine");
-                        if (stateMachine != null) {
-                            try {
-                                XposedHelpers.callMethod(stateMachine, "sendMessage", 1, 101);
-                            } catch (Throwable ignored) {
-                            }
-                        }
                     }
                 }
             }
@@ -578,6 +574,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             RectF curRect = (RectF) curRectObj;
                             if (!curRect.isEmpty()) {
                                 try {
+                                    setBooleanFieldSafe(currentAnim, "mMoveToTargetRectWhenAnimEnd", false);
                                     XposedHelpers.callMethod(currentAnim, "updateEndRectF", curRect);
                                 } catch (Throwable ignored) {
                                 }
@@ -589,8 +586,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         });
 
         // 6. On ACTION_UP (actionUpAppTouchResolution), if the user flicked up before RecentsAnimation started,
-        // immediately reverse the in-flight opening RectFSpringAnim back toward its mStartRect (the icon)
-        // and finish the opening RemoteAnimationController so the window never expands to 100% first!
+        // reverse the in-flight opening RectFSpringAnim back toward its mStartRect (the icon)
+        // WITHOUT calling doAnimationFinish() so the window NEVER flashes to 100% fullscreen!
         hookMethodsByName(navStubViewCls, "actionUpAppTouchResolution", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
@@ -599,7 +596,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
                 Object tm = sTransitionManagerRef.get();
                 if (tm != null && (getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false) || isOpenAnimActive(tm, cl))) {
-                    callMethodSafe(tm, "doAnimationFinish");
                     boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", true);
                     if (!remoteStarted) {
                         Object currentAnim = getBreakableCurrentAnim(cl);
@@ -618,7 +614,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         });
 
-        // 7. Ensure finishBreakOpenAnimRunnable (doAnimationFinish) runs when performAppToHome starts
+        // 7. Ensure finishBreakOpenAnimRunnable only runs if RecentsAnimation has actually started,
+        // preventing the window from snapping to fullscreen when closing mid-flight
         XC_MethodHook finishBrokenOpenOnCloseHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
@@ -626,24 +623,42 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     return;
                 }
                 if (getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false)) {
-                    setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
-                    Object finishRunnable = getObjectFieldSafe(param.thisObject, "finishBreakOpenAnimRunnable");
-                    if (finishRunnable instanceof Runnable) {
-                        try {
-                            ((Runnable) finishRunnable).run();
-                            return;
-                        } catch (Throwable ignored) {
+                    boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", false);
+                    if (remoteStarted) {
+                        setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
+                        Object finishRunnable = getObjectFieldSafe(param.thisObject, "finishBreakOpenAnimRunnable");
+                        if (finishRunnable instanceof Runnable) {
+                            try {
+                                ((Runnable) finishRunnable).run();
+                                return;
+                            } catch (Throwable ignored) {
+                            }
                         }
-                    }
-                    Object tm = sTransitionManagerRef.get();
-                    if (tm != null) {
-                        callMethodSafe(tm, "doAnimationFinish");
+                        Object tm = sTransitionManagerRef.get();
+                        if (tm != null) {
+                            callMethodSafe(tm, "doAnimationFinish");
+                        }
                     }
                 }
             }
         };
         hookMethodsByName(navStubViewCls, "performAppToHome", finishBrokenOpenOnCloseHook);
         hookMethodsByName(navStubViewCls, "startAppToHomeInGestureThread", finishBrokenOpenOnCloseHook);
+
+        // 8. When gesture completely finishes returning to home, safely clean up any leftover opening animation state
+        hookMethodsByName(navStubViewCls, "finishAppToHome", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (!sEnabled) {
+                    return;
+                }
+                setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
+                Object tm = sTransitionManagerRef.get();
+                if (tm != null) {
+                    callMethodSafe(tm, "doAnimationFinish");
+                }
+            }
+        });
     }
 
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
