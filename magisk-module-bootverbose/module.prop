@@ -1,0 +1,6 @@
+id=MirageVerboseBoot
+name=Mirage Verbose Boot
+version=v1.0.0
+versionCode=1
+author=Mor4land
+description=Replaces bootanimation with real kernel and Android init logs. Green=kernel, Cyan=init/SM, Yellow=warn, Red=panic. Instantly spot bootloops. Exits when boot completes.
