@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.15
-versionCode=16
+version=v1.0.16
+versionCode=17
 author=Mirage
-description=Плавный ColorOS-перехват открытия приложений без вспышки в полный экран и рывков (POCO M5).
+description=Плавный ColorOS-перехват открытия приложений, кинетический Bounce-отклик и градиентная кастомизация иконок (POCO M5).

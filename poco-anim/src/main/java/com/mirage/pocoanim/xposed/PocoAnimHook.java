@@ -8,11 +8,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import com.mirage.pocoanim.util.AnimPrefs;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -42,6 +56,15 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile boolean sNonStopSwipe = true;
     private static volatile boolean sTurboOptimize = true;
     private static volatile float sAnimSpeedRatio = 1.0f;
+
+    private static volatile boolean sIconThemeEnabled = false;
+    private static volatile int sIconColorMode = AnimPrefs.COLOR_MODE_GRADIENT;
+    private static volatile int sIconColor1 = AnimPrefs.DEFAULT_COLOR_1;
+    private static volatile int sIconColor2 = AnimPrefs.DEFAULT_COLOR_2;
+    private static volatile int sIconGradientPreset = 0;
+    private static volatile float sIconTintIntensity = 0.85f;
+    private static volatile boolean sIconBounceAnim = true;
+    private static volatile WeakReference<Activity> sLauncherActivityRef = new WeakReference<>(null);
 
     private static volatile boolean sReceiverRegistered = false;
     private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
@@ -73,6 +96,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         hookInstantLaunchAfterClose(lpparam.classLoader);
         hookBreakOpenAnimationInFlight(lpparam.classLoader);
         hookLauncherLifecycle(lpparam.classLoader);
+        hookIconThemingAndBounce(lpparam.classLoader);
     }
 
     private static void loadXSharedPrefs() {
@@ -91,6 +115,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sNonStopSwipe = xPrefs.getBoolean(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe);
                 sTurboOptimize = xPrefs.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize);
                 sAnimSpeedRatio = xPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio);
+                sIconThemeEnabled = xPrefs.getBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, sIconThemeEnabled);
+                sIconColorMode = xPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, sIconColorMode);
+                sIconColor1 = xPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, sIconColor1);
+                sIconColor2 = xPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, sIconColor2);
+                sIconGradientPreset = xPrefs.getInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, sIconGradientPreset);
+                sIconTintIntensity = xPrefs.getFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, sIconTintIntensity);
+                sIconBounceAnim = xPrefs.getBoolean(AnimPrefs.KEY_ICON_BOUNCE_ANIM, sIconBounceAnim);
             }
         } catch (Throwable ignored) {
         }
@@ -113,6 +144,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sNonStopSwipe = cache.getBoolean(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe);
                 sTurboOptimize = cache.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize);
                 sAnimSpeedRatio = cache.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio);
+                sIconThemeEnabled = cache.getBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, sIconThemeEnabled);
+                sIconColorMode = cache.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, sIconColorMode);
+                sIconColor1 = cache.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, sIconColor1);
+                sIconColor2 = cache.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, sIconColor2);
+                sIconGradientPreset = cache.getInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, sIconGradientPreset);
+                sIconTintIntensity = cache.getFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, sIconTintIntensity);
+                sIconBounceAnim = cache.getBoolean(AnimPrefs.KEY_ICON_BOUNCE_ANIM, sIconBounceAnim);
             }
         } catch (Throwable ignored) {
         }
@@ -136,6 +174,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     .putBoolean(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe)
                     .putBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize)
                     .putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio)
+                    .putBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, sIconThemeEnabled)
+                    .putInt(AnimPrefs.KEY_ICON_COLOR_MODE, sIconColorMode)
+                    .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, sIconColor1)
+                    .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, sIconColor2)
+                    .putInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, sIconGradientPreset)
+                    .putFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, sIconTintIntensity)
+                    .putBoolean(AnimPrefs.KEY_ICON_BOUNCE_ANIM, sIconBounceAnim)
                     .apply();
         } catch (Throwable ignored) {
         }
@@ -923,6 +968,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     try {
                         if (param.thisObject instanceof Activity) {
                             Activity activity = (Activity) param.thisObject;
+                            sLauncherActivityRef = new WeakReference<>(activity);
                             loadLocalCachePrefs(activity);
                             updateRuntimeFieldsPostInit(cl);
                             registerConfigReceiver(activity, cl);
@@ -940,7 +986,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 protected void afterHookedMethod(MethodHookParam param) {
                     try {
                         if (param.thisObject instanceof Activity) {
-                            loadLocalCachePrefs((Activity) param.thisObject);
+                            Activity activity = (Activity) param.thisObject;
+                            sLauncherActivityRef = new WeakReference<>(activity);
+                            loadLocalCachePrefs(activity);
                             updateRuntimeFieldsPostInit(cl);
                         }
                     } catch (Throwable ignored) {
@@ -977,10 +1025,36 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         sNonStopSwipe = intent.getBooleanExtra(AnimPrefs.KEY_NON_STOP_SWIPE, sNonStopSwipe);
                         sTurboOptimize = intent.getBooleanExtra(AnimPrefs.KEY_TURBO_OPTIMIZE, sTurboOptimize);
                         sAnimSpeedRatio = intent.getFloatExtra(AnimPrefs.KEY_ANIM_SPEED_RATIO, sAnimSpeedRatio);
+                        sIconThemeEnabled = intent.getBooleanExtra(AnimPrefs.KEY_ICON_THEME_ENABLED, sIconThemeEnabled);
+                        sIconColorMode = intent.getIntExtra(AnimPrefs.KEY_ICON_COLOR_MODE, sIconColorMode);
+                        sIconColor1 = intent.getIntExtra(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, sIconColor1);
+                        sIconColor2 = intent.getIntExtra(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, sIconColor2);
+                        sIconGradientPreset = intent.getIntExtra(AnimPrefs.KEY_ICON_GRADIENT_PRESET, sIconGradientPreset);
+                        sIconTintIntensity = intent.getFloatExtra(AnimPrefs.KEY_ICON_TINT_INTENSITY, sIconTintIntensity);
+                        sIconBounceAnim = intent.getBooleanExtra(AnimPrefs.KEY_ICON_BOUNCE_ANIM, sIconBounceAnim);
                         saveLocalCachePrefs(context);
                         updateRuntimeFieldsPostInit(cl);
+
+                        Activity launcher = sLauncherActivityRef.get();
+                        if (launcher != null) {
+                            launcher.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        View decor = launcher.getWindow().getDecorView();
+                                        if (decor != null) {
+                                            decor.invalidate();
+                                            decor.requestLayout();
+                                        }
+                                    } catch (Throwable ignored) {
+                                    }
+                                }
+                            });
+                        }
+
                         XposedBridge.log(TAG + ": Live config updated (enabled=" + sEnabled
-                                + ", instant=" + sInstantLaunch + ", nonStop=" + sNonStopSwipe + ", speed=" + sAnimSpeedRatio + ")");
+                                + ", instant=" + sInstantLaunch + ", nonStop=" + sNonStopSwipe + ", speed=" + sAnimSpeedRatio
+                                + ", iconTheme=" + sIconThemeEnabled + ", preset=" + sIconGradientPreset + ", bounce=" + sIconBounceAnim + ")");
                     } catch (Throwable ignored) {
                     }
                 }
@@ -1193,6 +1267,243 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             }
         } catch (Throwable ignored) {
+        }
+    }
+
+    public static class ThemedGradientDrawable extends BitmapDrawable {
+        public ThemedGradientDrawable(Resources res, Bitmap bitmap) {
+            super(res, bitmap);
+        }
+    }
+
+    private static Drawable applyGradientToDrawable(Context context, Drawable original, int presetIdx, float intensity) {
+        if (original == null || original instanceof ThemedGradientDrawable) {
+            return original;
+        }
+        try {
+            int w = original.getIntrinsicWidth();
+            int h = original.getIntrinsicHeight();
+            if (w <= 0 || h <= 0) {
+                w = 192;
+                h = 192;
+            }
+            w = Math.min(Math.max(w, 48), 384);
+            h = Math.min(Math.max(h, 48), 384);
+
+            Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            Rect oldBounds = original.copyBounds();
+            original.setBounds(0, 0, w, h);
+            original.draw(canvas);
+            if (oldBounds != null) {
+                original.setBounds(oldBounds);
+            }
+
+            int c1 = sIconColor1;
+            int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
+
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+            if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
+                paint.setColor(c1);
+            } else {
+                LinearGradient gradient = new LinearGradient(
+                        0, 0, w, h,
+                        c1, c2,
+                        Shader.TileMode.CLAMP
+                );
+                paint.setShader(gradient);
+            }
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
+            paint.setAlpha(alpha);
+
+            canvas.drawRect(0, 0, w, h, paint);
+
+            Resources res = (context != null) ? context.getResources() : Resources.getSystem();
+            return new ThemedGradientDrawable(res, bitmap);
+        } catch (Throwable t) {
+            return original;
+        }
+    }
+
+    private static Bitmap applyGradientToBitmap(Bitmap original, int presetIdx, float intensity) {
+        if (original == null || original.isRecycled()) {
+            return original;
+        }
+        try {
+            int w = original.getWidth();
+            int h = original.getHeight();
+            if (w <= 0 || h <= 0) {
+                return original;
+            }
+            Bitmap output = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(output);
+            Paint basePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+            canvas.drawBitmap(original, 0, 0, basePaint);
+
+            int c1 = sIconColor1;
+            int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
+
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
+                paint.setColor(c1);
+            } else {
+                LinearGradient gradient = new LinearGradient(
+                        0, 0, w, h,
+                        c1, c2,
+                        Shader.TileMode.CLAMP
+                );
+                paint.setShader(gradient);
+            }
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
+            paint.setAlpha(alpha);
+
+            canvas.drawRect(0, 0, w, h, paint);
+            return output;
+        } catch (Throwable t) {
+            return original;
+        }
+    }
+
+    private static void hookIconThemingAndBounce(ClassLoader cl) {
+        String[] iconClassNames = new String[]{
+                "com.miui.home.launcher.ShortcutIcon",
+                "com.miui.home.launcher.ItemIcon",
+                "com.miui.home.launcher.FolderIcon",
+                "com.miui.home.launcher.folder.FolderIcon"
+        };
+
+        final XC_MethodHook iconDrawableHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sIconThemeEnabled) {
+                    return;
+                }
+                if (param.args == null || param.args.length == 0) {
+                    return;
+                }
+                if (param.args[0] instanceof Drawable) {
+                    Drawable orig = (Drawable) param.args[0];
+                    if (orig instanceof ThemedGradientDrawable) {
+                        return;
+                    }
+                    Context ctx = null;
+                    if (param.thisObject instanceof View) {
+                        ctx = ((View) param.thisObject).getContext();
+                    }
+                    Drawable themed = applyGradientToDrawable(ctx, orig, sIconGradientPreset, sIconTintIntensity);
+                    if (themed != null) {
+                        param.args[0] = themed;
+                    }
+                } else if (param.args[0] instanceof Bitmap) {
+                    Bitmap orig = (Bitmap) param.args[0];
+                    Bitmap themed = applyGradientToBitmap(orig, sIconGradientPreset, sIconTintIntensity);
+                    if (themed != null) {
+                        param.args[0] = themed;
+                    }
+                }
+            }
+        };
+
+        final XC_MethodHook touchBounceHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sIconBounceAnim) {
+                    return;
+                }
+                if (!(param.thisObject instanceof View)) {
+                    return;
+                }
+                if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof MotionEvent)) {
+                    return;
+                }
+                MotionEvent ev = (MotionEvent) param.args[0];
+                final View iconView = (View) param.thisObject;
+                int action = ev.getActionMasked();
+
+                View animTarget = null;
+                try {
+                    Object imgObj = XposedHelpers.getObjectField(iconView, "mIconImageView");
+                    if (imgObj instanceof View) {
+                        animTarget = (View) imgObj;
+                    }
+                } catch (Throwable ignored) {
+                }
+                if (animTarget == null) {
+                    try {
+                        Object imgObj = XposedHelpers.callMethod(iconView, "getIconImageView");
+                        if (imgObj instanceof View) {
+                            animTarget = (View) imgObj;
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+                if (animTarget == null) {
+                    animTarget = iconView;
+                }
+
+                if (action == MotionEvent.ACTION_DOWN) {
+                    long downTime = ev.getDownTime();
+                    Object tag = animTarget.getTag(0x7F0A0001);
+                    if (tag instanceof Long && ((Long) tag) == downTime) {
+                        return;
+                    }
+                    animTarget.setTag(0x7F0A0001, downTime);
+
+                    animTarget.setPivotX(animTarget.getWidth() / 2f);
+                    animTarget.setPivotY(animTarget.getHeight() / 2f);
+                    animTarget.animate().cancel();
+                    animTarget.animate()
+                            .scaleX(0.86f)
+                            .scaleY(0.86f)
+                            .setDuration(110)
+                            .setInterpolator(new DecelerateInterpolator())
+                            .start();
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    if (Math.abs(animTarget.getScaleX() - 1.0f) < 0.01f && Math.abs(animTarget.getScaleY() - 1.0f) < 0.01f) {
+                        return;
+                    }
+                    animTarget.animate().cancel();
+                    animTarget.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(260)
+                            .setInterpolator(new OvershootInterpolator(2.4f))
+                            .start();
+                }
+            }
+        };
+
+        for (String clsName : iconClassNames) {
+            Class<?> cls = XposedHelpers.findClassIfExists(clsName, cl);
+            if (cls == null) {
+                continue;
+            }
+
+            for (Method m : cls.getDeclaredMethods()) {
+                String name = m.getName();
+                Class<?>[] pTypes = m.getParameterTypes();
+                if (pTypes.length == 1 && (name.startsWith("set") || name.startsWith("update") || name.equals("icon"))) {
+                    if (Drawable.class.isAssignableFrom(pTypes[0]) || Bitmap.class.isAssignableFrom(pTypes[0])) {
+                        try {
+                            XposedBridge.hookMethod(m, iconDrawableHook);
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            }
+
+            for (String touchMethod : new String[]{"dispatchTouchEvent", "onTouchEvent"}) {
+                try {
+                    for (Method m : cls.getDeclaredMethods()) {
+                        if (m.getName().equals(touchMethod) && m.getParameterTypes().length == 1 && m.getParameterTypes()[0] == MotionEvent.class) {
+                            XposedBridge.hookMethod(m, touchBounceHook);
+                        }
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
         }
     }
 }
