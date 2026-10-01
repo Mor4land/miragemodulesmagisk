@@ -369,6 +369,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(launcherCls, "launch", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled) {
+                        sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    }
                     if (!sEnabled || !sInstantLaunch) {
                         return;
                     }
@@ -394,6 +397,30 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             setBooleanFieldSafe(navStub, "mIsLaunchingNewTask", false);
                             setBooleanFieldSafe(navStub, "mIsBlockedAfterStartNewTask", false);
                         }
+                    }
+                }
+            });
+        }
+
+        // 4. Hook Application.isClickAppWaitForCallback to prevent NavStubView.getCurrentWindowMode from dropping swipes
+        Class<?> appCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Application", cl);
+        if (appCls != null) {
+            hookMethodsByName(appCls, "setClickAppWaitForCallback", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (param.args != null && param.args.length > 0 && Boolean.TRUE.equals(param.args[0])) {
+                        sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    }
+                    if (sEnabled && (sInstantLaunch || sNonStopSwipe)) {
+                        param.args[0] = Boolean.FALSE;
+                    }
+                }
+            });
+            hookMethodsByReturnType(appCls, "isClickAppWaitForCallback", boolean.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && (sInstantLaunch || sNonStopSwipe)) {
+                        param.setResult(false);
                     }
                 }
             });
@@ -494,7 +521,26 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         });
 
-        // 2. Bypass DeviceLevelUtils.isUseSimpleAnim() restriction in NavStubView.needBreakOpenAnim()
+        // 2. Bypass window mode 0 (GESTURE_NONE) drop when app is opening so gestures are dispatched to ConnectAnimManager
+        hookMethodsByName(navStubViewCls, "getCurrentWindowMode", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sNonStopSwipe) {
+                    return;
+                }
+                Object res = param.getResult();
+                if (res instanceof Integer && ((Integer) res) == 0) {
+                    if (isAppCurrentlyOpening(param.thisObject, cl)) {
+                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                        setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
+                        param.setResult(1);
+                    }
+                }
+            }
+        });
+
+        // 3. Bypass DeviceLevelUtils.isUseSimpleAnim() restriction in NavStubView.needBreakOpenAnim()
         hookMethodsByReturnType(navStubViewCls, "needBreakOpenAnim", boolean.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
@@ -659,21 +705,116 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             }
         });
+
+        // 9. Bridge opening RectFSpringAnim into BreakableAnimManager so ConnectAnimManager connects to the opening anim
+        Class<?> breakableMgrCls = XposedHelpers.findClassIfExists("com.miui.home.recents.breakableAnim.IconAndTaskBreakableAnimManager", cl);
+        Class<?> baseBreakableCls = XposedHelpers.findClassIfExists("com.miui.home.recents.breakableAnim.BreakableAnimManager", cl);
+        XC_MethodHook isAnimChainHook = new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (sEnabled && sNonStopSwipe && !Boolean.TRUE.equals(param.getResult())) {
+                    if (getOpeningRectFSpringAnimSafe(cl) != null || isAppCurrentlyOpening(null, cl)) {
+                        param.setResult(true);
+                    }
+                }
+            }
+        };
+        if (breakableMgrCls != null) {
+            hookMethodsByReturnType(breakableMgrCls, "isAnimChainOn", boolean.class, isAnimChainHook);
+        }
+        if (baseBreakableCls != null) {
+            hookMethodsByReturnType(baseBreakableCls, "isAnimChainOn", boolean.class, isAnimChainHook);
+            hookMethodsByName(baseBreakableCls, "getCurrentAnim", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sNonStopSwipe && param.getResult() == null) {
+                        Object spring = getOpeningRectFSpringAnimSafe(cl);
+                        if (spring != null) {
+                            param.setResult(spring);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 10. Enable BackGestureBreakController to allow side gestures to break open anim as well
+        Class<?> backBreakCls = XposedHelpers.findClassIfExists("com.miui.home.recents.BackGestureBreakController", cl);
+        if (backBreakCls != null) {
+            XC_MethodHook trueHook = new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sNonStopSwipe) {
+                        param.setResult(true);
+                    }
+                }
+            };
+            hookMethodsByReturnType(backBreakCls, "canUseBackGestureBreakOpenAnim", boolean.class, trueHook);
+            hookMethodsByReturnType(backBreakCls, "isOpenAnimBelowBackBreakThreshold", boolean.class, trueHook);
+        }
+
+        // 11. Bypass open anim threshold restriction in LocalWindowAnimImplementor
+        Class<?> localAnimCls = XposedHelpers.findClassIfExists("com.miui.home.recents.anim.windowanim.LocalWindowAnimImplementor", cl);
+        if (localAnimCls != null) {
+            hookMethodsByReturnType(localAnimCls, "isOpenAnimBelowBackBreakThreshold", boolean.class, new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sNonStopSwipe) {
+                        param.setResult(true);
+                    }
+                }
+            });
+        }
+    }
+
+    private static Object getAppTransitionManagerSafe(ClassLoader cl) {
+        Object tm = sTransitionManagerRef.get();
+        if (tm != null) {
+            return tm;
+        }
+        try {
+            Class<?> appCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Application", cl);
+            if (appCls != null) {
+                Object launcher = XposedHelpers.callStaticMethod(appCls, "getLauncher");
+                if (launcher != null) {
+                    Object appTm = XposedHelpers.callMethod(launcher, "getAppTransitionManager");
+                    if (appTm != null) {
+                        sTransitionManagerRef = new WeakReference<>(appTm);
+                        return appTm;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static Object getOpeningRectFSpringAnimSafe(ClassLoader cl) {
+        Object tm = getAppTransitionManagerSafe(cl);
+        if (tm != null) {
+            Object spring = getObjectFieldSafe(tm, "mRectFSpringAnim");
+            if (spring != null && callBooleanMethodSafe(spring, "isRunning", false)) {
+                return spring;
+            }
+        }
+        return null;
     }
 
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
+        if (getOpeningRectFSpringAnimSafe(cl) != null) {
+            return true;
+        }
         if (isBreakableAnimChainActive(cl)) {
             boolean closingToHome = navStubView != null && getBooleanFieldSafe(navStubView, "mIsAnimatingToLauncher", false);
             if (!closingToHome) {
                 return true;
             }
         }
-        Object tm = sTransitionManagerRef.get();
+        Object tm = getAppTransitionManagerSafe(cl);
         if (tm != null && isOpenAnimActive(tm, cl)) {
             return true;
         }
         long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
-        return elapsed >= 0L && elapsed < 450L;
+        return elapsed >= 0L && elapsed < 1000L;
     }
 
     private static boolean isOpenAnimActive(Object transitionManager, ClassLoader cl) {
