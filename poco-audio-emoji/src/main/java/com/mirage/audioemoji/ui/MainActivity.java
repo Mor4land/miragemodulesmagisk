@@ -222,10 +222,28 @@ public class MainActivity extends Activity {
     private String getDialerVersion() {
         try {
             PackageInfo pi = getPackageManager().getPackageInfo("com.google.android.dialer", 0);
-            return pi.versionName != null ? pi.versionName : "Установлен";
-        } catch (PackageManager.NameNotFoundException e) {
-            return "Не найдено";
+            return pi.versionName != null ? pi.versionName : "Установлен (Google)";
+        } catch (Throwable ignored) {
         }
+
+        try {
+            android.telecom.TelecomManager tm = (android.telecom.TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+            if (tm != null) {
+                String defDialer = tm.getDefaultDialerPackage();
+                if ("com.google.android.dialer".equals(defDialer)) {
+                    return "Установлен (по умолчанию)";
+                } else if (defDialer != null && !defDialer.isEmpty()) {
+                    return "Активна: " + defDialer;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        if (new java.io.File("/data/data/com.google.android.dialer").exists()) {
+            return "Обнаружен в системе";
+        }
+
+        return "Не найдено";
     }
 
     private void patchPhenotypeWithRoot() {
