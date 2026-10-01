@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.8
-versionCode=9
+version=v1.0.9
+versionCode=10
 author=Mirage
-description=Мгновенное прерывание анимации открытия свайпом на лету (Break Open Anim), чистые флагманские анимации без фризов, 90 Гц и защита WebView для POCO M5.
+description=Снятие взаимной блокировки WMS RemoteAnimation/RecentsAnimation для мгновенного прерывания открытия и закрытия без лагов (POCO M5).

@@ -360,6 +360,44 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterStartNewTask", boolean.class, unblockNavStubTaskHook);
             hookMethodsByReturnType(navStubViewCls, "isBlockedAfterExitSmallWindowMode", boolean.class, unblockNavStubTaskHook);
         }
+
+        // 3. When launching a new app while a previous app-to-home animation is still running,
+        // release RecentsAnimationController asynchronously (on UI_HELPER_EXECUTOR via finishControllerAsync)
+        // exactly like NavStubView.onTaskAppeared([41f060]) so WMS starts the new app immediately with zero UI-thread lag.
+        Class<?> launcherCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Launcher", cl);
+        if (launcherCls != null) {
+            hookMethodsByName(launcherCls, "launch", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || !sInstantLaunch) {
+                        return;
+                    }
+                    Object navStub = sNavStubViewRef.get();
+                    if (navStub == null && param.thisObject != null) {
+                        navStub = getObjectFieldSafe(param.thisObject, "mNavStubView");
+                        if (navStub != null) {
+                            sNavStubViewRef = new WeakReference<>(navStub);
+                        }
+                    }
+                    if (navStub != null) {
+                        boolean animatingToHome = getBooleanFieldSafe(navStub, "mIsAnimatingToLauncher", false);
+                        boolean animatingToRecents = getBooleanFieldSafe(navStub, "mIsAnimatingToRecents", false);
+                        if (animatingToHome || animatingToRecents || isBreakableAnimChainActive(cl)) {
+                            callMethodSafe(navStub, "removeFinishRunnable");
+                            Object listener = getObjectFieldSafe(navStub, "mRecentsAnimationListenerImpl");
+                            if (listener != null) {
+                                try {
+                                    XposedHelpers.callMethod(listener, "finishControllerAsync", true, false);
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                            setBooleanFieldSafe(navStub, "mIsLaunchingNewTask", false);
+                            setBooleanFieldSafe(navStub, "mIsBlockedAfterStartNewTask", false);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     private static void hookBreakOpenAnimationInFlight(final ClassLoader cl) {
@@ -378,6 +416,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             };
             hookMethodsByName(quickstepCls, "startIconLaunchAnimator", markOpenStartHook);
             hookMethodsByName(quickstepCls, "startOpeningWindowAnimators", markOpenStartHook);
+
+            // CRITICAL: When breakOpenAnim() is called on ACTION_DOWN, immediately invoke doAnimationFinish()
+            // so WindowManagerService releases the opening RemoteAnimationController lock right away.
+            // Without this, WMS blocks startRecentsActivity until the opening animation reaches 100%!
+            hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sNonStopSwipe) {
+                        callMethodSafe(param.thisObject, "doAnimationFinish");
+                    }
+                }
+            });
 
             hookMethodsByName(quickstepCls, "doAnimationFinish", new XC_MethodHook() {
                 @Override
@@ -399,6 +449,25 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     }
                 });
             }
+        }
+
+        // Tune RectFSpringAnim physics for crisp ColorOS-style response without ever calling cancel()
+        Class<?> rectFSpringCls = XposedHelpers.findClassIfExists("com.miui.home.recents.util.RectFSpringAnim", cl);
+        if (rectFSpringCls != null) {
+            hookMethodsByName(rectFSpringCls, "setAnimParam", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || !sTurboOptimize || param.args == null || param.args.length < 2) {
+                        return;
+                    }
+                    if (param.args[0] instanceof Float && param.args[1] instanceof Float) {
+                        float damping = (Float) param.args[0];
+                        float response = (Float) param.args[1];
+                        param.args[0] = Math.max(damping, 0.95f);
+                        param.args[1] = Math.max(0.16f, response * 0.82f * Math.min(1.0f, sAnimSpeedRatio));
+                    }
+                }
+            });
         }
 
         final Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
@@ -519,7 +588,37 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         });
 
-        // 6. Ensure finishBreakOpenAnimRunnable (doAnimationFinish) runs when a fast flick-up completes before RecentsAnimation starts
+        // 6. On ACTION_UP (actionUpAppTouchResolution), if the user flicked up before RecentsAnimation started,
+        // immediately reverse the in-flight opening RectFSpringAnim back toward its mStartRect (the icon)
+        // and finish the opening RemoteAnimationController so the window never expands to 100% first!
+        hookMethodsByName(navStubViewCls, "actionUpAppTouchResolution", new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sNonStopSwipe) {
+                    return;
+                }
+                Object tm = sTransitionManagerRef.get();
+                if (tm != null && (getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false) || isOpenAnimActive(tm, cl))) {
+                    callMethodSafe(tm, "doAnimationFinish");
+                    boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", true);
+                    if (!remoteStarted) {
+                        Object currentAnim = getBreakableCurrentAnim(cl);
+                        if (currentAnim != null) {
+                            Object startRect = getObjectFieldSafe(currentAnim, "mStartRect");
+                            if (startRect instanceof RectF && !((RectF) startRect).isEmpty()) {
+                                try {
+                                    setBooleanFieldSafe(currentAnim, "mMoveToTargetRectWhenAnimEnd", false);
+                                    XposedHelpers.callMethod(currentAnim, "updateEndRectF", startRect);
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 7. Ensure finishBreakOpenAnimRunnable (doAnimationFinish) runs when performAppToHome starts
         XC_MethodHook finishBrokenOpenOnCloseHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
