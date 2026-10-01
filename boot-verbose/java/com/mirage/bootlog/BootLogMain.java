@@ -4,43 +4,56 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
-import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.os.IBinder;
 import android.os.SystemClock;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Standalone root daemon executed via /system/bin/app_process64 during Android boot.
  * Creates a raw SurfaceFlinger overlay (SurfaceControl + BLASTBufferQueue) before
- * WindowManagerService starts and streams real /dev/kmsg (kernel + init) and logcat
- * (zygote + SystemServer + fatal crashes) in Arch Linux verbose boot format.
+ * WindowManagerService starts, streams real /dev/kmsg (kernel + init) and logcat
+ * (zygote + SystemServer + fatal crashes) in Arch Linux verbose boot format, and
+ * automatically saves crash logs + disables offending Magisk modules on bootloop.
  */
 public final class BootLogMain {
 
-    private static final int COLOR_BG       = 0xFF000000;
-    private static final int COLOR_HEADER   = 0xFF121212;
-    private static final int COLOR_OK       = 0xFF00E676; // Arch green
-    private static final int COLOR_KERNEL   = 0xFF00C853; // Kernel green
-    private static final int COLOR_INIT     = 0xFF00E5FF; // Init / Zygote cyan
-    private static final int COLOR_SYSTEM   = 0xFFE0E0E0; // SystemServer white-gray
-    private static final int COLOR_WARN     = 0xFFFFD600; // Warning / SELinux yellow
-    private static final int COLOR_ERR      = 0xFFFF1744; // Fatal / Error bright red
-    private static final int COLOR_DIM      = 0xFF757575; // Timestamp / meta gray
-    private static final int COLOR_CRASH_BG = 0xFF3B000B; // Pinned bootloop box background
+    private static final String SELF_MODULE_ID = "MirageVerboseBoot";
+    private static final String PERSISTENT_LOG_PATH = "/data/adb/mirage_bootloop_last.log";
+    private static final String SDCARD_LOG_PATH = "/sdcard/Download/MirageBootloop_LAST.log";
+    private static final String RESCUE_FLAG_PATH = "/data/adb/mirage_rescue_triggered";
+    private static final String BOOT_COUNT_PATH = "/data/adb/mirage_boot_count";
 
-    private static final int MAX_LINES = 220;
+    private static final int COLOR_BG        = 0xFF000000;
+    private static final int COLOR_HEADER    = 0xFF121212;
+    private static final int COLOR_OK        = 0xFF00E676; // Arch green
+    private static final int COLOR_KERNEL    = 0xFF00C853; // Kernel green
+    private static final int COLOR_INIT      = 0xFF00E5FF; // Init / Zygote cyan
+    private static final int COLOR_SYSTEM    = 0xFFE0E0E0; // SystemServer white-gray
+    private static final int COLOR_WARN      = 0xFFFFD600; // Warning / SELinux yellow
+    private static final int COLOR_ERR       = 0xFFFF1744; // Fatal / Error bright red
+    private static final int COLOR_DIM       = 0xFF757575; // Timestamp / meta gray
+    private static final int COLOR_CRASH_BG  = 0xFF3B000B; // Pinned bootloop box background
+    private static final int COLOR_RESCUE_BG = 0xFF002B1F; // Pinned rescue recovery banner
+
+    private static final int MAX_LINES = 240;
+    private static final long BOOT_HANG_TIMEOUT_MS = 105_000L; // 105s without boot_completed -> hang bootloop
 
     private static final class LogEntry {
         final String prefix;
@@ -58,14 +71,18 @@ public final class BootLogMain {
 
     private static final Object sLock = new Object();
     private static final ArrayList<LogEntry> sLines = new ArrayList<>(MAX_LINES + 16);
-    private static final ArrayList<String> sCrashLines = new ArrayList<>(8);
+    private static final ArrayList<String> sCrashLines = new ArrayList<>(10);
 
     private static volatile boolean sRunning = true;
     private static volatile boolean sDirty = true;
     private static volatile boolean sBootloopDetected = false;
+    private static volatile boolean sRescueExecuted = false;
+    private static volatile boolean sRecoveredFromPreviousBootloop = false;
+    private static volatile String sPreviousRescueInfo = "";
     private static volatile String sBootloopReason = "";
     private static volatile int sZygoteStarts = 0;
     private static volatile int sSystemServerStarts = 0;
+    private static volatile int sFatalSystemCrashes = 0;
     private static volatile boolean sCapturingCrashTrace = false;
     private static volatile int sCrashTraceRemaining = 0;
 
@@ -78,8 +95,10 @@ public final class BootLogMain {
     }
 
     private static void runBootLogger() throws Exception {
-        // Start capturing /dev/kmsg and logcat immediately, even before SurfaceFlinger is ready
-        addLine("[  OK  ]", COLOR_OK, "MirageVerboseBoot daemon started (uid=" + android.os.Process.myUid() + ")", COLOR_SYSTEM);
+        checkPreviousRescueBanner();
+
+        addLine("[  OK  ]", COLOR_OK,
+                "MirageVerboseBoot v1.1.0 started (uid=" + android.os.Process.myUid() + ")", COLOR_SYSTEM);
 
         Thread kmsgThread = new Thread(BootLogMain::readKmsgLoop, "MirageKmsgReader");
         kmsgThread.setDaemon(true);
@@ -89,7 +108,6 @@ public final class BootLogMain {
         logcatThread.setDaemon(true);
         logcatThread.start();
 
-        // Wait for SurfaceFlinger to come online
         SurfaceControl sc = null;
         Object bbq = null;
         Surface surface = null;
@@ -98,6 +116,7 @@ public final class BootLogMain {
 
         for (int attempt = 0; attempt < 120 && sRunning; attempt++) {
             if (isBootCompleted()) {
+                onBootSuccess();
                 return;
             }
             try {
@@ -120,7 +139,6 @@ public final class BootLogMain {
                     SurfaceControl.Transaction tx = new SurfaceControl.Transaction();
                     tx.setVisibility(sc, true);
                     tx.setBufferSize(sc, width, height);
-                    // Put above bootanimation (0x30000000)
                     callMethodSafe(tx, "setLayer", new Class<?>[]{SurfaceControl.class, int.class},
                             new Object[]{sc, 0x40000000});
                     callMethodSafe(tx, "setLayerStack", new Class<?>[]{SurfaceControl.class, int.class},
@@ -138,7 +156,6 @@ public final class BootLogMain {
                     }
                 }
             } catch (Throwable ignored) {
-                // SurfaceFlinger not ready yet
             }
             SystemClock.sleep(250);
         }
@@ -152,7 +169,7 @@ public final class BootLogMain {
 
         Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         textPaint.setTypeface(Typeface.MONOSPACE);
-        float textSize = Math.max(20f, width / 48f); // ~22.5px on 1080p (~80 chars per line)
+        float textSize = Math.max(20f, width / 48f);
         textPaint.setTextSize(textSize);
         float lineHeight = textSize * 1.32f;
 
@@ -160,19 +177,39 @@ public final class BootLogMain {
         bgPaint.setStyle(Paint.Style.FILL);
 
         long startMs = SystemClock.uptimeMillis();
-        long maxRunMs = 240_000L; // 4 min safety timeout (longer if bootlooping so user can read)
+        long rescueTriggeredAtMs = 0L;
 
         while (sRunning) {
             if (isBootCompleted()) {
+                onBootSuccess();
                 addLine("[  OK  ]", COLOR_OK, "Reached target Android Graphical System (sys.boot_completed=1)", COLOR_OK);
                 renderFrame(surface, width, height, textPaint, bgPaint, lineHeight);
-                SystemClock.sleep(700);
+                SystemClock.sleep(800);
                 break;
             }
 
             long elapsed = SystemClock.uptimeMillis() - startMs;
-            if (!sBootloopDetected && elapsed > maxRunMs) {
-                break;
+            if (!sBootloopDetected && elapsed > BOOT_HANG_TIMEOUT_MS) {
+                triggerBootloop("Boot timeout exceeded (" + (elapsed / 1000L) + "s) — system hung before boot_completed",
+                        "Timeout waiting for sys.boot_completed=1");
+            }
+
+            if (sBootloopDetected && !sRescueExecuted) {
+                sRescueExecuted = true;
+                rescueTriggeredAtMs = SystemClock.uptimeMillis();
+                performBootloopRescue();
+            }
+
+            // If rescue was executed, display countdown for 8 seconds so user can read the crash, then reboot
+            if (sRescueExecuted && rescueTriggeredAtMs > 0L) {
+                long sinceRescue = SystemClock.uptimeMillis() - rescueTriggeredAtMs;
+                if (sinceRescue >= 8_000L) {
+                    addLine("[RESCUE]", COLOR_WARN, "Rebooting into clean state now...", COLOR_WARN);
+                    renderFrame(surface, width, height, textPaint, bgPaint, lineHeight);
+                    SystemClock.sleep(400);
+                    rebootDeviceForRescue();
+                    break;
+                }
             }
 
             if (sDirty) {
@@ -180,10 +217,9 @@ public final class BootLogMain {
                 renderFrame(surface, width, height, textPaint, bgPaint, lineHeight);
             }
 
-            SystemClock.sleep(33); // ~30 FPS render cap, low CPU overhead during boot
+            SystemClock.sleep(33);
         }
 
-        // Clean teardown of SurfaceControl
         try {
             SurfaceControl.Transaction tx = new SurfaceControl.Transaction();
             tx.setVisibility(sc, false);
@@ -205,6 +241,172 @@ public final class BootLogMain {
         }
     }
 
+    private static void checkPreviousRescueBanner() {
+        try {
+            File f = new File(RESCUE_FLAG_PATH);
+            if (f.exists()) {
+                sRecoveredFromPreviousBootloop = true;
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
+                    String line = br.readLine();
+                    if (line != null) {
+                        sPreviousRescueInfo = line.trim();
+                    }
+                }
+                // Remove flag so it only shows on the first recovery boot
+                //noinspection ResultOfMethodCallIgnored
+                f.delete();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void onBootSuccess() {
+        try {
+            File countFile = new File(BOOT_COUNT_PATH);
+            if (countFile.exists()) {
+                //noinspection ResultOfMethodCallIgnored
+                countFile.delete();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * Disables all installed Magisk modules (except MirageVerboseBoot) by creating
+     * /data/adb/modules/<id>/disable and writes a full crash report to /data/adb/mirage_bootloop_last.log.
+     */
+    private static void performBootloopRescue() {
+        List<String> disabledModules = new ArrayList<>();
+        try {
+            File modulesDir = new File("/data/adb/modules");
+            File[] children = modulesDir.listFiles();
+            if (children != null) {
+                for (File mod : children) {
+                    if (!mod.isDirectory()) continue;
+                    String modName = mod.getName();
+                    if (SELF_MODULE_ID.equalsIgnoreCase(modName)) continue;
+
+                    File disableFile = new File(mod, "disable");
+                    if (!disableFile.exists()) {
+                        try {
+                            if (disableFile.createNewFile()) {
+                                disabledModules.add(modName);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        String modSummary = disabledModules.isEmpty()
+                ? "none (already disabled)"
+                : String.join(", ", disabledModules);
+
+        recordCrashDetail("Disabled Magisk modules: " + modSummary);
+        recordCrashDetail("Saved full log -> " + PERSISTENT_LOG_PATH + " (& /sdcard/Download/)");
+        recordCrashDetail("Auto-rebooting into safe state in 8 seconds...");
+
+        addLine("[RESCUE]", COLOR_WARN, "Disabled Magisk modules: " + modSummary, COLOR_WARN);
+        addLine("[RESCUE]", COLOR_WARN, "Saving crash log to " + PERSISTENT_LOG_PATH, COLOR_WARN);
+
+        // Write rescue marker for next boot
+        try (FileOutputStream fos = new FileOutputStream(RESCUE_FLAG_PATH, false);
+             PrintWriter pw = new PrintWriter(fos)) {
+            pw.println("Disabled modules: " + modSummary + " | Log: " + SDCARD_LOG_PATH);
+        } catch (Throwable ignored) {
+        }
+
+        // Write comprehensive crash log
+        writePersistentBootloopLog(disabledModules);
+    }
+
+    private static void writePersistentBootloopLog(List<String> disabledModules) {
+        List<LogEntry> linesCopy;
+        List<String> crashCopy;
+        synchronized (sLock) {
+            linesCopy = new ArrayList<>(sLines);
+            crashCopy = new ArrayList<>(sCrashLines);
+        }
+
+        File outFile = new File(PERSISTENT_LOG_PATH);
+        try (FileOutputStream fos = new FileOutputStream(outFile, false);
+             PrintWriter pw = new PrintWriter(fos)) {
+            String ts = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
+            pw.println("==================================================================");
+            pw.println(" MIRAGE VERBOSE BOOT — BOOTLOOP & CRASH DIAGNOSTIC REPORT");
+            pw.println("==================================================================");
+            pw.println("Timestamp       : " + ts);
+            pw.println("Bootloop Reason : " + sBootloopReason);
+            pw.println("Zygote Starts   : " + sZygoteStarts);
+            pw.println("SysServer Starts: " + sSystemServerStarts);
+            pw.println("Disabled Modules: " + (disabledModules.isEmpty() ? "none" : String.join(", ", disabledModules)));
+            pw.println();
+            pw.println("--- PINNED CRASH / STACKTRACE SUMMARY ---");
+            for (String cl : crashCopy) {
+                pw.println("  " + cl);
+            }
+            pw.println();
+            pw.println("--- CAPTURED BOOT LOG BUFFER (KERNEL + INIT + SYSTEM) ---");
+            for (LogEntry entry : linesCopy) {
+                pw.println(entry.prefix + " " + entry.text);
+            }
+            pw.println();
+            pw.println("--- LOGCAT CRASH & SYSTEM TAIL ---");
+            pw.flush();
+
+            // Append raw logcat -d -b crash,system,main tail
+            try {
+                Process p = new ProcessBuilder(
+                        "/system/bin/logcat", "-d", "-b", "crash,system,main", "-v", "time", "-t", "300"
+                ).redirectErrorStream(true).start();
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        pw.println(line);
+                    }
+                }
+                p.destroy();
+            } catch (Throwable ignored) {
+            }
+            pw.flush();
+        } catch (Throwable ignored) {
+        }
+
+        // Also attempt immediate copy to /sdcard/Download if already mounted
+        try {
+            File dlDir = new File("/sdcard/Download");
+            if (dlDir.isDirectory() && dlDir.canWrite()) {
+                copyFile(outFile, new File(SDCARD_LOG_PATH));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void copyFile(File src, File dst) {
+        try (FileInputStream in = new FileInputStream(src);
+             FileOutputStream out = new FileOutputStream(dst, false)) {
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                out.write(buf, 0, n);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void rebootDeviceForRescue() {
+        try {
+            new ProcessBuilder("/system/bin/setprop", "sys.powerctl", "reboot,bootloop_rescue").start();
+            SystemClock.sleep(1000);
+            new ProcessBuilder("/system/bin/reboot", "bootloop_rescue").start();
+        } catch (Throwable ignored) {
+        }
+    }
+
     private static void renderFrame(Surface surface, int width, int height,
                                     Paint textPaint, Paint bgPaint, float lineHeight) {
         Canvas canvas = null;
@@ -217,7 +419,7 @@ public final class BootLogMain {
             canvas.drawColor(COLOR_BG, PorterDuff.Mode.SRC);
 
             float padX = 24f;
-            float topY = 64f; // clear camera punch-hole
+            float topY = 64f;
 
             // Header bar
             bgPaint.setColor(COLOR_HEADER);
@@ -225,20 +427,38 @@ public final class BootLogMain {
 
             textPaint.setFakeBoldText(true);
             textPaint.setColor(COLOR_INIT);
-            String title = ":: Mirage Verbose Boot [Arch-Mode] — Live Kernel + Init + System";
+            String title = ":: Mirage Verbose Boot v1.1 [Arch-Mode + Anti-Bootloop]";
             canvas.drawText(title, padX, topY, textPaint);
             textPaint.setFakeBoldText(false);
 
             float contentTopY = topY + lineHeight + 28f;
 
+            // Show green recovery banner if previous boot was rescued from a bootloop
+            if (sRecoveredFromPreviousBootloop && !sBootloopDetected) {
+                float boxHeight = 2 * lineHeight + 24f;
+                bgPaint.setColor(COLOR_RESCUE_BG);
+                canvas.drawRect(12f, contentTopY - lineHeight + 4f, width - 12f, contentTopY + boxHeight - lineHeight, bgPaint);
+                bgPaint.setColor(COLOR_OK);
+                canvas.drawRect(12f, contentTopY - lineHeight + 4f, 20f, contentTopY + boxHeight - lineHeight, bgPaint);
+
+                textPaint.setFakeBoldText(true);
+                textPaint.setColor(COLOR_OK);
+                canvas.drawText("[RESCUE] RECOVERED FROM BOOTLOOP — OFFENDING MODULES DISABLED", padX + 8f, contentTopY, textPaint);
+                textPaint.setFakeBoldText(false);
+                contentTopY += lineHeight;
+
+                textPaint.setColor(COLOR_SYSTEM);
+                canvas.drawText(ellipsize(sPreviousRescueInfo, width - padX * 2, textPaint), padX + 8f, contentTopY, textPaint);
+                contentTopY += lineHeight + 16f;
+            }
+
             // If bootloop or fatal system crash detected, pin red diagnostic banner at top
-            List<String> crashSnapshot = null;
-            String crashReason = sBootloopReason;
             if (sBootloopDetected) {
+                List<String> crashSnapshot;
                 synchronized (sLock) {
                     crashSnapshot = new ArrayList<>(sCrashLines);
                 }
-                int boxLines = 1 + (crashSnapshot != null ? crashSnapshot.size() : 0);
+                int boxLines = 1 + crashSnapshot.size();
                 float boxHeight = boxLines * lineHeight + 28f;
 
                 bgPaint.setColor(COLOR_CRASH_BG);
@@ -249,21 +469,18 @@ public final class BootLogMain {
 
                 textPaint.setFakeBoldText(true);
                 textPaint.setColor(COLOR_ERR);
-                canvas.drawText("[!] BOOTLOOP / FATAL CRASH: " + crashReason, padX + 8f, contentTopY, textPaint);
+                canvas.drawText("[!] BOOTLOOP / FATAL CRASH: " + sBootloopReason, padX + 8f, contentTopY, textPaint);
                 textPaint.setFakeBoldText(false);
                 contentTopY += lineHeight;
 
-                if (crashSnapshot != null) {
-                    textPaint.setColor(0xFFFF8A80);
-                    for (String cl : crashSnapshot) {
-                        canvas.drawText(ellipsize(cl, width - padX * 2, textPaint), padX + 8f, contentTopY, textPaint);
-                        contentTopY += lineHeight;
-                    }
+                textPaint.setColor(0xFFFF8A80);
+                for (String cl : crashSnapshot) {
+                    canvas.drawText(ellipsize(cl, width - padX * 2, textPaint), padX + 8f, contentTopY, textPaint);
+                    contentTopY += lineHeight;
                 }
                 contentTopY += 16f;
             }
 
-            // Calculate how many log lines fit in the remaining height
             float bottomY = height - 36f;
             int maxVisible = Math.max(5, (int) ((bottomY - contentTopY) / lineHeight));
 
@@ -310,7 +527,6 @@ public final class BootLogMain {
     }
 
     private static void readKmsgLoop() {
-        // /dev/kmsg is non-blocking and readable by multiple processes from boot start
         try (FileInputStream fis = new FileInputStream("/dev/kmsg");
              BufferedReader br = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8), 8192)) {
             String raw;
@@ -321,7 +537,6 @@ public final class BootLogMain {
         } catch (Throwable ignored) {
         }
 
-        // Fallback to dmesg -w if /dev/kmsg failed
         try {
             Process proc = new ProcessBuilder("/system/bin/dmesg", "-w").redirectErrorStream(true).start();
             try (BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
@@ -338,14 +553,12 @@ public final class BootLogMain {
 
     private static void parseAndAddKmsgLine(String raw) {
         if (raw == null || raw.isEmpty()) return;
-        // Continuation lines in /dev/kmsg start with space
         if (raw.charAt(0) == ' ') return;
 
         int level = 6;
         long usec = 0L;
         String msg = raw;
 
-        // /dev/kmsg format: priority,seq,timestamp_usec,flags;message
         int semi = raw.indexOf(';');
         if (semi > 0 && semi < 64) {
             String header = raw.substring(0, semi);
@@ -366,7 +579,6 @@ public final class BootLogMain {
 
         if (msg.isEmpty()) return;
 
-        // Format timestamp like Arch dmesg: [   1.234567]
         String tsPrefix;
         if (usec > 0) {
             long sec = usec / 1_000_000L;
@@ -376,17 +588,20 @@ public final class BootLogMain {
             tsPrefix = "[  KERNEL  ]";
         }
 
-        // Check for Android init service events in kmsg
         if (msg.contains("init: starting service 'zygote'")) {
             sZygoteStarts++;
             if (sZygoteStarts >= 2) {
-                triggerBootloop("Zygote restarted (" + sZygoteStarts + "x) — check crash lines above", msg);
+                triggerBootloop("Zygote restarted (" + sZygoteStarts + "x) — bootloop detected", msg);
             }
             addLine("[  OK  ]", COLOR_OK, tsPrefix + " " + msg, COLOR_INIT);
             return;
         }
         if (msg.contains("init: Service 'zygote'") && msg.contains("exited")) {
-            triggerBootloop("Zygote process died during boot", msg);
+            if (sZygoteStarts >= 2) {
+                triggerBootloop("Zygote process died repeatedly", msg);
+            } else {
+                recordCrashDetail(msg);
+            }
             addLine("[FAILED]", COLOR_ERR, tsPrefix + " " + msg, COLOR_ERR);
             return;
         }
@@ -449,15 +664,13 @@ public final class BootLogMain {
             return;
         }
 
-        // Brief format: P/Tag(PID): message
         char prio = raw.length() > 1 && raw.charAt(1) == '/' ? raw.charAt(0) : 'I';
 
-        // Detect fatal system crashes & bootloops
         if (raw.contains("FATAL EXCEPTION IN SYSTEM PROCESS")
-                || raw.contains("*** *** *** *** *** *** *** ***")
-                || raw.contains("Fatal signal ")
-                || raw.contains("Watchdog: *** WATCHDOG KILLING SYSTEM PROCESS")) {
-            triggerBootloop("Fatal crash in system process", raw);
+                || raw.contains("Watchdog: *** WATCHDOG KILLING SYSTEM PROCESS")
+                || (raw.contains("Fatal signal ") && (raw.contains("system_server") || raw.contains("zygote") || raw.contains("surfaceflinger")))) {
+            sFatalSystemCrashes++;
+            triggerBootloop("Fatal crash in system_server / zygote", raw);
             sCapturingCrashTrace = true;
             sCrashTraceRemaining = 5;
             addLine("[FATAL!]", COLOR_ERR, raw, COLOR_ERR);
@@ -484,7 +697,6 @@ public final class BootLogMain {
             return;
         }
 
-        // Filter logcat to meaningful boot milestones and errors so screen remains readable
         boolean isImportantTag = raw.contains("Zygote")
                 || raw.contains("SystemServer")
                 || raw.contains("SystemServiceManager")
@@ -520,7 +732,7 @@ public final class BootLogMain {
             if (sBootloopReason.isEmpty()) {
                 sBootloopReason = reason;
             }
-            if (firstLine != null && sCrashLines.size() < 6) {
+            if (firstLine != null && sCrashLines.size() < 7) {
                 sCrashLines.add(firstLine.trim());
             }
             sDirty = true;
@@ -529,7 +741,7 @@ public final class BootLogMain {
 
     private static void recordCrashDetail(String line) {
         synchronized (sLock) {
-            if (sCrashLines.size() < 6) {
+            if (sCrashLines.size() < 8) {
                 sCrashLines.add(line.trim());
                 sDirty = true;
             }
@@ -547,7 +759,6 @@ public final class BootLogMain {
     }
 
     private static Object[] createSurfaceFromControl(SurfaceControl sc, int width, int height) {
-        // Android 12–14: BLASTBufferQueue(String name, SurfaceControl sc, int width, int height, int format)
         try {
             Class<?> bbqCls = Class.forName("android.graphics.BLASTBufferQueue");
             try {
@@ -569,7 +780,6 @@ public final class BootLogMain {
         } catch (Throwable ignored) {
         }
 
-        // Android 9–11 fallback: new Surface(SurfaceControl)
         try {
             Constructor<Surface> ctor = Surface.class.getConstructor(SurfaceControl.class);
             Surface s = ctor.newInstance(sc);
@@ -583,7 +793,6 @@ public final class BootLogMain {
     private static int[] queryDisplaySize() {
         try {
             long[] ids = null;
-            // Try DisplayControl.getPhysicalDisplayIds() (Android 14+) or SurfaceControl.getPhysicalDisplayIds() (Android 11-13)
             try {
                 Class<?> dcCls = Class.forName("com.android.server.display.DisplayControl");
                 Method m = dcCls.getMethod("getPhysicalDisplayIds");

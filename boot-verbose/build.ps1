@@ -70,7 +70,7 @@ Get-ChildItem "$Root\magisk-module-bootverbose" -Include "*.sh","*.prop","*.rule
 # 4. Package Magisk module ZIP
 $distDir = "$Root\dist"
 New-Item -ItemType Directory -Force -Path $distDir | Out-Null
-$zipOut = "$distDir\MirageVerboseBoot-v1.0.0.zip"
+$zipOut = "$distDir\MirageVerboseBoot-v1.1.0.zip"
 Remove-Item $zipOut -ErrorAction SilentlyContinue
 
 Compress-Archive -Path "$Root\magisk-module-bootverbose\*" -DestinationPath $zipOut -CompressionLevel Optimal

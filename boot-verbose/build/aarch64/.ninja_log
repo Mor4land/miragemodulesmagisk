@@ -1,0 +1,5 @@
+# ninja log v6
+10	2409	8125422958543978	CMakeFiles/bootlogd.dir/src/bootlogd.c.o	51e8c27bffbdfda4
+6	123	8125427767339634	build.ninja	88fdab8205afb8a7
+6	123	8125427767309676	C:/Users/mlowers/miragemodulesmagisk/boot-verbose/build/aarch64/cmake_install.cmake	88fdab8205afb8a7
+2410	5751	8125422982539157	bootlogd	c3560eab29c0f361

@@ -1,9 +1,58 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
+COUNT_FILE="/data/adb/mirage_boot_count"
+LOG_FILE="/data/adb/mirage_bootloop_last.log"
+RESCUE_FLAG="/data/adb/mirage_rescue_triggered"
 
-# Start background watcher so we attach to SurfaceFlinger the instant it comes online
+# 1. Early Boot-Attempt Counter (catches early kernel/init/zygote hard bootloops)
+COUNT=0
+if [ -f "$COUNT_FILE" ]; then
+    COUNT=$(cat "$COUNT_FILE" 2>/dev/null)
+    case "$COUNT" in
+        ''|*[!0-9]*) COUNT=0 ;;
+    esac
+fi
+COUNT=$((COUNT + 1))
+echo "$COUNT" > "$COUNT_FILE"
+
+if [ "$COUNT" -ge 3 ]; then
+    # 2 consecutive boots failed to reach sys.boot_completed=1 -> disable other Magisk modules now!
+    DISABLED_LIST=""
+    for mod in /data/adb/modules/*; do
+        [ -d "$mod" ] || continue
+        mod_name=${mod##*/}
+        [ "$mod_name" = "MirageVerboseBoot" ] && continue
+        if [ ! -f "$mod/disable" ]; then
+            touch "$mod/disable"
+            DISABLED_LIST="$DISABLED_LIST $mod_name"
+        fi
+    done
+
+    {
+        echo "=================================================================="
+        echo " MIRAGE VERBOSE BOOT — EARLY BOOTLOOP RESCUE REPORT (post-fs-data)"
+        echo "=================================================================="
+        echo "Boot attempts failed : $((COUNT - 1))"
+        echo "Disabled modules     :${DISABLED_LIST:- none}"
+        echo ""
+        echo "--- PSTORE / RAMOOPS (PREVIOUS KERNEL/INIT CRASH) ---"
+        for pf in /sys/fs/pstore/*; do
+            if [ -f "$pf" ]; then
+                echo ">>> $pf <<<"
+                tail -n 120 "$pf" 2>/dev/null
+            fi
+        done
+        echo ""
+        echo "--- CURRENT DMESG ---"
+        dmesg 2>/dev/null | tail -n 200
+    } > "$LOG_FILE" 2>&1
+
+    echo "Disabled modules:${DISABLED_LIST:- none} | Log: /sdcard/Download/MirageBootloop_LAST.log" > "$RESCUE_FLAG"
+    echo "0" > "$COUNT_FILE"
+fi
+
+# 2. Start background watcher so we attach to SurfaceFlinger the instant it comes online
 (
-    # Wait up to 30s for SurfaceFlinger service to start
     i=0
     while [ $i -lt 120 ]; do
         sf_state=$(getprop init.svc.surfaceflinger)

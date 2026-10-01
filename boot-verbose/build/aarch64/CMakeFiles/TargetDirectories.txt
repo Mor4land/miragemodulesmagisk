@@ -1,0 +1,3 @@
+C:/Users/mlowers/miragemodulesmagisk/boot-verbose/build/aarch64/CMakeFiles/bootlogd.dir
+C:/Users/mlowers/miragemodulesmagisk/boot-verbose/build/aarch64/CMakeFiles/edit_cache.dir
+C:/Users/mlowers/miragemodulesmagisk/boot-verbose/build/aarch64/CMakeFiles/rebuild_cache.dir
