@@ -1,5 +1,7 @@
 package com.mirage.pocoanim.xposed;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -432,13 +434,14 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", true);
                 }
             };
+            hookMethodsByName(quickstepCls, "getActivityLaunchOptions", markOpenStartHook);
             hookMethodsByName(quickstepCls, "startIconLaunchAnimator", markOpenStartHook);
             hookMethodsByName(quickstepCls, "startOpeningWindowAnimators", markOpenStartHook);
 
             // In breakOpenAnim(), NEVER invoke doAnimationFinish()! Calling doAnimationFinish() mid-launch
             // fires animationResult.finish(), which forces WindowManagerService to immediately drop the
             // RemoteAnimation leash and snap the app window to 100% fullscreen before the close gesture can catch it.
-            // Instead, guarantee mMoveToTargetRectWhenAnimEnd is false so mRectFSpringAnim never snaps to fullscreen.
+            // Instead, guarantee mMoveToTargetRectWhenAnimEnd is false and immediately redirect the spring back to the icon!
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
@@ -446,6 +449,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
                         if (spring != null) {
                             setBooleanFieldSafe(spring, "mMoveToTargetRectWhenAnimEnd", false);
+                            Object startRect = callObjectMethodSafe(spring, "getStartRect");
+                            if (!(startRect instanceof RectF) || ((RectF) startRect).isEmpty()) {
+                                startRect = getObjectFieldSafe(spring, "mStartRect");
+                            }
+                            if (startRect instanceof RectF && !((RectF) startRect).isEmpty()) {
+                                try {
+                                    XposedHelpers.callMethod(spring, "updateEndRectF", startRect);
+                                } catch (Throwable ignored) {
+                                }
+                            }
                         }
                     }
                 }
@@ -479,15 +492,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(rectFSpringCls, "setAnimParam", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
-                    if (!sEnabled || !sTurboOptimize || param.args == null || param.args.length < 2) {
+                    if (!sEnabled || !sTurboOptimize || param.args == null || param.args.length < 3) {
                         return;
                     }
-                    if (param.args[0] instanceof Float && param.args[1] instanceof Float) {
-                        float damping = (Float) param.args[0];
-                        float response = (Float) param.args[1];
+                    // In RectFSpringAnim.setAnimParam(String key, float damping, float response)
+                    if (param.args[1] instanceof Float && param.args[2] instanceof Float) {
+                        float damping = (Float) param.args[1];
+                        float response = (Float) param.args[2];
                         // Smooth critical damping (0.84 - 0.90) avoids stiff deceleration stutter during fast exits
-                        param.args[0] = Math.min(0.90f, Math.max(0.84f, damping));
-                        param.args[1] = Math.max(0.22f, response * 0.88f * Math.min(1.0f, sAnimSpeedRatio));
+                        param.args[1] = Math.min(0.90f, Math.max(0.84f, damping));
+                        param.args[2] = Math.max(0.22f, response * 0.88f * Math.min(1.0f, sAnimSpeedRatio));
                     }
                 }
             });
@@ -601,25 +615,59 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         Class<?> connectMgrCls = getConnectAnimManagerClass(cl);
         if (connectMgrCls != null) {
             setStaticBooleanFieldSafe(connectMgrCls, "USE_CONNECT_ANIM", true);
+
+            // Bypass mRemoteAnim == null guard in ConnectAnimManager.connectRemoteAnim
+            // When opening an app from the home screen, mRemoteAnim is null in stock MIUI.
+            // By populating mRemoteAnim with setAnim (the opening spring), connectRemoteAnim runs
+            // completely, registers mAnim with BreakableAnimManager, wires gesture updates,
+            // and sets up ConnectAnimManager$2 listener for clean zero-micro-lag teardown!
+            hookMethodsByName(connectMgrCls, "connectRemoteAnim", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || !sNonStopSwipe) {
+                        return;
+                    }
+                    Object currentRemote = getObjectFieldSafe(param.thisObject, "mRemoteAnim");
+                    if (currentRemote == null || !callBooleanMethodSafe(currentRemote, "isRunning", false)) {
+                        Object setAnim = (param.args != null && param.args.length > 0) ? param.args[0] : null;
+                        if (setAnim != null) {
+                            setObjectFieldSafe(param.thisObject, "mRemoteAnim", setAnim);
+                            callMethodSafe(setAnim, "setIsOpenAnim", true);
+                        }
+                    }
+                }
+            });
         }
 
-        // 4b. On touch down during app open, connect opening animation directly into ConnectAnimManager
+        // 4b. On touch down during app open, immediately reverse the in-flight spring directly back to the icon!
+        // This guarantees Folme spring physics instantly curves the window back without ever expanding toward fullscreen.
         XC_MethodHook connectOpeningOnTouchDown = new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
                 if (!sEnabled || !sNonStopSwipe) {
                     return;
                 }
-                Object openSpring = getOpeningRectFSpringAnimSafe(cl);
+                Object openSpring = getBreakableCurrentAnim(cl);
                 if (openSpring != null) {
                     try {
-                        callMethodSafe(openSpring, "setIsOpenAnim", true);
                         setBooleanFieldSafe(openSpring, "mMoveToTargetRectWhenAnimEnd", false);
+                        callMethodSafe(openSpring, "setIsOpenAnim", true);
 
+                        // Direct in-flight redirection to icon bounds
+                        Object startRect = callObjectMethodSafe(openSpring, "getStartRect");
+                        if (!(startRect instanceof RectF) || ((RectF) startRect).isEmpty()) {
+                            startRect = getObjectFieldSafe(openSpring, "mStartRect");
+                        }
+                        if (startRect instanceof RectF && !((RectF) startRect).isEmpty()) {
+                            XposedHelpers.callMethod(openSpring, "updateEndRectF", startRect);
+                        }
+
+                        // Wire gesture pipeline via ConnectAnimManager
                         Class<?> mgrCls = getConnectAnimManagerClass(cl);
                         if (mgrCls != null) {
                             Object connectMgr = XposedHelpers.callStaticMethod(mgrCls, "getInstance");
                             if (connectMgr != null) {
+                                setObjectFieldSafe(connectMgr, "mRemoteAnim", openSpring);
                                 Object calc = getObjectFieldSafe(param.thisObject, "mCalculator");
                                 Object curRect = calc != null ? callObjectMethodSafe(calc, "getCurRect") : null;
                                 Object sm = getObjectFieldSafe(param.thisObject, "mStateMachine");
@@ -629,7 +677,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             }
                         }
                     } catch (Throwable t) {
-                        XposedBridge.log("PocoAnim: Failed to connectOpeningAnim on touch down: " + t);
+                        XposedBridge.log("PocoAnim: Failed to reverse openSpring on touch down: " + t);
                     }
                 }
             }
@@ -637,36 +685,57 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         hookMethodsByName(navStubViewCls, "commonHomeTouchFromDown", connectOpeningOnTouchDown);
         hookMethodsByName(navStubViewCls, "commonAppTouchFromDown", connectOpeningOnTouchDown);
 
-        // 5. On ACTION_UP (actionUpAppTouchResolution), if the user flicked up before RecentsAnimation started,
-        // reverse the in-flight opening RectFSpringAnim back toward its mStartRect (the icon)
-        // WITHOUT calling doAnimationFinish() so the window NEVER flashes to 100% fullscreen!
-        hookMethodsByName(navStubViewCls, "actionUpAppTouchResolution", new XC_MethodHook() {
+        // 4c. On touch move during gesture, dynamically update spring towards finger if active
+        XC_MethodHook updateOpeningOnTouchMove = new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sNonStopSwipe) {
+                    return;
+                }
+                Object spring = getBreakableCurrentAnim(cl);
+                if (spring != null) {
+                    Object calc = getObjectFieldSafe(param.thisObject, "mCalculator");
+                    Object curRect = calc != null ? callObjectMethodSafe(calc, "getCurRect") : null;
+                    if (curRect instanceof RectF && !((RectF) curRect).isEmpty()) {
+                        try {
+                            XposedHelpers.callMethod(spring, "updateEndRectF", curRect);
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+            }
+        };
+        hookMethodsByName(navStubViewCls, "commonHomeTouchFromMove", updateOpeningOnTouchMove);
+
+        // 5. On ACTION_UP, guide spring smoothly into icon bounds
+        XC_MethodHook actionUpHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (!sEnabled || !sNonStopSwipe) {
                     return;
                 }
-                Object tm = sTransitionManagerRef.get();
-                if (tm != null && getBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false) && isAppCurrentlyOpening(param.thisObject, cl)) {
-                    boolean remoteStarted = callBooleanMethodSafe(param.thisObject, "isRecentsRemoteAnimStarted", true);
-                    if (!remoteStarted) {
-                        Object currentAnim = getBreakableCurrentAnim(cl);
-                        if (currentAnim != null) {
-                            Object startRect = getObjectFieldSafe(currentAnim, "mStartRect");
-                            if (startRect instanceof RectF && !((RectF) startRect).isEmpty()) {
-                                try {
-                                    setBooleanFieldSafe(currentAnim, "mMoveToTargetRectWhenAnimEnd", false);
-                                    XposedHelpers.callMethod(currentAnim, "updateEndRectF", startRect);
-                                } catch (Throwable ignored) {
-                                }
-                            }
+                Object currentAnim = getBreakableCurrentAnim(cl);
+                if (currentAnim != null) {
+                    Object startRect = callObjectMethodSafe(currentAnim, "getStartRect");
+                    if (!(startRect instanceof RectF) || ((RectF) startRect).isEmpty()) {
+                        startRect = getObjectFieldSafe(currentAnim, "mStartRect");
+                    }
+                    if (startRect instanceof RectF && !((RectF) startRect).isEmpty()) {
+                        try {
+                            setBooleanFieldSafe(currentAnim, "mMoveToTargetRectWhenAnimEnd", false);
+                            XposedHelpers.callMethod(currentAnim, "updateEndRectF", startRect);
+                        } catch (Throwable ignored) {
                         }
                     }
                 }
             }
-        });
+        };
+        hookMethodsByName(navStubViewCls, "actionUpAppTouchResolution", actionUpHook);
+        hookMethodsByName(navStubViewCls, "commonHomeTouchFromUpOrCancel", actionUpHook);
 
-        // 6. When gesture completely finishes returning to home, safely clean up any leftover opening animation state
+        // 6. When gesture completely finishes returning to home, safely clean up any leftover opening animation state.
+        // If the spring is still landing on the icon, wait for onAnimationEnd before calling doAnimationFinish()
+        // so WindowManagerService does not drop the surface leash mid-flight, eliminating micro-lag/stutter completely!
         hookMethodsByName(navStubViewCls, "finishAppToHome", new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
@@ -674,8 +743,21 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     return;
                 }
                 setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
-                Object tm = sTransitionManagerRef.get();
+                final Object tm = sTransitionManagerRef.get();
                 if (tm != null) {
+                    Object spring = getObjectFieldSafe(tm, "mRectFSpringAnim");
+                    if (spring != null && callBooleanMethodSafe(spring, "isRunning", false)) {
+                        try {
+                            XposedHelpers.callMethod(spring, "addAnimatorListener", new AnimatorListenerAdapter() {
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    callMethodSafe(tm, "doAnimationFinish");
+                                }
+                            });
+                            return;
+                        } catch (Throwable ignored) {
+                        }
+                    }
                     callMethodSafe(tm, "doAnimationFinish");
                 }
             }
@@ -758,7 +840,27 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             if (mgrCls != null) {
                 Object instance = XposedHelpers.callStaticMethod(mgrCls, "getInstance");
                 if (instance != null) {
-                    return XposedHelpers.callMethod(instance, "getCurrentAnim");
+                    Object anim = callObjectMethodSafe(instance, "getCurrentAnim");
+                    if (anim != null && callBooleanMethodSafe(anim, "isRunning", false)) {
+                        return anim;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            Class<?> connectCls = getConnectAnimManagerClass(cl);
+            if (connectCls != null) {
+                Object connectMgr = XposedHelpers.callStaticMethod(connectCls, "getInstance");
+                if (connectMgr != null) {
+                    Object anim = callObjectMethodSafe(connectMgr, "getRemoteOpenBreakAnim");
+                    if (anim != null && callBooleanMethodSafe(anim, "isRunning", false)) {
+                        return anim;
+                    }
+                    Object remoteAnim = getObjectFieldSafe(connectMgr, "mRemoteAnim");
+                    if (remoteAnim != null && callBooleanMethodSafe(remoteAnim, "isRunning", false)) {
+                        return remoteAnim;
+                    }
                 }
             }
         } catch (Throwable ignored) {
@@ -955,6 +1057,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
         try {
             XposedHelpers.setIntField(target, fieldName, value);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void setObjectFieldSafe(Object target, String fieldName, Object value) {
+        if (target == null) {
+            return;
+        }
+        try {
+            XposedHelpers.setObjectField(target, fieldName, value);
         } catch (Throwable ignored) {
         }
     }
