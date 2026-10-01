@@ -3,24 +3,22 @@
 
 SKIPUNZIP=0
 
-# Fix permissions on the binary
-chmod 755 "$MODPATH/system/bin/bootanimation"
-chown root:shell "$MODPATH/system/bin/bootanimation"
-
-# Set SELinux file context to match the original bootanimation binary
-# so the bootanim domain can execute it without policy violations
-chcon u:object_r:bootanim_exec:s0 "$MODPATH/system/bin/bootanimation" 2>/dev/null || true
+set_perm_recursive "$MODPATH" 0 0 0755 0644
+set_perm "$MODPATH/system/bin/bootanimation" 0 2000 0755 u:object_r:bootanim_exec:s0
+set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
+set_perm "$MODPATH/service.sh" 0 0 0755
+set_perm "$MODPATH/bootlog.dex" 0 0 0644
 
 ui_print ""
-ui_print "  Mirage Verbose Boot v1.0.0"
-ui_print "  ────────────────────────────────"
-ui_print "  Boot will display real kernel + init logs"
+ui_print "  Mirage Verbose Boot v1.0.0 [Arch-Mode]"
+ui_print "  ────────────────────────────────────────"
+ui_print "   Dual-Engine Real Boot Logger:"
+ui_print "   1. SurfaceFlinger BLAST Layer (DRM/HWC2)"
+ui_print "   2. Native Framebuffer bootlogd (/dev/kmsg)"
 ui_print ""
 ui_print "  Colors:"
-ui_print "    Green  = kernel driver messages"
-ui_print "    Cyan   = Android init / servicemanager"
-ui_print "    Yellow = warnings"
-ui_print "    Red    = errors / panics / bootloop"
-ui_print ""
-ui_print "  If you see Red lines repeating — that is your bootloop."
+ui_print "    [  OK  ] Green  = kernel / service start"
+ui_print "    [ INIT ] Cyan   = Android init / Zygote / SystemServer"
+ui_print "    [ WARN ] Yellow = SELinux avc / warnings"
+ui_print "    [ ERR! ] Red    = Fatal crash / bootloop pin box"
 ui_print ""

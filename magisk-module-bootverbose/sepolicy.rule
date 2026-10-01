@@ -1,6 +1,5 @@
-# SELinux policy rules for MirageVerboseBoot
-# Grants the bootanim domain read access to /proc/kmsg which is
-# restricted by default on Android 10+ (requires CAP_SYSLOG).
-
 allow bootanim proc_kmsg file { open read getattr }
-allow bootanim proc_kmsg dir  { search }
+allow bootanim kmsg_device chr_file { open read getattr }
+allow bootanim graphics_device chr_file { open read write ioctl mmap getattr }
+allow bootanim graphics_device dir { search }
+allow bootanim self capability2 { syslog }

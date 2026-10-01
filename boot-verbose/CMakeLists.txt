@@ -19,4 +19,3 @@ target_link_options(bootlogd PRIVATE
     -Wl,--strip-all
 )
 
-target_link_libraries(bootlogd pthread)

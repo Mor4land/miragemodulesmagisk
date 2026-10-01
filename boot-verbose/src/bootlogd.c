@@ -158,11 +158,19 @@ typedef struct {
     uint32_t rows;         /* text rows     = height / FONT_H */
     uint32_t cur_col;
     uint32_t cur_row;
+    struct fb_var_screeninfo vinfo;
 } FB;
 
 static FB               g_fb;
 static uint32_t        *g_backbuf;   /* native-format pixel backbuffer */
 static pthread_mutex_t  g_lock = PTHREAD_MUTEX_INITIALIZER;
+static volatile sig_atomic_t g_running = 1;
+
+static void on_sigterm(int sig)
+{
+    (void)sig;
+    g_running = 0;
+}
 
 /* ── pixel format helpers ────────────────────────────────────────────── */
 static inline uint32_t argb_to_pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
@@ -191,6 +199,8 @@ static void fb_flush(void)
                g_backbuf  + (size_t)y * g_fb.width,
                (size_t)g_fb.width * g_fb.bpp);
     }
+    g_fb.vinfo.activate = FB_ACTIVATE_NOW | FB_ACTIVATE_FORCE;
+    ioctl(g_fb.fd, FBIOPAN_DISPLAY, &g_fb.vinfo);
 }
 
 /* ── fill entire backbuf with bg color ───────────────────────────────── */
@@ -333,9 +343,12 @@ static void *kmsg_thread(void *arg)
 {
     (void)arg;
 
-    int fd = open("/proc/kmsg", O_RDONLY | O_NONBLOCK);
+    int fd = open("/dev/kmsg", O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
-        fb_print_line("[bootlogd] ERROR: cannot open /proc/kmsg", COL_ERR);
+        fd = open("/proc/kmsg", O_RDONLY | O_NONBLOCK);
+    }
+    if (fd < 0) {
+        fb_print_line("[bootlogd] ERROR: cannot open /dev/kmsg or /proc/kmsg", COL_ERR);
         return NULL;
     }
 
@@ -345,13 +358,13 @@ static void *kmsg_thread(void *arg)
 
     struct pollfd pfd = { .fd = fd, .events = POLLIN };
 
-    while (1) {
-        int r = poll(&pfd, 1, 500);
+    while (g_running) {
+        int r = poll(&pfd, 1, 250);
         if (r < 0) { if (errno == EINTR) continue; break; }
         if (r == 0) continue;
 
         ssize_t n = read(fd, buf, sizeof(buf) - 1);
-        if (n <= 0) { usleep(50000); continue; }
+        if (n <= 0) { usleep(25000); continue; }
         buf[n] = '\0';
 
         for (ssize_t i = 0; i < n; i++) {
@@ -381,7 +394,12 @@ static void *kmsg_thread(void *arg)
 static int wait_for_boot_complete(int timeout_seconds)
 {
     char val[128];
-    for (int i = 0; i < timeout_seconds; i++) {
+    int ticks = timeout_seconds * 4;
+    for (int i = 0; i < ticks && g_running; i++) {
+        val[0] = '\0';
+        __system_property_get("service.bootanim.exit", val);
+        if (strcmp(val, "1") == 0) return 0;
+
         val[0] = '\0';
         __system_property_get("sys.boot_completed", val);
         if (strcmp(val, "1") == 0) return 0;
@@ -390,9 +408,9 @@ static int wait_for_boot_complete(int timeout_seconds)
         __system_property_get("dev.bootcomplete", val);
         if (strcmp(val, "1") == 0) return 0;
 
-        sleep(1);
+        usleep(250000);
     }
-    return -1; /* timed out */
+    return -1; /* timed out or interrupted */
 }
 
 /* ── framebuffer init ────────────────────────────────────────────────── */
@@ -412,6 +430,7 @@ static int fb_init(void)
         return -1;
     }
 
+    g_fb.vinfo   = vinfo;
     g_fb.width   = vinfo.xres;
     g_fb.height  = vinfo.yres;
     g_fb.bpp     = vinfo.bits_per_pixel / 8;
@@ -470,13 +489,14 @@ static void print_separator(void)
 /* ── main ────────────────────────────────────────────────────────────── */
 int main(void)
 {
-    /* Ignore signals that would abort boot */
-    signal(SIGTERM, SIG_IGN);
+    signal(SIGTERM, on_sigterm);
+    signal(SIGINT,  on_sigterm);
     signal(SIGHUP,  SIG_IGN);
 
     if (fb_init() < 0) {
-        /* No framebuffer — just wait until boot completes so we don't abort */
-        wait_for_boot_complete(120);
+        /* No legacy fbdev — SurfaceControl overlay daemon handles DRM/HWC display.
+         * Wait cleanly until bootanim exit so stock bootanimation doesn't cover logs. */
+        wait_for_boot_complete(180);
         return 0;
     }
 
@@ -502,17 +522,13 @@ int main(void)
     pthread_create(&tid, &attr, kmsg_thread, NULL);
     pthread_attr_destroy(&attr);
 
-    /* Block until boot complete (120 s hard timeout) */
-    wait_for_boot_complete(120);
-
-    /* Pause briefly so the last log lines are visible */
-    sleep(1);
+    /* Block until boot complete (180 s timeout) */
+    wait_for_boot_complete(180);
+    g_running = 0;
 
     print_separator();
     fb_print_line("  Boot completed — handing off to system UI", COL_INIT);
     fb_flush();
-
-    sleep(1);
 
     fb_destroy();
     return 0;
