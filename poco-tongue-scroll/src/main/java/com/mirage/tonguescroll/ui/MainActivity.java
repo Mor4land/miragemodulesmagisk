@@ -5,8 +5,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -15,14 +17,22 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.Face;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
-import android.util.TypedValue;
+import android.util.Size;
 import android.view.Gravity;
 import android.view.Surface;
 import android.view.TextureView;
@@ -44,6 +54,7 @@ import com.mirage.tonguescroll.config.TongueConfig;
 import com.mirage.tonguescroll.cv.TongueDetector;
 import com.mirage.tonguescroll.service.TongueScrollService;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 public class MainActivity extends Activity {
@@ -60,10 +71,17 @@ public class MainActivity extends Activity {
     private CameraOverlayView overlayView;
     private CameraDevice cameraDevice;
     private CameraCaptureSession captureSession;
-    private boolean isPreviewRunning = false;
+    private ImageReader labImageReader;
+    private HandlerThread labCameraThread;
+    private Handler labCameraHandler;
+    private boolean isCameraStarting = false;
+    private Rect currentFaceRect = null;
 
     // UI Widgets
     private TextView tvStatusBadge;
+    private TextView tvCameraDiag;
+    private Switch masterSwitch;
+    private TextView tvMasterSwitchLabel;
     private ProgressBar pbConfidence;
     private TextView tvConfidenceValue;
     private TextView tvGestureStatus;
@@ -77,8 +95,7 @@ public class MainActivity extends Activity {
     private Button btnDirUp;
     private Button btnDirLeft;
     private Button btnDirRight;
-
-    private boolean isProcessingFrame = false;
+    private Button btnRestartCamera;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +117,7 @@ public class MainActivity extends Activity {
         labDetector.setSensitivity(config.getSensitivity());
         labDetector.setCooldownMs(config.getCooldownMs());
 
+        startLabCameraThread();
         setContentView(buildRootLayout());
         checkPermissions();
     }
@@ -108,13 +126,38 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         updateServiceStatus();
-        startLabCamera();
+        if (cameraPreview != null && cameraPreview.isAvailable()) {
+            startLabCamera();
+        }
     }
 
     @Override
     protected void onPause() {
         stopLabCamera();
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopLabCameraThread();
+        super.onDestroy();
+    }
+
+    private void startLabCameraThread() {
+        labCameraThread = new HandlerThread("LabCameraBackgroundThread");
+        labCameraThread.start();
+        labCameraHandler = new Handler(labCameraThread.getLooper());
+    }
+
+    private void stopLabCameraThread() {
+        if (labCameraThread != null) {
+            labCameraThread.quitSafely();
+            try {
+                labCameraThread.join(400);
+            } catch (InterruptedException ignored) {}
+            labCameraThread = null;
+            labCameraHandler = null;
+        }
     }
 
     private View buildRootLayout() {
@@ -149,7 +192,7 @@ public class MainActivity extends Activity {
     private View buildHeaderSection() {
         LinearLayout header = new LinearLayout(this);
         header.setOrientation(LinearLayout.VERTICAL);
-        header.setPadding(0, MaterialUiHelper.dpToPx(this, 12), 0, MaterialUiHelper.dpToPx(this, 16));
+        header.setPadding(0, MaterialUiHelper.dpToPx(this, 8), 0, MaterialUiHelper.dpToPx(this, 14));
 
         LinearLayout topRow = new LinearLayout(this);
         topRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -157,7 +200,7 @@ public class MainActivity extends Activity {
 
         ImageView icon = new ImageView(this);
         icon.setImageResource(R.drawable.ic_launcher);
-        int iconSize = MaterialUiHelper.dpToPx(this, 40);
+        int iconSize = MaterialUiHelper.dpToPx(this, 42);
         LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(iconSize, iconSize);
         iconLp.rightMargin = MaterialUiHelper.dpToPx(this, 12);
         topRow.addView(icon, iconLp);
@@ -181,17 +224,30 @@ public class MainActivity extends Activity {
 
         topRow.addView(titles);
 
-        Switch masterSwitch = new Switch(this);
+        // Master Switch with Explicit Status
+        LinearLayout switchContainer = new LinearLayout(this);
+        switchContainer.setOrientation(LinearLayout.VERTICAL);
+        switchContainer.setGravity(Gravity.CENTER_HORIZONTAL);
+
+        masterSwitch = new Switch(this);
         masterSwitch.setChecked(config.isEnabled());
         masterSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
             config.setEnabled(isChecked);
+            updateMasterSwitchUi(isChecked);
             if (TongueScrollService.getInstance() != null) {
                 TongueScrollService.getInstance().reloadConfig();
             }
             updateServiceStatus();
         });
-        topRow.addView(masterSwitch);
+        switchContainer.addView(masterSwitch);
 
+        tvMasterSwitchLabel = new TextView(this);
+        tvMasterSwitchLabel.setTextSize(11);
+        tvMasterSwitchLabel.setTypeface(null, Typeface.BOLD);
+        updateMasterSwitchUi(config.isEnabled());
+        switchContainer.addView(tvMasterSwitchLabel);
+
+        topRow.addView(switchContainer);
         header.addView(topRow);
 
         // Status Badge Row
@@ -207,6 +263,18 @@ public class MainActivity extends Activity {
         return header;
     }
 
+    private void updateMasterSwitchUi(boolean isChecked) {
+        if (tvMasterSwitchLabel != null) {
+            if (isChecked) {
+                tvMasterSwitchLabel.setText("ВКЛЮЧЕНО");
+                tvMasterSwitchLabel.setTextColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
+            } else {
+                tvMasterSwitchLabel.setText("ВЫКЛЮЧЕНО");
+                tvMasterSwitchLabel.setTextColor(MaterialUiHelper.COLOR_TEXT_MUTED);
+            }
+        }
+    }
+
     private View buildCameraLabSection() {
         LinearLayout card = createCardContainer();
 
@@ -214,15 +282,15 @@ public class MainActivity extends Activity {
         card.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText("Направьте лицо в камеру и высуньте язык. Индикатор покажет распознавание в реальном времени:");
+        desc.setText("Направьте лицо в камеру и высуньте язык. При распознавании появится розовая рамка и шкала заполнится:");
         desc.setTextSize(12);
         desc.setTextColor(MaterialUiHelper.COLOR_TEXT_SECONDARY);
-        desc.setPadding(0, 0, 0, MaterialUiHelper.dpToPx(this, 12));
+        desc.setPadding(0, 0, 0, MaterialUiHelper.dpToPx(this, 8));
         card.addView(desc);
 
         // Camera Preview + Canvas Overlay Frame
         FrameLayout cameraFrame = new FrameLayout(this);
-        int previewHeight = MaterialUiHelper.dpToPx(this, 220);
+        int previewHeight = MaterialUiHelper.dpToPx(this, 230);
         cameraFrame.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, previewHeight));
         cameraFrame.setBackground(MaterialUiHelper.createFrostedGlassDrawable(16, this));
         cameraFrame.setClipToOutline(true);
@@ -238,10 +306,37 @@ public class MainActivity extends Activity {
 
         card.addView(cameraFrame);
 
+        // Diagnostics row under camera
+        LinearLayout diagRow = new LinearLayout(this);
+        diagRow.setOrientation(LinearLayout.HORIZONTAL);
+        diagRow.setGravity(Gravity.CENTER_VERTICAL);
+        diagRow.setPadding(0, MaterialUiHelper.dpToPx(this, 6), 0, 0);
+
+        tvCameraDiag = new TextView(this);
+        tvCameraDiag.setText("⏳ Инициализация камеры...");
+        tvCameraDiag.setTextSize(11);
+        tvCameraDiag.setTextColor(MaterialUiHelper.COLOR_TEXT_MUTED);
+        tvCameraDiag.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+        diagRow.addView(tvCameraDiag);
+
+        btnRestartCamera = new Button(this);
+        btnRestartCamera.setText("🔄 Перезапустить камеру");
+        btnRestartCamera.setTextSize(11);
+        btnRestartCamera.setPadding(MaterialUiHelper.dpToPx(this, 8), 0, MaterialUiHelper.dpToPx(this, 8), 0);
+        btnRestartCamera.setTextColor(MaterialUiHelper.COLOR_PRIMARY);
+        btnRestartCamera.setBackground(MaterialUiHelper.createRoundedDrawable(MaterialUiHelper.COLOR_SURFACE_CONTAINER, MaterialUiHelper.COLOR_OUTLINE_BORDER, 10, 1, this));
+        btnRestartCamera.setOnClickListener(v -> {
+            stopLabCamera();
+            startLabCamera();
+        });
+        diagRow.addView(btnRestartCamera);
+
+        card.addView(diagRow);
+
         // Confidence Meter
         LinearLayout meterLayout = new LinearLayout(this);
         meterLayout.setOrientation(LinearLayout.VERTICAL);
-        meterLayout.setPadding(0, MaterialUiHelper.dpToPx(this, 12), 0, 0);
+        meterLayout.setPadding(0, MaterialUiHelper.dpToPx(this, 10), 0, 0);
 
         LinearLayout valRow = new LinearLayout(this);
         valRow.setOrientation(LinearLayout.HORIZONTAL);
@@ -281,7 +376,7 @@ public class MainActivity extends Activity {
         card.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText("Свайпните языком или нажмите кнопку, чтобы проверить пролистывание прямо здесь:");
+        desc.setText("Свайпните языком перед камерой или нажмите кнопку ниже для проверки физического свайпа:");
         desc.setTextSize(12);
         desc.setTextColor(MaterialUiHelper.COLOR_TEXT_SECONDARY);
         desc.setPadding(0, 0, 0, MaterialUiHelper.dpToPx(this, 10));
@@ -553,21 +648,31 @@ public class MainActivity extends Activity {
     }
 
     private void updateServiceStatus() {
-        boolean running = TongueScrollService.isServiceRunning();
-        if (running && config.isEnabled()) {
-            tvStatusBadge.setText("СЛУЖБА АКТИВНА И ГОТОВА");
-            tvStatusBadge.setTextColor(0xFF00391E);
-            GradientDrawable gd = new GradientDrawable();
-            gd.setShape(GradientDrawable.RECTANGLE);
-            gd.setColor(MaterialUiHelper.COLOR_SUCCESS);
-            gd.setCornerRadius(MaterialUiHelper.dpToPx(this, 14));
-            tvStatusBadge.setBackground(gd);
-        } else {
-            tvStatusBadge.setText("ТРЕБУЕТСЯ ВКЛЮЧИТЬ СПЕЦ. ВОЗМОЖНОСТИ");
+        boolean serviceActive = TongueScrollService.isServiceRunning();
+        boolean enabled = config.isEnabled();
+
+        if (!enabled) {
+            tvStatusBadge.setText("⚠️ МОДУЛЬ ВЫКЛЮЧЕН ВРУЧНУЮ (ВКЛЮЧИТЕ ВВЕРХУ)");
             tvStatusBadge.setTextColor(0xFF680016);
             GradientDrawable gd = new GradientDrawable();
             gd.setShape(GradientDrawable.RECTANGLE);
             gd.setColor(MaterialUiHelper.COLOR_ERROR);
+            gd.setCornerRadius(MaterialUiHelper.dpToPx(this, 14));
+            tvStatusBadge.setBackground(gd);
+        } else if (!serviceActive) {
+            tvStatusBadge.setText("⚠️ ТРЕБУЕТСЯ ВКЛЮЧИТЬ СПЕЦ. ВОЗМОЖНОСТИ");
+            tvStatusBadge.setTextColor(0xFF680016);
+            GradientDrawable gd = new GradientDrawable();
+            gd.setShape(GradientDrawable.RECTANGLE);
+            gd.setColor(MaterialUiHelper.COLOR_ERROR);
+            gd.setCornerRadius(MaterialUiHelper.dpToPx(this, 14));
+            tvStatusBadge.setBackground(gd);
+        } else {
+            tvStatusBadge.setText("✅ СЛУЖБА АКТИВНА И ГОТОВА К РАБОТЕ");
+            tvStatusBadge.setTextColor(0xFF00391E);
+            GradientDrawable gd = new GradientDrawable();
+            gd.setShape(GradientDrawable.RECTANGLE);
+            gd.setColor(MaterialUiHelper.COLOR_SUCCESS);
             gd.setCornerRadius(MaterialUiHelper.dpToPx(this, 14));
             tvStatusBadge.setBackground(gd);
         }
@@ -583,7 +688,7 @@ public class MainActivity extends Activity {
         tvConfidenceValue.setText("Уверенность: " + result.confidence + "% | Порог: " + config.getSensitivity() + "%");
 
         if (result.confidence >= config.getSensitivity()) {
-            tvGestureStatus.setText("👅 ЯЗЫК ОБНАРУЖЕН!");
+            tvGestureStatus.setText("👅 ЯЗЫК ОБНАРУЖЕН! СВАЙП!");
             tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
         } else {
             tvGestureStatus.setText("Нейтрально");
@@ -591,12 +696,12 @@ public class MainActivity extends Activity {
         }
 
         if (overlayView != null) {
-            overlayView.updateDetection(result, 160, 120);
+            overlayView.updateDetection(result, 320, 240);
         }
     }
 
     private void onLabGestureTriggered(int confidence) {
-        Toast.makeText(this, "👅 Жест языка подтвержден (" + confidence + "%)! Свайп...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "👅 Жест языка подтвержден (" + confidence + "%)!", Toast.LENGTH_SHORT).show();
         performDirectTestSwipe();
     }
 
@@ -616,7 +721,7 @@ public class MainActivity extends Activity {
     }
 
     // =========================================================================
-    // Camera2 Live TextureView Preview for Interactive Calibration
+    // Camera2 Dual-Stream: OpenGL TextureView Preview + ImageReader CV Stream
     // =========================================================================
 
     private final TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
@@ -635,28 +740,19 @@ public class MainActivity extends Activity {
         }
 
         @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-            // Sample downscaled bitmap for live test lab detection
-            if (!isProcessingFrame && cameraPreview != null) {
-                isProcessingFrame = true;
-                new Thread(() -> {
-                    try {
-                        Bitmap bmp = cameraPreview.getBitmap(160, 120);
-                        if (bmp != null) {
-                            labDetector.analyzeBitmap(bmp, null);
-                            bmp.recycle();
-                        }
-                    } catch (Exception ignored) {
-                    } finally {
-                        isProcessingFrame = false;
-                    }
-                }).start();
-            }
-        }
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
     };
 
-    private void startLabCamera() {
-        if (isPreviewRunning || checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+    private synchronized void startLabCamera() {
+        if (isCameraStarting || cameraDevice != null) return;
+
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            tvCameraDiag.setText("⚠️ Разрешение камеры не предоставлено");
+            return;
+        }
+
+        if (cameraPreview == null || !cameraPreview.isAvailable()) {
+            tvCameraDiag.setText("⏳ Ожидание поверхности TextureView...");
             return;
         }
 
@@ -674,74 +770,128 @@ public class MainActivity extends Activity {
                 }
             }
 
-            if (frontId == null) return;
+            if (frontId == null) {
+                tvCameraDiag.setText("❌ Фронтальная камера не найдена");
+                return;
+            }
+
+            isCameraStarting = true;
+            tvCameraDiag.setText("⏳ Подключение к передней камере...");
 
             manager.openCamera(frontId, new CameraDevice.StateCallback() {
                 @Override
                 public void onOpened(CameraDevice camera) {
+                    isCameraStarting = false;
                     cameraDevice = camera;
+                    tvCameraDiag.setText("🟢 Камера подключена, настройка видеопотока...");
                     createLabPreviewSession();
                 }
 
                 @Override
                 public void onDisconnected(CameraDevice camera) {
+                    isCameraStarting = false;
                     camera.close();
                     cameraDevice = null;
-                    isPreviewRunning = false;
+                    tvCameraDiag.setText("⚠️ Камера отключена");
                 }
 
                 @Override
                 public void onError(CameraDevice camera, int error) {
+                    isCameraStarting = false;
                     camera.close();
                     cameraDevice = null;
-                    isPreviewRunning = false;
+                    tvCameraDiag.setText("❌ Ошибка камеры: код " + error);
+                    Log.e(TAG, "Lab CameraDevice error: " + error);
                 }
             }, mainHandler);
 
-            isPreviewRunning = true;
-
         } catch (CameraAccessException | SecurityException e) {
+            isCameraStarting = false;
+            tvCameraDiag.setText("❌ Ошибка доступа к камере: " + e.getMessage());
             Log.e(TAG, "Failed to open front camera in lab", e);
         }
     }
 
-    private void createLabPreviewSession() {
+    private synchronized void createLabPreviewSession() {
         if (cameraDevice == null || cameraPreview == null || !cameraPreview.isAvailable()) return;
 
         try {
             SurfaceTexture texture = cameraPreview.getSurfaceTexture();
+            if (texture == null) return;
+
             texture.setDefaultBufferSize(640, 480);
-            Surface surface = new Surface(texture);
+            Surface previewSurface = new Surface(texture);
+
+            // Create low-overhead YUV ImageReader for real-time tongue detection (<1.5ms per frame)
+            if (labImageReader != null) {
+                labImageReader.close();
+            }
+            labImageReader = ImageReader.newInstance(320, 240, ImageFormat.YUV_420_888, 2);
+            labImageReader.setOnImageAvailableListener(reader -> {
+                Image image = null;
+                try {
+                    image = reader.acquireLatestImage();
+                    if (image != null && labDetector != null) {
+                        labDetector.analyzeYuv(image, currentFaceRect);
+                    }
+                } catch (Exception ignored) {
+                } finally {
+                    if (image != null) image.close();
+                }
+            }, labCameraHandler);
 
             final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            builder.addTarget(surface);
+            builder.addTarget(previewSurface);
+            builder.addTarget(labImageReader.getSurface());
 
-            cameraDevice.createCaptureSession(Collections.singletonList(surface), new CameraCaptureSession.StateCallback() {
-                @Override
-                public void onConfigured(CameraCaptureSession session) {
-                    if (cameraDevice == null) return;
-                    captureSession = session;
-                    try {
-                        session.setRepeatingRequest(builder.build(), null, mainHandler);
-                    } catch (CameraAccessException e) {
-                        Log.e(TAG, "Error starting lab preview", e);
-                    }
-                }
+            // Auto-exposure, auto-white-balance and hardware face tracking
+            builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            builder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            builder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+            builder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
+            builder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CaptureRequest.STATISTICS_FACE_DETECT_MODE_SIMPLE);
 
-                @Override
-                public void onConfigureFailed(CameraCaptureSession session) {
-                    Log.e(TAG, "Failed configuring lab preview session");
-                }
-            }, mainHandler);
+            cameraDevice.createCaptureSession(
+                    Arrays.asList(previewSurface, labImageReader.getSurface()),
+                    new CameraCaptureSession.StateCallback() {
+                        @Override
+                        public void onConfigured(CameraCaptureSession session) {
+                            if (cameraDevice == null) return;
+                            captureSession = session;
+                            try {
+                                session.setRepeatingRequest(builder.build(), new CameraCaptureSession.CaptureCallback() {
+                                    @Override
+                                    public void onCaptureCompleted(CameraCaptureSession s, CaptureRequest req, TotalCaptureResult result) {
+                                        Face[] faces = result.get(CaptureResult.STATISTICS_FACES);
+                                        if (faces != null && faces.length > 0) {
+                                            currentFaceRect = faces[0].getBounds();
+                                        } else {
+                                            currentFaceRect = null;
+                                        }
+                                    }
+                                }, labCameraHandler);
+                                tvCameraDiag.setText("🟢 Видеопоток активен • Детекция работает");
+                            } catch (CameraAccessException e) {
+                                tvCameraDiag.setText("❌ Сбой сессии камеры");
+                                Log.e(TAG, "Error starting lab preview repeating request", e);
+                            }
+                        }
+
+                        @Override
+                        public void onConfigureFailed(CameraCaptureSession session) {
+                            tvCameraDiag.setText("❌ Сбой конфигурации сессии камеры");
+                        }
+                    },
+                    mainHandler
+            );
 
         } catch (CameraAccessException e) {
+            tvCameraDiag.setText("❌ Ошибка создания сессии: " + e.getMessage());
             Log.e(TAG, "Error creating lab preview session", e);
         }
     }
 
-    private void stopLabCamera() {
-        if (!isPreviewRunning && cameraDevice == null) return;
-
+    private synchronized void stopLabCamera() {
         try {
             if (captureSession != null) {
                 captureSession.stopRepeating();
@@ -755,7 +905,15 @@ public class MainActivity extends Activity {
             cameraDevice = null;
         }
 
-        isPreviewRunning = false;
+        if (labImageReader != null) {
+            labImageReader.close();
+            labImageReader = null;
+        }
+
+        isCameraStarting = false;
+        if (tvCameraDiag != null) {
+            tvCameraDiag.setText("⏸️ Камера приостановлена");
+        }
     }
 
     private void checkPermissions() {
@@ -772,6 +930,9 @@ public class MainActivity extends Activity {
                 startLabCamera();
             } else {
                 Toast.makeText(this, "Для работы детектора языка необходим доступ к передней камере", Toast.LENGTH_LONG).show();
+                if (tvCameraDiag != null) {
+                    tvCameraDiag.setText("⚠️ Разрешение камеры отклонено");
+                }
             }
         }
     }

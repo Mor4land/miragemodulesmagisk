@@ -70,9 +70,18 @@ public class CameraOverlayView extends View {
             float top = r.top * scaleY;
             float bottom = r.bottom * scaleY;
 
+            if (lastResult.confidence >= 50) {
+                mouthPaint.setColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
+                mouthPaint.setStrokeWidth(MaterialUiHelper.dpToPx(getContext(), 3.5f));
+            } else {
+                mouthPaint.setColor(MaterialUiHelper.COLOR_PRIMARY);
+                mouthPaint.setStrokeWidth(MaterialUiHelper.dpToPx(getContext(), 2f));
+            }
+
             RectF rectF = new RectF(left, top, right, bottom);
             canvas.drawRoundRect(rectF, 16f, 16f, mouthPaint);
-            canvas.drawText("Зона рта", left + 8, top - 8, textPaint);
+            String label = lastResult.confidence >= 50 ? "👅 ЯЗЫК (" + lastResult.confidence + "%)" : "👄 Зона рта";
+            canvas.drawText(label, left + 8, Math.max(24f, top - 8), textPaint);
         }
 
         // Draw Detected Tongue Cluster

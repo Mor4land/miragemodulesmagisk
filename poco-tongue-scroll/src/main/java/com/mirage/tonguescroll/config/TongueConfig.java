@@ -35,8 +35,7 @@ public class TongueConfig {
             "com.android.chrome",             // Google Chrome
             "org.telegram.messenger",        // Telegram
             "com.vkontakte.android",          // VK Clips
-            "com.fooview.android.fooview",    // Reader
-            "com.mirage.tonguescroll"         // Test Lab
+            "com.fooview.android.fooview"     // Reader
     ));
 
     private final SharedPreferences prefs;
@@ -126,11 +125,14 @@ public class TongueConfig {
     }
 
     public boolean isPackageAllowed(String packageName) {
+        if ("com.mirage.tonguescroll".equals(packageName)) {
+            return false; // Background service yields camera to the Test Lab
+        }
         if (!isRunOnlyInTargetApps()) {
             return true;
         }
         if (packageName == null) return false;
         Set<String> targets = getTargetPackages();
-        return targets.contains(packageName) || packageName.equals("com.mirage.tonguescroll");
+        return targets.contains(packageName);
     }
 }
