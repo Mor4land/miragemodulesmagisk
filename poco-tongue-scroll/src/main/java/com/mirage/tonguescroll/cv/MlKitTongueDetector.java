@@ -86,7 +86,7 @@ public class MlKitTongueDetector {
                 .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
                 .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                .setMinFaceSize(0.20f)
+                .setMinFaceSize(0.12f)
                 .build();
 
         this.faceDetector = FaceDetection.getClient(options);
@@ -255,9 +255,10 @@ public class MlKitTongueDetector {
         );
 
         // 1. NEURAL MOUTH OPENNESS GATE:
-        // If mouth aperture < 9px, the mouth is PHYSICALLY CLOSED.
-        // It is impossible for a tongue to be out. Confidence is STRICTLY 0%.
-        if (mouthAperture < 9.0f) {
+        // Normalize aperture by mouthWidth so detection works identically up close and at arm's length.
+        float apertureRatio = mouthAperture / mouthWidth;
+        if (mouthAperture < 5.5f || apertureRatio < 0.082f) {
+            consecutiveActiveFrames = 0;
             notifyResult(new DetectionResult(0, mouthBounds, null, false, mouthAperture, 0f, false,
                     String.format(java.util.Locale.US, "👄 Рот закрыт (Зазор: %.1f px) -> 0%%", mouthAperture),
                     frameWidth, frameHeight));
@@ -265,21 +266,18 @@ public class MlKitTongueDetector {
         }
 
         // 2. MOUTH IS OPEN:
-        // Evaluate tongue protrusion.
-        // When the tongue is protruded, the distance from upper lip bottom down to the tip of the
-        // protrusion extends past the lower lip bottom contour (centerLowBottom.y).
+        // Evaluate tongue protrusion relative to mouth width.
         float totalMouthOpening = centerLowBottom.y - centerUpBottom.y;
         float openingRatio = totalMouthOpening / mouthWidth;
 
-        // Protrusion is significant when openingRatio > 0.38 and aperture > 22px
         int confidence = 0;
         RectF tongueBox = null;
         float protrusionPx = 0f;
 
-        if (mouthAperture >= 18.0f && openingRatio >= 0.32f) {
-            protrusionPx = totalMouthOpening - lowerLipHeight;
-            float rawScore = ((openingRatio - 0.32f) / 0.38f) * 100.0f;
-            confidence = Math.min(100, Math.max(20, Math.round(rawScore + 30f)));
+        if (apertureRatio >= 0.125f && openingRatio >= 0.28f) {
+            protrusionPx = Math.max(0f, totalMouthOpening - lowerLipHeight);
+            float rawScore = ((openingRatio - 0.28f) / 0.34f) * 100.0f;
+            confidence = Math.min(100, Math.max(20, Math.round(rawScore + 32f)));
 
             float tongueWidth = mouthWidth * 0.45f;
             tongueBox = new RectF(

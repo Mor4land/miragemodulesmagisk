@@ -63,6 +63,8 @@ public class MainActivity extends Activity {
     private static final String TAG = "TongueMainActivity";
     private static final int REQ_CAMERA_PERMISSION = 101;
 
+    public static volatile boolean isLabResumed = false;
+
     private TongueConfig config;
     private MlKitTongueDetector labMlDetector;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -133,30 +135,84 @@ public class MainActivity extends Activity {
         startLabCameraThread();
         setContentView(buildRootLayout());
         checkPermissions();
+        autoEnableBackgroundServiceAndPrivileges();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        isLabResumed = true;
+        if (TongueScrollService.getInstance() != null) {
+            TongueScrollService.getInstance().onLabActivityResumed();
+        }
         updateServiceStatus();
         if (cameraPreview != null && cameraPreview.isAvailable()) {
-            startLabCamera();
+            mainHandler.postDelayed(this::startLabCamera, 150);
         }
     }
 
     @Override
     protected void onPause() {
+        isLabResumed = false;
         stopLabCamera();
+        ensureBackgroundServiceStarted();
+        if (TongueScrollService.getInstance() != null) {
+            TongueScrollService.getInstance().onLabActivityPaused();
+        }
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
+        isLabResumed = false;
         stopLabCameraThread();
         if (labMlDetector != null) {
             labMlDetector.close();
         }
         super.onDestroy();
+    }
+
+    private void ensureBackgroundServiceStarted() {
+        if (config != null && config.isEnabled()) {
+            try {
+                Intent svcIntent = new Intent(this, TongueScrollService.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(svcIntent);
+                } else {
+                    startService(svcIntent);
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "Could not start TongueScrollService directly", e);
+            }
+        }
+    }
+
+    private void autoEnableBackgroundServiceAndPrivileges() {
+        ensureBackgroundServiceStarted();
+        new Thread(() -> {
+            try {
+                String svcName = "com.mirage.tonguescroll/com.mirage.tonguescroll.service.TongueScrollService";
+                String script =
+                        "pm grant com.mirage.tonguescroll android.permission.CAMERA 2>/dev/null; " +
+                        "pm grant com.mirage.tonguescroll android.permission.SYSTEM_ALERT_WINDOW 2>/dev/null; " +
+                        "pm grant com.mirage.tonguescroll android.permission.POST_NOTIFICATIONS 2>/dev/null; " +
+                        "appops set com.mirage.tonguescroll CAMERA allow 2>/dev/null; " +
+                        "appops set com.mirage.tonguescroll SYSTEM_ALERT_WINDOW allow 2>/dev/null; " +
+                        "appops set com.mirage.tonguescroll ACCESS_RESTRICTED_SETTINGS allow 2>/dev/null; " +
+                        "dumpsys deviceidle whitelist +com.mirage.tonguescroll 2>/dev/null; " +
+                        "CUR=$(settings get secure enabled_accessibility_services 2>/dev/null); " +
+                        "if [ -z \"$CUR\" ] || [ \"$CUR\" = \"null\" ]; then " +
+                        "  settings put secure enabled_accessibility_services \"" + svcName + "\"; " +
+                        "elif echo \"$CUR\" | grep -qv \"" + svcName + "\"; then " +
+                        "  settings put secure enabled_accessibility_services \"$CUR:" + svcName + "\"; " +
+                        "fi; " +
+                        "settings put secure accessibility_enabled 1 2>/dev/null";
+                Runtime.getRuntime().exec(new String[]{"su", "-c", script}).waitFor();
+                mainHandler.post(this::updateServiceStatus);
+            } catch (Exception e) {
+                Log.w(TAG, "Root auto-enable not available or failed", e);
+            }
+        }).start();
     }
 
     private void startLabCameraThread() {

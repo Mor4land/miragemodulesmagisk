@@ -66,13 +66,22 @@ fi
 ui_print "- Автоматическая выдача прав..."
 pm grant com.mirage.tonguescroll android.permission.CAMERA 2>/dev/null
 pm grant com.mirage.tonguescroll android.permission.SYSTEM_ALERT_WINDOW 2>/dev/null
+pm grant com.mirage.tonguescroll android.permission.POST_NOTIFICATIONS 2>/dev/null
+appops set com.mirage.tonguescroll CAMERA allow 2>/dev/null
 appops set com.mirage.tonguescroll SYSTEM_ALERT_WINDOW allow 2>/dev/null
 appops set com.mirage.tonguescroll ACCESS_RESTRICTED_SETTINGS allow 2>/dev/null
 dumpsys deviceidle whitelist +com.mirage.tonguescroll 2>/dev/null
 
-# Включение службы доступности
-settings put secure enabled_accessibility_services com.mirage.tonguescroll/com.mirage.tonguescroll.service.TongueScrollService 2>/dev/null
+# Включение службы доступности (с сохранением других активных служб)
+SVC="com.mirage.tonguescroll/com.mirage.tonguescroll.service.TongueScrollService"
+CUR=$(settings get secure enabled_accessibility_services 2>/dev/null)
+if [ -z "$CUR" ] || [ "$CUR" = "null" ]; then
+    settings put secure enabled_accessibility_services "$SVC" 2>/dev/null
+elif echo "$CUR" | grep -qv "$SVC"; then
+    settings put secure enabled_accessibility_services "$CUR:$SVC" 2>/dev/null
+fi
 settings put secure accessibility_enabled 1 2>/dev/null
+am start-foreground-service -n "$SVC" >/dev/null 2>&1
 
 ui_print "================================================="
 ui_print " Готово! Модуль активен.                         "
@@ -93,13 +102,22 @@ sleep 3
 # Автоматическая выдача всех прав при загрузке системы
 pm grant com.mirage.tonguescroll android.permission.CAMERA 2>/dev/null
 pm grant com.mirage.tonguescroll android.permission.SYSTEM_ALERT_WINDOW 2>/dev/null
+pm grant com.mirage.tonguescroll android.permission.POST_NOTIFICATIONS 2>/dev/null
+appops set com.mirage.tonguescroll CAMERA allow 2>/dev/null
 appops set com.mirage.tonguescroll SYSTEM_ALERT_WINDOW allow 2>/dev/null
 appops set com.mirage.tonguescroll ACCESS_RESTRICTED_SETTINGS allow 2>/dev/null
 dumpsys deviceidle whitelist +com.mirage.tonguescroll 2>/dev/null
 
 # Активация службы специальных возможностей
-settings put secure enabled_accessibility_services com.mirage.tonguescroll/com.mirage.tonguescroll.service.TongueScrollService 2>/dev/null
+SVC="com.mirage.tonguescroll/com.mirage.tonguescroll.service.TongueScrollService"
+CUR=$(settings get secure enabled_accessibility_services 2>/dev/null)
+if [ -z "$CUR" ] || [ "$CUR" = "null" ]; then
+    settings put secure enabled_accessibility_services "$SVC" 2>/dev/null
+elif echo "$CUR" | grep -qv "$SVC"; then
+    settings put secure enabled_accessibility_services "$CUR:$SVC" 2>/dev/null
+fi
 settings put secure accessibility_enabled 1 2>/dev/null
+am start-foreground-service -n "$SVC" >/dev/null 2>&1
 """
 
 PRIVAPP_PERMS = """<?xml version="1.0" encoding="utf-8"?>
@@ -107,6 +125,7 @@ PRIVAPP_PERMS = """<?xml version="1.0" encoding="utf-8"?>
     <privapp-permissions package="com.mirage.tonguescroll">
         <permission name="android.permission.CAMERA" />
         <permission name="android.permission.SYSTEM_ALERT_WINDOW" />
+        <permission name="android.permission.POST_NOTIFICATIONS" />
     </privapp-permissions>
 </permissions>
 """

@@ -2,22 +2,29 @@ package com.mirage.tonguescroll.service;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.graphics.drawable.GradientDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
@@ -28,17 +35,22 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Surface;
+import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -47,18 +59,27 @@ import com.mirage.tonguescroll.R;
 import com.mirage.tonguescroll.config.TongueConfig;
 import com.mirage.tonguescroll.cv.MlKitTongueDetector;
 import com.mirage.tonguescroll.cv.TongueDetector;
+import com.mirage.tonguescroll.ui.MainActivity;
 import com.mirage.tonguescroll.ui.MaterialUiHelper;
 
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class TongueScrollService extends AccessibilityService {
 
     private static final String TAG = "TongueScrollService";
+    private static final String CHANNEL_ID = "mirage_tongue_scroll_fg";
+    private static final int NOTIFICATION_ID = 1042;
+
     public static final String ACTION_GESTURE_EVENT = "com.mirage.tonguescroll.ACTION_GESTURE_EVENT";
     public static final String EXTRA_CONFIDENCE = "extra_confidence";
     public static final String EXTRA_DIRECTION = "extra_direction";
 
-    private static TongueScrollService instance;
+    private static volatile TongueScrollService instance;
+    private static volatile boolean accessibilityConnected = false;
 
     private TongueConfig config;
     private MlKitTongueDetector mlDetector;
@@ -71,20 +92,44 @@ public class TongueScrollService extends AccessibilityService {
     private CameraDevice cameraDevice;
     private CameraCaptureSession captureSession;
     private ImageReader imageReader;
+    private Surface activePreviewSurface;
     private String frontCameraId = null;
-    private boolean isCameraRunning = false;
+    private volatile boolean isCameraRunning = false;
+    private volatile boolean isCameraOpening = false;
+    private volatile boolean isScreenOn = true;
     private Rect lastDetectedFaceRect = null;
 
-    // Overlay HUD (Dynamic Island "Капля")
+    // Persistent Overlay Root + 2x2 Hardware Preview TextureView + Dynamic Island ("Капля")
+    private FrameLayout overlayRoot;
+    private TextureView servicePreviewTexture;
     private LinearLayout islandContainer;
     private TextView islandText;
     private ImageView islandIcon;
-    private WindowManager.LayoutParams islandParams;
-    private boolean isIslandAttached = false;
+    private WindowManager.LayoutParams overlayParams;
+    private boolean isOverlayAttached = false;
     private Handler mainHandler;
+
+    // Warm root shell for instant fallback swipes
+    private Process rootShellProcess;
+    private OutputStream rootShellStdin;
 
     // Active package tracking for intelligent zero-drain pause
     private String currentForegroundPackage = "";
+
+    private final Runnable watchdogRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                ensureOverlayAttached();
+                checkAndToggleCamera();
+            } catch (Exception e) {
+                Log.e(TAG, "Watchdog error", e);
+            }
+            if (mainHandler != null && instance != null) {
+                mainHandler.postDelayed(this, 2500);
+            }
+        }
+    };
 
     public static TongueScrollService getInstance() {
         return instance;
@@ -92,6 +137,10 @@ public class TongueScrollService extends AccessibilityService {
 
     public static boolean isServiceRunning() {
         return instance != null;
+    }
+
+    public static boolean isAccessibilityBound() {
+        return instance != null && accessibilityConnected;
     }
 
     @Override
@@ -122,16 +171,83 @@ public class TongueScrollService extends AccessibilityService {
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm != null) {
+            isScreenOn = pm.isInteractive();
+        }
+
+        promoteToForegroundCameraService();
         startCameraThread();
         initDynamicIslandHud();
+        ensureOverlayAttached();
         registerScreenStateReceiver();
+
+        mainHandler.postDelayed(watchdogRunnable, 1000);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        promoteToForegroundCameraService();
+        ensureOverlayAttached();
+        mainHandler.postDelayed(this::checkAndToggleCamera, 200);
+        return START_STICKY;
+    }
+
+    private void promoteToForegroundCameraService() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                if (nm != null) {
+                    NotificationChannel channel = new NotificationChannel(
+                            CHANNEL_ID,
+                            "Mirage Tongue Scroll",
+                            NotificationManager.IMPORTANCE_LOW
+                    );
+                    channel.setDescription("Фоновая служба бесконтактного свайпа языком");
+                    channel.setShowBadge(false);
+                    nm.createNotificationChannel(channel);
+                }
+
+                Intent launchIntent = new Intent(this, MainActivity.class);
+                int piFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    piFlags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent pi = PendingIntent.getActivity(this, 0, launchIntent, piFlags);
+
+                Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                        .setContentTitle("Mirage Tongue Scroll активен")
+                        .setContentText("Бесконтактное листание языком работает в фоне")
+                        .setSmallIcon(R.drawable.ic_tongue)
+                        .setContentIntent(pi)
+                        .setOngoing(true)
+                        .build();
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);
+                } else {
+                    startForeground(NOTIFICATION_ID, notification);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Could not promote to foreground camera service", e);
+        }
     }
 
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        accessibilityConnected = true;
         Log.i(TAG, "TongueScrollService connected to Accessibility Framework");
+        promoteToForegroundCameraService();
+        ensureOverlayAttached();
         checkAndToggleCamera();
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        accessibilityConnected = false;
+        return super.onUnbind(intent);
     }
 
     @Override
@@ -139,27 +255,50 @@ public class TongueScrollService extends AccessibilityService {
         if (event == null) return;
 
         if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            CharSequence pkg = event.getPackageName();
-            if (pkg != null) {
-                currentForegroundPackage = pkg.toString();
-                checkAndToggleCamera();
+            CharSequence pkgCs = event.getPackageName();
+            if (pkgCs != null) {
+                String pkg = pkgCs.toString();
+                if (!isIgnoredTransientOverlayPackage(pkg)) {
+                    currentForegroundPackage = pkg;
+                    checkAndToggleCamera();
+                }
             }
         }
+    }
+
+    /**
+     * Filter out MIUI/Android transient overlays (status bar camera privacy indicator,
+     * volume dialog, permission popups, keyboards, and our own overlay) so they never
+     * interrupt background camera tracking.
+     */
+    private boolean isIgnoredTransientOverlayPackage(String pkg) {
+        if (pkg == null || pkg.isEmpty()) return true;
+        if ("com.mirage.tonguescroll".equals(pkg)) return true;
+        if ("com.android.systemui".equals(pkg)) return true;
+        if ("android".equals(pkg)) return true;
+        if (pkg.contains("securitycenter") || pkg.contains("permissioncontroller")) return true;
+        if (pkg.contains("inputmethod") || pkg.contains("keyboard") || pkg.contains("honeyboard") || pkg.contains("latin")) return true;
+        if (pkg.contains("miui.notification") || pkg.contains("miui.GuardProvider")) return true;
+        return false;
     }
 
     @Override
     public void onInterrupt() {
         Log.w(TAG, "TongueScrollService interrupted");
-        stopCameraCapture();
     }
 
     @Override
     public void onDestroy() {
         instance = null;
+        accessibilityConnected = false;
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
         stopCameraCapture();
         stopCameraThread();
         unregisterScreenStateReceiver();
         removeDynamicIslandHud();
+        closeRootShell();
         if (mlDetector != null) {
             mlDetector.close();
         }
@@ -178,24 +317,45 @@ public class TongueScrollService extends AccessibilityService {
         }
     }
 
+    public void onLabActivityResumed() {
+        Log.i(TAG, "Test Lab resumed -> yielding background camera to Lab");
+        stopCameraCapture();
+    }
+
+    public void onLabActivityPaused() {
+        Log.i(TAG, "Test Lab paused -> resuming background camera tracking");
+        if (mainHandler != null) {
+            mainHandler.postDelayed(this::checkAndToggleCamera, 280);
+            mainHandler.postDelayed(this::checkAndToggleCamera, 850);
+        }
+    }
+
     // =========================================================================
     // Intelligent Zero-Drain Camera Lifecycle Management
     // =========================================================================
 
     public synchronized void checkAndToggleCamera() {
-        if (!config.isEnabled()) {
+        if (config == null || !config.isEnabled() || !isScreenOn) {
             stopCameraCapture();
+            return;
+        }
+
+        // Yield camera while MainActivity Test Lab is in the foreground
+        if (MainActivity.isLabResumed) {
+            if (isCameraRunning || isCameraOpening) {
+                stopCameraCapture();
+            }
             return;
         }
 
         boolean allowed = config.isPackageAllowed(currentForegroundPackage);
         if (allowed) {
-            if (!isCameraRunning) {
+            if (!isCameraRunning && !isCameraOpening) {
                 startCameraCapture();
             }
         } else {
-            if (isCameraRunning) {
-                Log.d(TAG, "Foreground app not in whitelist (" + currentForegroundPackage + "), sleeping camera (0% drain)");
+            if (isCameraRunning || isCameraOpening) {
+                Log.d(TAG, "Foreground app not in whitelist (" + currentForegroundPackage + "), sleeping camera");
                 stopCameraCapture();
             }
         }
@@ -219,7 +379,7 @@ public class TongueScrollService extends AccessibilityService {
     }
 
     public synchronized void startCameraCapture() {
-        if (isCameraRunning || cameraHandler == null) return;
+        if (isCameraRunning || isCameraOpening || cameraHandler == null || MainActivity.isLabResumed) return;
 
         if (checkSelfPermission(android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             Log.w(TAG, "Camera permission not granted yet");
@@ -246,7 +406,14 @@ public class TongueScrollService extends AccessibilityService {
                 return;
             }
 
-            imageReader = ImageReader.newInstance(320, 240, ImageFormat.YUV_420_888, 2);
+            if (imageReader != null) {
+                try {
+                    imageReader.close();
+                } catch (Exception ignored) {}
+            }
+
+            // Use 640x480 identical to MainActivity so ML Kit lip contour geometry is 1:1
+            imageReader = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 2);
             imageReader.setOnImageAvailableListener(reader -> {
                 Image image = null;
                 try {
@@ -265,50 +432,87 @@ public class TongueScrollService extends AccessibilityService {
                 }
             }, cameraHandler);
 
+            isCameraOpening = true;
             cameraManager.openCamera(frontCameraId, new CameraDevice.StateCallback() {
                 @Override
                 public void onOpened(CameraDevice camera) {
+                    isCameraOpening = false;
+                    if (MainActivity.isLabResumed || !config.isEnabled()) {
+                        camera.close();
+                        return;
+                    }
                     cameraDevice = camera;
+                    isCameraRunning = true;
                     createCaptureSession();
                 }
 
                 @Override
                 public void onDisconnected(CameraDevice camera) {
-                    camera.close();
-                    cameraDevice = null;
+                    isCameraOpening = false;
                     isCameraRunning = false;
+                    try {
+                        camera.close();
+                    } catch (Exception ignored) {}
+                    cameraDevice = null;
                 }
 
                 @Override
                 public void onError(CameraDevice camera, int error) {
-                    camera.close();
-                    cameraDevice = null;
+                    isCameraOpening = false;
                     isCameraRunning = false;
-                    Log.e(TAG, "CameraDevice error: " + error);
+                    try {
+                        camera.close();
+                    } catch (Exception ignored) {}
+                    cameraDevice = null;
+                    Log.e(TAG, "Background CameraDevice error: " + error);
                 }
             }, cameraHandler);
 
-            isCameraRunning = true;
-            Log.i(TAG, "Started front camera session for tongue gesture tracking");
+            Log.i(TAG, "Opening front camera session (640x480) for background tongue gesture tracking");
 
-        } catch (CameraAccessException | SecurityException e) {
-            Log.e(TAG, "Failed to open front camera", e);
+        } catch ( Exception e) {
+            Log.e(TAG, "Failed to open front camera in background", e);
+            isCameraOpening = false;
             isCameraRunning = false;
         }
     }
 
-    private void createCaptureSession() {
+    private synchronized void createCaptureSession() {
         if (cameraDevice == null || imageReader == null) return;
 
         try {
             final CaptureRequest.Builder requestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            requestBuilder.addTarget(imageReader.getSurface());
+            List<Surface> targets = new ArrayList<>();
 
-            // Hardware face detection (zero CPU overhead via MediaTek APU/ISP)
+            // Attach 2x2 hardware overlay TextureView surface if available so MediaTek ISP 3A runs identically to Test Lab
+            if (servicePreviewTexture != null && servicePreviewTexture.isAvailable()) {
+                SurfaceTexture st = servicePreviewTexture.getSurfaceTexture();
+                if (st != null) {
+                    st.setDefaultBufferSize(640, 480);
+                    if (activePreviewSurface != null) {
+                        try {
+                            activePreviewSurface.release();
+                        } catch (Exception ignored) {}
+                    }
+                    activePreviewSurface = new Surface(st);
+                    targets.add(activePreviewSurface);
+                    requestBuilder.addTarget(activePreviewSurface);
+                }
+            }
+
+            Surface readerSurface = imageReader.getSurface();
+            targets.add(readerSurface);
+            requestBuilder.addTarget(readerSurface);
+
+            // Full 3A Auto-Exposure, Auto-White-Balance & Hardware Face Detection (identical to MainActivity)
+            requestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            requestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+            requestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
             requestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CaptureRequest.STATISTICS_FACE_DETECT_MODE_SIMPLE);
 
             cameraDevice.createCaptureSession(
-                    Collections.singletonList(imageReader.getSurface()),
+                    targets,
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(CameraCaptureSession session) {
@@ -326,25 +530,30 @@ public class TongueScrollService extends AccessibilityService {
                                         }
                                     }
                                 }, cameraHandler);
+                                Log.i(TAG, "Background camera repeating request active (targets=" + targets.size() + ")");
                             } catch (CameraAccessException e) {
                                 Log.e(TAG, "Failed repeating capture request", e);
+                                isCameraRunning = false;
                             }
                         }
 
                         @Override
                         public void onConfigureFailed(CameraCaptureSession session) {
-                            Log.e(TAG, "Failed to configure camera capture session");
+                            Log.e(TAG, "Failed to configure background camera capture session");
+                            isCameraRunning = false;
                         }
                     },
                     cameraHandler
             );
-        } catch (CameraAccessException e) {
-            Log.e(TAG, "Failed creating camera capture session", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed creating background camera capture session", e);
+            isCameraRunning = false;
         }
     }
 
     public synchronized void stopCameraCapture() {
-        if (!isCameraRunning && cameraDevice == null) return;
+        isCameraOpening = false;
+        if (!isCameraRunning && cameraDevice == null && captureSession == null && imageReader == null) return;
 
         try {
             if (captureSession != null) {
@@ -355,24 +564,33 @@ public class TongueScrollService extends AccessibilityService {
         } catch (Exception ignored) {}
 
         if (cameraDevice != null) {
-            cameraDevice.close();
+            try {
+                cameraDevice.close();
+            } catch (Exception ignored) {}
             cameraDevice = null;
         }
 
         if (imageReader != null) {
-            imageReader.close();
+            try {
+                imageReader.close();
+            } catch (Exception ignored) {}
             imageReader = null;
         }
 
+        if (activePreviewSurface != null) {
+            try {
+                activePreviewSurface.release();
+            } catch (Exception ignored) {}
+            activePreviewSurface = null;
+        }
+
         isCameraRunning = false;
-        Log.i(TAG, "Front camera capture stopped (standby/battery save mode)");
+        Log.i(TAG, "Front camera capture stopped");
     }
 
     // =========================================================================
-    // Gesture Execution: Dispatch Real Touch Swipes
+    // Gesture Execution: Dispatch Real Touch Swipes + Warm Root Shell Fallback
     // =========================================================================
-
-
 
     public void triggerScrollGesture(String direction, int confidence) {
         if (config.isHapticFeedbackEnabled() && vibrator != null) {
@@ -387,10 +605,15 @@ public class TongueScrollService extends AccessibilityService {
             showDynamicIslandDrop(direction, confidence);
         }
 
+        // Do not dispatch global screen swipe if Test Lab is currently open (Test Lab scrolls its own sandbox view)
+        if (MainActivity.isLabResumed) {
+            return;
+        }
+
         DisplayMetrics dm = getResources().getDisplayMetrics();
         int screenWidth = dm.widthPixels;
         int screenHeight = dm.heightPixels;
-        int distance = Math.min(screenHeight - 200, config.getScrollDistancePx());
+        int distance = Math.min(screenHeight - 250, config.getScrollDistancePx());
         int duration = config.getScrollDurationMs();
 
         float startX = screenWidth / 2.0f;
@@ -400,24 +623,24 @@ public class TongueScrollService extends AccessibilityService {
 
         switch (direction) {
             case TongueConfig.DIR_DOWN:
-                // Swipe from bottom-middle up towards top (advancing feed / next video)
-                startY = screenHeight * 0.72f;
-                endY = startY - distance;
+                // Swipe from bottom-middle up towards top (advancing feed / next video in TikTok, Shorts, Reels)
+                startY = Math.min(screenHeight - 160f, screenHeight * 0.74f);
+                endY = Math.max(140f, startY - distance);
                 break;
             case TongueConfig.DIR_UP:
                 // Swipe from top-middle down towards bottom (previous video)
-                startY = screenHeight * 0.28f;
-                endY = startY + distance;
+                startY = Math.max(160f, screenHeight * 0.26f);
+                endY = Math.min(screenHeight - 140f, startY + distance);
                 break;
             case TongueConfig.DIR_LEFT:
                 // Swipe content left (next page)
                 startX = screenWidth * 0.82f;
-                endX = startX - distance;
+                endX = Math.max(80f, startX - Math.min(screenWidth - 180, distance));
                 break;
             case TongueConfig.DIR_RIGHT:
                 // Swipe content right (prev page)
                 startX = screenWidth * 0.18f;
-                endX = startX + distance;
+                endX = Math.min(screenWidth - 80f, startX + Math.min(screenWidth - 180, distance));
                 break;
         }
 
@@ -427,41 +650,115 @@ public class TongueScrollService extends AccessibilityService {
         final float fEndY = endY;
         final int fDuration = duration;
 
-        Path path = new Path();
-        path.moveTo(fStartX, fStartY);
-        path.lineTo(fEndX, fEndY);
+        boolean dispatched = false;
+        if (accessibilityConnected) {
+            try {
+                Path path = new Path();
+                path.moveTo(fStartX, fStartY);
+                path.lineTo(fEndX, fEndY);
 
-        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
-        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(path, 0, fDuration));
+                GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+                gestureBuilder.addStroke(new GestureDescription.StrokeDescription(path, 0, fDuration));
 
-        dispatchGesture(gestureBuilder.build(), new GestureResultCallback() {
-            @Override
-            public void onCompleted(GestureDescription gestureDescription) {
-                Log.d(TAG, "Touch swipe gesture executed successfully: " + direction);
+                dispatched = dispatchGesture(gestureBuilder.build(), new GestureResultCallback() {
+                    @Override
+                    public void onCompleted(GestureDescription gestureDescription) {
+                        Log.d(TAG, "Touch swipe gesture executed via Accessibility: " + direction);
+                    }
+
+                    @Override
+                    public void onCancelled(GestureDescription gestureDescription) {
+                        Log.w(TAG, "Accessibility gesture cancelled, executing root swipe fallback");
+                        dispatchRootSwipeFallback((int) fStartX, (int) fStartY, (int) fEndX, (int) fEndY, fDuration);
+                    }
+                }, mainHandler);
+            } catch (Exception e) {
+                Log.w(TAG, "Accessibility dispatchGesture threw exception, falling back to root", e);
+                dispatched = false;
             }
+        }
 
-            @Override
-            public void onCancelled(GestureDescription gestureDescription) {
-                Log.w(TAG, "Touch swipe gesture cancelled, trying root fallback");
-                dispatchRootSwipeFallback((int) fStartX, (int) fStartY, (int) fEndX, (int) fEndY, fDuration);
-            }
-        }, null);
+        if (!dispatched) {
+            Log.i(TAG, "Executing swipe via root shell fallback: " + direction);
+            dispatchRootSwipeFallback((int) fStartX, (int) fStartY, (int) fEndX, (int) fEndY, fDuration);
+        }
     }
 
     private void dispatchRootSwipeFallback(int sx, int sy, int ex, int ey, int duration) {
         new Thread(() -> {
+            String cmd = String.format(java.util.Locale.US, "input swipe %d %d %d %d %d\n", sx, sy, ex, ey, duration);
+            synchronized (this) {
+                try {
+                    if (rootShellProcess == null || rootShellStdin == null) {
+                        rootShellProcess = Runtime.getRuntime().exec("su");
+                        rootShellStdin = rootShellProcess.getOutputStream();
+                    }
+                    rootShellStdin.write(cmd.getBytes(StandardCharsets.UTF_8));
+                    rootShellStdin.flush();
+                    return;
+                } catch (Exception e) {
+                    closeRootShell();
+                }
+            }
             try {
-                String cmd = String.format("input swipe %d %d %d %d %d", sx, sy, ex, ey, duration);
-                Runtime.getRuntime().exec(new String[]{"su", "-c", cmd}).waitFor();
+                Runtime.getRuntime().exec(new String[]{"su", "-c", cmd.trim()}).waitFor();
             } catch (Exception ignored) {}
         }).start();
     }
 
+    private synchronized void closeRootShell() {
+        if (rootShellStdin != null) {
+            try {
+                rootShellStdin.close();
+            } catch (Exception ignored) {}
+            rootShellStdin = null;
+        }
+        if (rootShellProcess != null) {
+            try {
+                rootShellProcess.destroy();
+            } catch (Exception ignored) {}
+            rootShellProcess = null;
+        }
+    }
+
     // =========================================================================
-    // Dynamic Island "Капля" HUD Feedback
+    // Persistent Overlay + 2x2 Hardware Preview + Dynamic Island "Капля" HUD
     // =========================================================================
 
     private void initDynamicIslandHud() {
+        overlayRoot = new FrameLayout(this);
+
+        // 2x2 hardware-accelerated TextureView keeps Camera2 3A & background camera priority active
+        servicePreviewTexture = new TextureView(this);
+        servicePreviewTexture.setAlpha(0.02f);
+        FrameLayout.LayoutParams texLp = new FrameLayout.LayoutParams(2, 2, Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+        overlayRoot.addView(servicePreviewTexture, texLp);
+        servicePreviewTexture.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                surface.setDefaultBufferSize(640, 480);
+                // If camera was already opened without preview surface, rebuild session with dual surfaces
+                if (isCameraRunning && activePreviewSurface == null) {
+                    if (cameraHandler != null) {
+                        cameraHandler.post(() -> createCaptureSession());
+                    }
+                } else {
+                    checkAndToggleCamera();
+                }
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+                return true;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
+        });
+
         islandContainer = new LinearLayout(this);
         islandContainer.setOrientation(LinearLayout.HORIZONTAL);
         islandContainer.setGravity(Gravity.CENTER_VERTICAL);
@@ -486,26 +783,68 @@ public class TongueScrollService extends AccessibilityService {
         islandText.setTypeface(null, android.graphics.Typeface.BOLD);
         islandContainer.addView(islandText);
 
-        int layoutType;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layoutType = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
-        } else {
-            layoutType = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        }
+        islandContainer.setAlpha(0f);
+        islandContainer.setTranslationY(-120f);
 
-        islandParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                layoutType,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT
+        FrameLayout.LayoutParams islandLp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.CENTER_HORIZONTAL
         );
+        overlayRoot.addView(islandContainer, islandLp);
+    }
 
-        islandParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-        islandParams.y = MaterialUiHelper.dpToPx(this, 24); // Right under POCO M5 camera notch
-        islandContainer.setVisibility(View.GONE);
+    private void ensureOverlayAttached() {
+        if (isOverlayAttached || overlayRoot == null || windowManager == null) return;
+
+        mainHandler.post(() -> {
+            if (isOverlayAttached || overlayRoot == null || windowManager == null) return;
+
+            int[] candidateTypes;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (accessibilityConnected) {
+                    candidateTypes = new int[]{
+                            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                    };
+                } else {
+                    candidateTypes = new int[]{
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
+                    };
+                }
+            } else {
+                candidateTypes = new int[]{WindowManager.LayoutParams.TYPE_PHONE};
+            }
+
+            for (int type : candidateTypes) {
+                if (type == WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                        && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        && !Settings.canDrawOverlays(this)) {
+                    continue;
+                }
+                try {
+                    overlayParams = new WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.WRAP_CONTENT,
+                            WindowManager.LayoutParams.WRAP_CONTENT,
+                            type,
+                            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                                    | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                            PixelFormat.TRANSLUCENT
+                    );
+                    overlayParams.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+                    overlayParams.y = MaterialUiHelper.dpToPx(this, 24); // Right under POCO M5 camera notch
+                    windowManager.addView(overlayRoot, overlayParams);
+                    isOverlayAttached = true;
+                    Log.i(TAG, "Persistent overlay HUD attached with window type: " + type);
+                    break;
+                } catch (Exception e) {
+                    Log.w(TAG, "Could not attach overlay with type " + type + ": " + e.getMessage());
+                }
+            }
+        });
     }
 
     private void showDynamicIslandDrop(String direction, int confidence) {
@@ -513,9 +852,8 @@ public class TongueScrollService extends AccessibilityService {
 
         mainHandler.post(() -> {
             try {
-                if (!isIslandAttached) {
-                    windowManager.addView(islandContainer, islandParams);
-                    isIslandAttached = true;
+                if (!isOverlayAttached) {
+                    ensureOverlayAttached();
                 }
 
                 String label;
@@ -535,7 +873,7 @@ public class TongueScrollService extends AccessibilityService {
                 }
                 islandText.setText(label);
 
-                islandContainer.setVisibility(View.VISIBLE);
+                islandContainer.animate().cancel();
                 islandContainer.setTranslationY(-120f); // Drops from top notch
                 islandContainer.setScaleX(0.7f);
                 islandContainer.setScaleY(0.7f);
@@ -552,7 +890,7 @@ public class TongueScrollService extends AccessibilityService {
                         .withEndAction(() -> {
                             // Retract after 1.1s
                             mainHandler.postDelayed(() -> {
-                                if (islandContainer != null && islandContainer.getVisibility() == View.VISIBLE) {
+                                if (islandContainer != null) {
                                     islandContainer.animate()
                                             .translationY(-120f)
                                             .scaleX(0.7f)
@@ -560,7 +898,6 @@ public class TongueScrollService extends AccessibilityService {
                                             .alpha(0f)
                                             .setDuration(260)
                                             .setInterpolator(new DecelerateInterpolator())
-                                            .withEndAction(() -> islandContainer.setVisibility(View.GONE))
                                             .start();
                                 }
                             }, 1100);
@@ -574,10 +911,10 @@ public class TongueScrollService extends AccessibilityService {
     }
 
     private void removeDynamicIslandHud() {
-        if (isIslandAttached && islandContainer != null && windowManager != null) {
+        if (isOverlayAttached && overlayRoot != null && windowManager != null) {
             try {
-                windowManager.removeView(islandContainer);
-                isIslandAttached = false;
+                windowManager.removeView(overlayRoot);
+                isOverlayAttached = false;
             } catch (Exception ignored) {}
         }
     }
@@ -591,8 +928,10 @@ public class TongueScrollService extends AccessibilityService {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                isScreenOn = false;
                 stopCameraCapture();
             } else if (Intent.ACTION_USER_PRESENT.equals(action) || Intent.ACTION_SCREEN_ON.equals(action)) {
+                isScreenOn = true;
                 checkAndToggleCamera();
             }
         }

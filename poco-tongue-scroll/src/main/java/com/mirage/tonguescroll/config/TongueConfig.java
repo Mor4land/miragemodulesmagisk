@@ -19,7 +19,7 @@ public class TongueConfig {
     public static final String KEY_DIRECTION = "key_direction";
     public static final String KEY_ISLAND_FEEDBACK = "key_island_feedback";
     public static final String KEY_HAPTIC_FEEDBACK = "key_haptic_feedback";
-    public static final String KEY_RUN_ONLY_TARGET_APPS = "key_run_only_target_apps";
+    public static final String KEY_RUN_ONLY_TARGET_APPS = "key_run_only_target_apps_v2";
     public static final String KEY_TARGET_PACKAGES = "key_target_packages";
 
     public static final String DIR_DOWN = "DOWN";     // Swipe content up -> next item (Shorts/TikTok)
@@ -29,11 +29,24 @@ public class TongueConfig {
 
     private static final Set<String> DEFAULT_TARGET_APPS = new HashSet<>(Arrays.asList(
             "com.zhiliaoapp.musically",       // TikTok
-            "com.ss.android.ugc.trill",       // TikTok Lite / Global
+            "com.zhiliaoapp.musically.go",    // TikTok Lite
+            "com.ss.android.ugc.trill",       // TikTok Global
+            "com.ss.android.ugc.aweme",       // Douyin / TikTok CN
             "com.google.android.youtube",     // YouTube Shorts
+            "app.revanced.android.youtube",   // YouTube ReVanced
+            "app.rvx.android.youtube",        // YouTube RVX
             "com.instagram.android",          // Instagram Reels
+            "com.instander.android",          // Instander
             "com.android.chrome",             // Google Chrome
-            "org.telegram.messenger",        // Telegram
+            "com.chrome.beta",                // Chrome Beta
+            "org.mozilla.firefox",            // Firefox
+            "com.mi.globalbrowser",           // Mi Browser
+            "com.yandex.browser",             // Yandex Browser
+            "org.telegram.messenger",         // Telegram
+            "org.telegram.messenger.web",     // Telegram Direct
+            "org.thunderdog.challegram",      // Telegram X
+            "com.radolyn.ayugram",            // AyuGram
+            "tw.nekomimi.nekogram",           // Nekogram
             "com.vkontakte.android",          // VK Clips
             "com.fooview.android.fooview"     // Reader
     ));
@@ -109,7 +122,7 @@ public class TongueConfig {
     }
 
     public boolean isRunOnlyInTargetApps() {
-        return prefs.getBoolean(KEY_RUN_ONLY_TARGET_APPS, true);
+        return prefs.getBoolean(KEY_RUN_ONLY_TARGET_APPS, false);
     }
 
     public void setRunOnlyInTargetApps(boolean onlyTarget) {
@@ -125,13 +138,12 @@ public class TongueConfig {
     }
 
     public boolean isPackageAllowed(String packageName) {
-        if ("com.mirage.tonguescroll".equals(packageName)) {
-            return false; // Background service yields camera to the Test Lab
-        }
         if (!isRunOnlyInTargetApps()) {
             return true;
         }
-        if (packageName == null) return false;
+        if (packageName == null || packageName.isEmpty()) {
+            return true; // Allow when foreground package has not been reported yet
+        }
         Set<String> targets = getTargetPackages();
         return targets.contains(packageName);
     }
