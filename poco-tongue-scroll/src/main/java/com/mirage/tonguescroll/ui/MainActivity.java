@@ -51,6 +51,7 @@ import android.widget.Toast;
 
 import com.mirage.tonguescroll.R;
 import com.mirage.tonguescroll.config.TongueConfig;
+import com.mirage.tonguescroll.cv.MlKitTongueDetector;
 import com.mirage.tonguescroll.cv.TongueDetector;
 import com.mirage.tonguescroll.service.TongueScrollService;
 
@@ -63,7 +64,7 @@ public class MainActivity extends Activity {
     private static final int REQ_CAMERA_PERMISSION = 101;
 
     private TongueConfig config;
-    private TongueDetector labDetector;
+    private MlKitTongueDetector labMlDetector;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     // Camera Preview in Test Lab
@@ -76,7 +77,7 @@ public class MainActivity extends Activity {
     private Handler labCameraHandler;
     private boolean isCameraStarting = false;
     private Rect currentFaceRect = null;
-    private TongueDetector.DetectionResult lastFrameResult = null;
+    private MlKitTongueDetector.DetectionResult lastFrameResult = null;
 
     // UI Widgets
     private TextView tvStatusBadge;
@@ -103,20 +104,20 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         config = new TongueConfig(this);
 
-        // Lab Detector for real-time interactive preview calibration
-        labDetector = new TongueDetector(new TongueDetector.Listener() {
+        // Google ML Kit Neural Face & Lip Contour Detector
+        labMlDetector = new MlKitTongueDetector(new MlKitTongueDetector.Listener() {
             @Override
             public void onTongueGestureDetected(int confidence, TongueDetector.GestureType gestureType) {
                 mainHandler.post(() -> onLabGestureTriggered(confidence));
             }
 
             @Override
-            public void onFrameAnalyzed(TongueDetector.DetectionResult result) {
-                mainHandler.post(() -> onLabFrameAnalyzed(result));
+            public void onFrameAnalyzed(MlKitTongueDetector.DetectionResult result) {
+                mainHandler.post(() -> onLabMlKitFrameAnalyzed(result));
             }
         });
-        labDetector.setSensitivity(config.getSensitivity());
-        labDetector.setCooldownMs(config.getCooldownMs());
+        labMlDetector.setSensitivity(config.getSensitivity());
+        labMlDetector.setCooldownMs(config.getCooldownMs());
 
         startLabCameraThread();
         setContentView(buildRootLayout());
@@ -141,6 +142,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         stopLabCameraThread();
+        if (labMlDetector != null) {
+            labMlDetector.close();
+        }
         super.onDestroy();
     }
 
@@ -332,27 +336,19 @@ public class MainActivity extends Activity {
         });
         diagRow.addView(btnRestartCamera);
 
-        Button btnCalibrateClosed = new Button(this);
-        btnCalibrateClosed.setText("🎯 Калибровать закрытый рот");
-        btnCalibrateClosed.setTextSize(11);
-        btnCalibrateClosed.setPadding(MaterialUiHelper.dpToPx(this, 8), 0, MaterialUiHelper.dpToPx(this, 8), 0);
-        btnCalibrateClosed.setTextColor(MaterialUiHelper.COLOR_PRIMARY);
-        btnCalibrateClosed.setBackground(MaterialUiHelper.createRoundedDrawable(MaterialUiHelper.COLOR_PRIMARY_CONTAINER, MaterialUiHelper.COLOR_OUTLINE_BORDER, 10, 1, this));
+        Button btnNeuralInfo = new Button(this);
+        btnNeuralInfo.setText("🧠 Google ML Kit");
+        btnNeuralInfo.setTextSize(11);
+        btnNeuralInfo.setPadding(MaterialUiHelper.dpToPx(this, 8), 0, MaterialUiHelper.dpToPx(this, 8), 0);
+        btnNeuralInfo.setTextColor(MaterialUiHelper.COLOR_PRIMARY);
+        btnNeuralInfo.setBackground(MaterialUiHelper.createRoundedDrawable(MaterialUiHelper.COLOR_PRIMARY_CONTAINER, MaterialUiHelper.COLOR_OUTLINE_BORDER, 10, 1, this));
         LinearLayout.LayoutParams calLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, MaterialUiHelper.dpToPx(this, 34));
         calLp.leftMargin = MaterialUiHelper.dpToPx(this, 6);
-        btnCalibrateClosed.setLayoutParams(calLp);
-        btnCalibrateClosed.setOnClickListener(v -> {
-            if (lastFrameResult != null && lastFrameResult.tongueClusterBox != null) {
-                int h = lastFrameResult.tongueClusterBox.height();
-                int w = lastFrameResult.tongueClusterBox.width();
-                int a = lastFrameResult.tonguePixelCount;
-                labDetector.calibrateBaseline(h, a, w);
-                Toast.makeText(this, "✅ Закрытый рот зафиксирован: H=" + h + "px, H/W=" + String.format("%.2f", lastFrameResult.currentAspect) + " -> Порог 0%", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Посмотрите в камеру перед калибровкой", Toast.LENGTH_SHORT).show();
-            }
+        btnNeuralInfo.setLayoutParams(calLp);
+        btnNeuralInfo.setOnClickListener(v -> {
+            Toast.makeText(this, "Нейросеть Google ML Kit активна: распознавание контуров лица и губ", Toast.LENGTH_SHORT).show();
         });
-        diagRow.addView(btnCalibrateClosed);
+        diagRow.addView(btnNeuralInfo);
 
         card.addView(diagRow);
 
@@ -465,7 +461,7 @@ public class MainActivity extends Activity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int val = progress + 15;
                 config.setSensitivity(val);
-                labDetector.setSensitivity(val);
+                labMlDetector.setSensitivity(val);
                 tvSensitivityVal.setText("Чувствительность порога: " + val + "%");
                 if (TongueScrollService.getInstance() != null) {
                     TongueScrollService.getInstance().reloadConfig();
@@ -518,7 +514,7 @@ public class MainActivity extends Activity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int val = 500 + (progress * 100);
                 config.setCooldownMs(val);
-                labDetector.setCooldownMs(val);
+                labMlDetector.setCooldownMs(val);
                 tvCooldownVal.setText("Задержка (Debounce): " + (val / 1000.0f) + " сек");
                 if (TongueScrollService.getInstance() != null) {
                     TongueScrollService.getInstance().reloadConfig();
@@ -705,25 +701,25 @@ public class MainActivity extends Activity {
     // Real-Time Frame Callback & Test Feed Scroll Animation
     // =========================================================================
 
-    private void onLabFrameAnalyzed(TongueDetector.DetectionResult result) {
+    private void onLabMlKitFrameAnalyzed(MlKitTongueDetector.DetectionResult result) {
         if (result == null) return;
         this.lastFrameResult = result;
         pbConfidence.setProgress(result.confidence);
+        tvConfidenceValue.setText(result.statusText);
 
         if (result.confidence >= config.getSensitivity()) {
-            tvConfidenceValue.setText(String.format("👅 ЯЗЫК: %d%% | Порог: %d%% | H/W=%.2f (x%.1f)",
-                    result.confidence, config.getSensitivity(), result.currentAspect, result.heightGrowth));
             tvGestureStatus.setText("👅 СВАЙП!");
             tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
+        } else if (result.isMouthOpen) {
+            tvGestureStatus.setText(String.format("😮 Открыт (%.0f px)", result.mouthAperturePx));
+            tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_SECONDARY);
         } else {
-            tvConfidenceValue.setText(String.format("👄 Рот закрыт: 0%% | H/W=%.2f | Рост: x%.1f (База: %.0fpx)",
-                    result.currentAspect, result.heightGrowth, result.baselineHeight));
-            tvGestureStatus.setText("Рот закрыт");
+            tvGestureStatus.setText("👄 Закрыт");
             tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_MUTED);
         }
 
         if (overlayView != null) {
-            overlayView.updateDetection(result, 320, 240);
+            overlayView.updateMlKitResult(result, 320, 240);
         }
     }
 
@@ -853,18 +849,17 @@ public class MainActivity extends Activity {
             if (labImageReader != null) {
                 labImageReader.close();
             }
-            labImageReader = ImageReader.newInstance(320, 240, ImageFormat.YUV_420_888, 2);
             labImageReader.setOnImageAvailableListener(reader -> {
                 Image image = null;
                 try {
                     image = reader.acquireLatestImage();
-                    if (image != null && labDetector != null) {
-                        labDetector.analyzeYuv(image, currentFaceRect);
+                    if (image != null && labMlDetector != null && !labMlDetector.isBusy()) {
+                        labMlDetector.processYuvImage(image, 270);
+                        return; // closed asynchronously by ML Kit task
                     }
                 } catch (Exception ignored) {
-                } finally {
-                    if (image != null) image.close();
                 }
+                if (image != null) image.close();
             }, labCameraHandler);
 
             final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);

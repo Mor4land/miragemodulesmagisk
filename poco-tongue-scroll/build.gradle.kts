@@ -31,5 +31,5 @@ android {
 }
 
 dependencies {
-    // Zero bloated dependencies: Native Camera2, Computer Vision algorithms and GestureDispatch
+    implementation("com.google.mlkit:face-detection:16.1.7")
 }

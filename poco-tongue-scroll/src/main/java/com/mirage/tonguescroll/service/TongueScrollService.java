@@ -45,12 +45,13 @@ import android.widget.TextView;
 
 import com.mirage.tonguescroll.R;
 import com.mirage.tonguescroll.config.TongueConfig;
+import com.mirage.tonguescroll.cv.MlKitTongueDetector;
 import com.mirage.tonguescroll.cv.TongueDetector;
 import com.mirage.tonguescroll.ui.MaterialUiHelper;
 
 import java.util.Collections;
 
-public class TongueScrollService extends AccessibilityService implements TongueDetector.Listener {
+public class TongueScrollService extends AccessibilityService {
 
     private static final String TAG = "TongueScrollService";
     public static final String ACTION_GESTURE_EVENT = "com.mirage.tonguescroll.ACTION_GESTURE_EVENT";
@@ -60,7 +61,7 @@ public class TongueScrollService extends AccessibilityService implements TongueD
     private static TongueScrollService instance;
 
     private TongueConfig config;
-    private TongueDetector detector;
+    private MlKitTongueDetector mlDetector;
     private Vibrator vibrator;
     private WindowManager windowManager;
 
@@ -99,9 +100,25 @@ public class TongueScrollService extends AccessibilityService implements TongueD
         instance = this;
         mainHandler = new Handler(Looper.getMainLooper());
         config = new TongueConfig(this);
-        detector = new TongueDetector(this);
-        detector.setSensitivity(config.getSensitivity());
-        detector.setCooldownMs(config.getCooldownMs());
+        mlDetector = new MlKitTongueDetector(new MlKitTongueDetector.Listener() {
+            @Override
+            public void onTongueGestureDetected(int confidence, TongueDetector.GestureType gestureType) {
+                mainHandler.post(() -> triggerScrollGesture(config.getDirection(), confidence));
+            }
+
+            @Override
+            public void onFrameAnalyzed(MlKitTongueDetector.DetectionResult result) {
+                Intent intent = new Intent(ACTION_GESTURE_EVENT);
+                intent.putExtra(EXTRA_CONFIDENCE, result.confidence);
+                intent.putExtra(EXTRA_DIRECTION, config.getDirection());
+                intent.putExtra("is_triggered", result.isTriggered);
+                intent.putExtra("aperture", result.mouthAperturePx);
+                intent.setPackage(getPackageName());
+                sendBroadcast(intent);
+            }
+        });
+        mlDetector.setSensitivity(config.getSensitivity());
+        mlDetector.setCooldownMs(config.getCooldownMs());
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
 
@@ -143,6 +160,9 @@ public class TongueScrollService extends AccessibilityService implements TongueD
         stopCameraThread();
         unregisterScreenStateReceiver();
         removeDynamicIslandHud();
+        if (mlDetector != null) {
+            mlDetector.close();
+        }
         super.onDestroy();
     }
 
@@ -151,9 +171,9 @@ public class TongueScrollService extends AccessibilityService implements TongueD
     }
 
     public void reloadConfig() {
-        if (config != null && detector != null) {
-            detector.setSensitivity(config.getSensitivity());
-            detector.setCooldownMs(config.getCooldownMs());
+        if (config != null && mlDetector != null) {
+            mlDetector.setSensitivity(config.getSensitivity());
+            mlDetector.setCooldownMs(config.getCooldownMs());
             checkAndToggleCamera();
         }
     }
@@ -226,21 +246,20 @@ public class TongueScrollService extends AccessibilityService implements TongueD
                 return;
             }
 
-            // Low resolution YUV buffer for ultra-low battery consumption & <2ms frame processing
             imageReader = ImageReader.newInstance(320, 240, ImageFormat.YUV_420_888, 2);
             imageReader.setOnImageAvailableListener(reader -> {
                 Image image = null;
                 try {
                     image = reader.acquireLatestImage();
-                    if (image != null && detector != null) {
-                        detector.analyzeYuv(image, lastDetectedFaceRect);
+                    if (image != null && mlDetector != null && !mlDetector.isBusy()) {
+                        mlDetector.processYuvImage(image, 270);
+                        return; // mlDetector closes image when async detection finishes
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Error processing camera frame", e);
-                } finally {
-                    if (image != null) {
-                        image.close();
-                    }
+                }
+                if (image != null) {
+                    image.close();
                 }
             }, cameraHandler);
 
@@ -351,23 +370,7 @@ public class TongueScrollService extends AccessibilityService implements TongueD
     // Gesture Execution: Dispatch Real Touch Swipes
     // =========================================================================
 
-    @Override
-    public void onTongueGestureDetected(int confidence, TongueDetector.GestureType gestureType) {
-        mainHandler.post(() -> {
-            triggerScrollGesture(config.getDirection(), confidence);
-        });
-    }
 
-    @Override
-    public void onFrameAnalyzed(TongueDetector.DetectionResult result) {
-        // Send broadcast for MainActivity (Test Lab) real-time UI updates
-        Intent intent = new Intent(ACTION_GESTURE_EVENT);
-        intent.putExtra(EXTRA_CONFIDENCE, result.confidence);
-        intent.putExtra(EXTRA_DIRECTION, config.getDirection());
-        intent.putExtra("is_triggered", result.isTriggered);
-        intent.setPackage(getPackageName());
-        sendBroadcast(intent);
-    }
 
     public void triggerScrollGesture(String direction, int confidence) {
         if (config.isHapticFeedbackEnabled() && vibrator != null) {

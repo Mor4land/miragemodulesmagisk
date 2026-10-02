@@ -3,12 +3,11 @@ package com.mirage.tonguescroll.ui;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.mirage.tonguescroll.cv.TongueDetector;
+import com.mirage.tonguescroll.cv.MlKitTongueDetector;
 
 public class CameraOverlayView extends View {
 
@@ -16,9 +15,9 @@ public class CameraOverlayView extends View {
     private final Paint tonguePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private TongueDetector.DetectionResult lastResult;
-    private int frameWidth = 320;
-    private int frameHeight = 240;
+    private MlKitTongueDetector.DetectionResult lastResult;
+    private int frameWidth = 480;
+    private int frameHeight = 640;
 
     public CameraOverlayView(Context context) {
         super(context);
@@ -44,7 +43,7 @@ public class CameraOverlayView extends View {
         textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
     }
 
-    public void updateDetection(TongueDetector.DetectionResult result, int fWidth, int fHeight) {
+    public void updateMlKitResult(MlKitTongueDetector.DetectionResult result, int fWidth, int fHeight) {
         this.lastResult = result;
         if (fWidth > 0 && fHeight > 0) {
             this.frameWidth = fWidth;
@@ -61,16 +60,16 @@ public class CameraOverlayView extends View {
         float scaleX = (float) getWidth() / (float) frameWidth;
         float scaleY = (float) getHeight() / (float) frameHeight;
 
-        // Draw Mouth ROI Box
-        if (lastResult.mouthRoi != null && lastResult.mouthRoi.width() > 0) {
-            Rect r = lastResult.mouthRoi;
-            // Mirror X for front camera view natural mirror effect
+        // Draw Neural Mouth Bounds
+        if (lastResult.mouthBounds != null) {
+            RectF r = lastResult.mouthBounds;
+            // Mirror X for front camera view
             float left = (frameWidth - r.right) * scaleX;
             float right = (frameWidth - r.left) * scaleX;
             float top = r.top * scaleY;
             float bottom = r.bottom * scaleY;
 
-            if (lastResult.confidence >= 50) {
+            if (lastResult.confidence >= 45) {
                 mouthPaint.setColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
                 mouthPaint.setStrokeWidth(MaterialUiHelper.dpToPx(getContext(), 3.5f));
             } else {
@@ -80,18 +79,21 @@ public class CameraOverlayView extends View {
 
             RectF rectF = new RectF(left, top, right, bottom);
             canvas.drawRoundRect(rectF, 16f, 16f, mouthPaint);
+
             String label;
             if (lastResult.confidence >= 45) {
                 label = "👅 ЯЗЫК (" + lastResult.confidence + "%)";
+            } else if (lastResult.mouthAperturePx < 9f) {
+                label = "👄 Рот закрыт (0%)";
             } else {
-                label = String.format("👄 Рот закрыт [H/W=%.2f] (0%%)", lastResult.currentAspect);
+                label = String.format("😮 Рот открыт (%.0f px)", lastResult.mouthAperturePx);
             }
             canvas.drawText(label, left + 8, Math.max(24f, top - 8), textPaint);
         }
 
-        // Draw Detected Tongue Cluster ONLY when confidence is positive (tongue actually protruded)
-        if (lastResult.confidence >= 45 && lastResult.tongueClusterBox != null && lastResult.tongueClusterBox.width() > 4) {
-            Rect tr = lastResult.tongueClusterBox;
+        // Draw Tongue Box when protruding
+        if (lastResult.confidence >= 45 && lastResult.tongueBox != null) {
+            RectF tr = lastResult.tongueBox;
             float tLeft = (frameWidth - tr.right) * scaleX;
             float tRight = (frameWidth - tr.left) * scaleX;
             float tTop = tr.top * scaleY;
