@@ -1,0 +1,70 @@
+#!/system/bin/sh
+# Mirage POCO M5 Debloat & Feature Unlocker CLI Utility
+CONF="/data/adb/mirage_pocom5_debloat.conf"
+LOG="/data/adb/mirage_debloat_disabled_packages.txt"
+
+case "$1" in
+  status)
+    echo "============================================="
+    echo "  Mirage POCO M5 Debloat & Unlock Status     "
+    echo "============================================="
+    echo "Device:       $(getprop ro.product.model) ($(getprop ro.product.device))"
+    echo "Platform:     $(getprop ro.board.platform)"
+    echo "Device Level: $(getprop ro.config.device_level)"
+    echo "Real Blur:    $(getprop ro.miui.has_real_blur)"
+    echo "Freeform:     $(getprop persist.sys.miui_freeform_enable)"
+    echo "Refresh Rate: $(settings get system peak_refresh_rate 2>/dev/null)Hz"
+    echo "MIUI Ads:     $(settings get secure miui_ad_enabled 2>/dev/null)"
+    echo "Analytics:    $(settings get secure miui_analytics_enabled 2>/dev/null)"
+    echo "---------------------------------------------"
+    echo "Disabled packages count: $(wc -l < "$LOG" 2>/dev/null || echo 0)"
+    if [ -f "$LOG" ]; then
+        while read -r p; do
+            [ -n "$p" ] && echo "  [-] $p"
+        done < "$LOG"
+    fi
+    echo "============================================="
+    ;;
+  restore-all)
+    echo "Восстановление всех отключенных пакетов..."
+    if [ -f "$LOG" ]; then
+        while read -r p; do
+            if [ -n "$p" ]; then
+                pm enable "$p" >/dev/null 2>&1
+                pm unsuspend "$p" >/dev/null 2>&1
+                echo "  [+] Включено: $p"
+            fi
+        done < "$LOG"
+        rm -f "$LOG"
+    fi
+    echo "Готово. Все пакеты восстановлены."
+    ;;
+  disable)
+    if [ -z "$2" ]; then
+        echo "Использование: mirage-debloat disable <имя_пакета>"
+        exit 1
+    fi
+    pm disable-user --user 0 "$2" >/dev/null 2>&1
+    touch "$LOG"
+    if ! grep -q "^$2$" "$LOG"; then
+        echo "$2" >> "$LOG"
+    fi
+    echo "Пакет отключен: $2"
+    ;;
+  enable)
+    if [ -z "$2" ]; then
+        echo "Использование: mirage-debloat enable <имя_пакета>"
+        exit 1
+    fi
+    pm enable "$2" >/dev/null 2>&1
+    pm unsuspend "$2" >/dev/null 2>&1
+    if [ -f "$LOG" ]; then
+        sed -i "\|^$2\$|d" "$LOG" 2>/dev/null
+    fi
+    echo "Пакет включен: $2"
+    ;;
+  *)
+    echo "Mirage POCO M5 Debloat & Feature Unlocker CLI"
+    echo "Использование: mirage-debloat [status | restore-all | disable <pkg> | enable <pkg>]"
+    ;;
+esac

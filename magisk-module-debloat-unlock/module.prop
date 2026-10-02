@@ -1,0 +1,6 @@
+id=mirage_pocom5_debloat_unlock
+name=POCO M5 Ultimate Debloat & Feature Unlocker
+version=v1.0.0
+versionCode=100
+author=Mor4land
+description=Комплексный твик для POCO M5 (rock / MIUI / HyperOS): деблоат мусора и трекеров, блокировка рекламы MSA/Analytics/hosts, разблокировка Gaussian Blur, плавающих окон (Freeform), боковой панели (Sidebar), Game Turbo и фиксация плавных 90Hz.

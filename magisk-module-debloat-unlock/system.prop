@@ -1,0 +1,36 @@
+# ========================================================
+# Mirage POCO M5 (rock) Debloat & Feature Unlocker Props
+# ========================================================
+
+# 1. High Device Tier Classification (Folme Engine & SystemUI)
+# Unlocks Gaussian Blur in Control Center and Volume Bar (replaces solid gray)
+ro.config.device_level=v:1,c:3,g:3
+ro.config.device_level_from_folme=c:3,g:3,v:1
+ro.miui.has_real_blur=1
+persist.sys.miui_blur_supported=true
+persist.sys.background_blur_supported=true
+ro.miui.backdrop_sampling_enabled=false
+persist.sys.miui.animator_sched.bigcore=true
+
+# 2. Multitasking & Freeform Floating Windows
+persist.sys.miui_freeform_enable=true
+ro.miui.support_freeform=true
+persist.sys.miui.freeform.multi_window=true
+persist.sys.miui_fullscreen_freeform_enable=true
+persist.sys.miui_bubble_enable=true
+
+# 3. Disable Ad Engine & Telemetry at Prop Layer
+ro.miui.ad.enable=0
+persist.sys.miui.ad.enable=0
+ro.miui.personalized_ad=0
+
+# 4. Audio Quality & Sound Assistant
+ro.vendor.audio.soundfx.usb=true
+persist.vendor.audio.hifi=true
+
+# 5. Display Refresh Rate & Rendering
+persist.sys.miui_refresh_rate=90
+persist.vendor.powerhal.rendering_fps=90
+
+# 6. Low Memory Killer & Background Task Retention (Helio G99)
+ro.sys.fw.bg_apps_limit=32

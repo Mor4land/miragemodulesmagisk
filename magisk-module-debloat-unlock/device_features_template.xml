@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<features>
+    <!-- Screen & Visual Effects -->
+    <bool name="support_round_corner">true</bool>
+    <bool name="support_real_blur">true</bool>
+    <bool name="support_window_simple_anim">false</bool>
+    <bool name="is_low_device">false</bool>
+    <bool name="is_middle_device">true</bool>
+    <bool name="is_lower_than_middle">false</bool>
+    <bool name="support_canvas">true</bool>
+
+    <!-- Multitasking & Freeform -->
+    <bool name="support_freeform">true</bool>
+    <bool name="support_smart_toolbox">true</bool>
+    <bool name="support_dual_clock">true</bool>
+    <bool name="support_tap_screen_to_wake">true</bool>
+    <bool name="support_extreme_battery_saver">true</bool>
+    <bool name="support_sound_assist">true</bool>
+
+    <!-- Gaming & Performance -->
+    <bool name="support_game_booster">true</bool>
+    <bool name="support_game_turbo">true</bool>
+
+    <!-- Camera Enhancements -->
+    <bool name="support_camera_ai_scene">true</bool>
+    <bool name="support_picture_watermark">true</bool>
+    <bool name="support_camera_dynamic_sky">true</bool>
+    <bool name="support_video_sky">true</bool>
+    <bool name="support_super_resolution">true</bool>
+    <bool name="support_cloud_watermark">true</bool>
+</features>

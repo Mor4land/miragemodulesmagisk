@@ -1,0 +1,39 @@
+127.0.0.1 localhost
+::1 localhost
+
+# Xiaomi Advertising Network (MSA)
+0.0.0.0 api.ad.xiaomi.com
+0.0.0.0 ad.xiaomi.com
+0.0.0.0 ad1.xiaomi.com
+0.0.0.0 ad.intl.xiaomi.com
+0.0.0.0 sdkconfig.ad.xiaomi.com
+0.0.0.0 sdkconfig.intl.ad.xiaomi.com
+0.0.0.0 analytics.ad.xiaomi.com
+0.0.0.0 tracking.miui.com
+0.0.0.0 sa.api.intl.miui.com
+0.0.0.0 adv.sec.miui.com
+0.0.0.0 o2o.api.xiaomi.com
+0.0.0.0 log.ad.xiaomi.com
+0.0.0.0 ssp.ad.xiaomi.com
+0.0.0.0 test.ad.xiaomi.com
+0.0.0.0 new.api.ad.xiaomi.com
+
+# Xiaomi Analytics & Telemetry Tracking
+0.0.0.0 data.mistat.xiaomi.com
+0.0.0.0 data.mistat.intl.xiaomi.com
+0.0.0.0 data.mistat.india.xiaomi.com
+0.0.0.0 data.mistat.rus.xiaomi.com
+0.0.0.0 abtest.mistat.xiaomi.com
+0.0.0.0 stat.pandora.xiaomi.com
+0.0.0.0 tracking.rus.miui.com
+0.0.0.0 tracking.intl.miui.com
+
+# Xiaomi Quick Apps / Hybrid Ads
+0.0.0.0 hybrid.miui.com
+0.0.0.0 api.hybrid.xiaomi.com
+0.0.0.0 notice.alipay.com
+0.0.0.0 etl-xlmc-ssl.sandai.net
+
+# Mobile Trackers Pre-loaded
+0.0.0.0 app-measurement.com
+0.0.0.0 crashlytics.com
