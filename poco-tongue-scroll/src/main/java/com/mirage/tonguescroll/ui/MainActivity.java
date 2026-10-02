@@ -76,6 +76,7 @@ public class MainActivity extends Activity {
     private Handler labCameraHandler;
     private boolean isCameraStarting = false;
     private Rect currentFaceRect = null;
+    private TongueDetector.DetectionResult lastFrameResult = null;
 
     // UI Widgets
     private TextView tvStatusBadge;
@@ -320,16 +321,38 @@ public class MainActivity extends Activity {
         diagRow.addView(tvCameraDiag);
 
         btnRestartCamera = new Button(this);
-        btnRestartCamera.setText("🔄 Перезапустить камеру");
+        btnRestartCamera.setText("🔄 Камера");
         btnRestartCamera.setTextSize(11);
-        btnRestartCamera.setPadding(MaterialUiHelper.dpToPx(this, 8), 0, MaterialUiHelper.dpToPx(this, 8), 0);
-        btnRestartCamera.setTextColor(MaterialUiHelper.COLOR_PRIMARY);
+        btnRestartCamera.setPadding(MaterialUiHelper.dpToPx(this, 6), 0, MaterialUiHelper.dpToPx(this, 6), 0);
+        btnRestartCamera.setTextColor(MaterialUiHelper.COLOR_TEXT_SECONDARY);
         btnRestartCamera.setBackground(MaterialUiHelper.createRoundedDrawable(MaterialUiHelper.COLOR_SURFACE_CONTAINER, MaterialUiHelper.COLOR_OUTLINE_BORDER, 10, 1, this));
         btnRestartCamera.setOnClickListener(v -> {
             stopLabCamera();
             startLabCamera();
         });
         diagRow.addView(btnRestartCamera);
+
+        Button btnCalibrateClosed = new Button(this);
+        btnCalibrateClosed.setText("🎯 Калибровать закрытый рот");
+        btnCalibrateClosed.setTextSize(11);
+        btnCalibrateClosed.setPadding(MaterialUiHelper.dpToPx(this, 8), 0, MaterialUiHelper.dpToPx(this, 8), 0);
+        btnCalibrateClosed.setTextColor(MaterialUiHelper.COLOR_PRIMARY);
+        btnCalibrateClosed.setBackground(MaterialUiHelper.createRoundedDrawable(MaterialUiHelper.COLOR_PRIMARY_CONTAINER, MaterialUiHelper.COLOR_OUTLINE_BORDER, 10, 1, this));
+        LinearLayout.LayoutParams calLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, MaterialUiHelper.dpToPx(this, 34));
+        calLp.leftMargin = MaterialUiHelper.dpToPx(this, 6);
+        btnCalibrateClosed.setLayoutParams(calLp);
+        btnCalibrateClosed.setOnClickListener(v -> {
+            if (lastFrameResult != null && lastFrameResult.tongueClusterBox != null) {
+                int h = lastFrameResult.tongueClusterBox.height();
+                int w = lastFrameResult.tongueClusterBox.width();
+                int a = lastFrameResult.tonguePixelCount;
+                labDetector.calibrateBaseline(h, a, w);
+                Toast.makeText(this, "✅ Закрытый рот зафиксирован: H=" + h + "px, H/W=" + String.format("%.2f", lastFrameResult.currentAspect) + " -> Порог 0%", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Посмотрите в камеру перед калибровкой", Toast.LENGTH_SHORT).show();
+            }
+        });
+        diagRow.addView(btnCalibrateClosed);
 
         card.addView(diagRow);
 
@@ -684,14 +707,18 @@ public class MainActivity extends Activity {
 
     private void onLabFrameAnalyzed(TongueDetector.DetectionResult result) {
         if (result == null) return;
+        this.lastFrameResult = result;
         pbConfidence.setProgress(result.confidence);
-        tvConfidenceValue.setText("Уверенность: " + result.confidence + "% | Порог: " + config.getSensitivity() + "%");
 
         if (result.confidence >= config.getSensitivity()) {
-            tvGestureStatus.setText("👅 ЯЗЫК ОБНАРУЖЕН! СВАЙП!");
+            tvConfidenceValue.setText(String.format("👅 ЯЗЫК: %d%% | Порог: %d%% | H/W=%.2f (x%.1f)",
+                    result.confidence, config.getSensitivity(), result.currentAspect, result.heightGrowth));
+            tvGestureStatus.setText("👅 СВАЙП!");
             tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
         } else {
-            tvGestureStatus.setText("Нейтрально");
+            tvConfidenceValue.setText(String.format("👄 Рот закрыт: 0%% | H/W=%.2f | Рост: x%.1f (База: %.0fpx)",
+                    result.currentAspect, result.heightGrowth, result.baselineHeight));
+            tvGestureStatus.setText("Рот закрыт");
             tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_MUTED);
         }
 

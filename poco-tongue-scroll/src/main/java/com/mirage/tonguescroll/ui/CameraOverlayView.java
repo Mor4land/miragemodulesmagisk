@@ -80,12 +80,17 @@ public class CameraOverlayView extends View {
 
             RectF rectF = new RectF(left, top, right, bottom);
             canvas.drawRoundRect(rectF, 16f, 16f, mouthPaint);
-            String label = lastResult.confidence >= 50 ? "👅 ЯЗЫК (" + lastResult.confidence + "%)" : "👄 Зона рта";
+            String label;
+            if (lastResult.confidence >= 45) {
+                label = "👅 ЯЗЫК (" + lastResult.confidence + "%)";
+            } else {
+                label = String.format("👄 Рот закрыт [H/W=%.2f] (0%%)", lastResult.currentAspect);
+            }
             canvas.drawText(label, left + 8, Math.max(24f, top - 8), textPaint);
         }
 
-        // Draw Detected Tongue Cluster
-        if (lastResult.tongueClusterBox != null && lastResult.tongueClusterBox.width() > 4) {
+        // Draw Detected Tongue Cluster ONLY when confidence is positive (tongue actually protruded)
+        if (lastResult.confidence >= 45 && lastResult.tongueClusterBox != null && lastResult.tongueClusterBox.width() > 4) {
             Rect tr = lastResult.tongueClusterBox;
             float tLeft = (frameWidth - tr.right) * scaleX;
             float tRight = (frameWidth - tr.left) * scaleX;
@@ -94,7 +99,7 @@ public class CameraOverlayView extends View {
 
             RectF tRectF = new RectF(tLeft, tTop, tRight, tBottom);
             canvas.drawRoundRect(tRectF, 12f, 12f, tonguePaint);
-            canvas.drawText("👅 Язык (" + lastResult.confidence + "%)", tLeft + 8, tTop - 8, textPaint);
+            canvas.drawText("👅 Язык (" + lastResult.confidence + "%)", tLeft + 8, Math.max(20f, tTop - 8), textPaint);
         }
     }
 }

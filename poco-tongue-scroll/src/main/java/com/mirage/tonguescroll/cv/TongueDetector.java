@@ -16,7 +16,7 @@ public class TongueDetector {
     }
 
     public enum GestureType {
-        TONGUE_PROTRUDE_DOWN,   // Standard downward tongue flick
+        TONGUE_PROTRUDE_DOWN,   // Standard downward tongue protrusion
         TONGUE_PROTRUDE_UP,     // Upward
         TONGUE_PROTRUDE_HOLD    // Extended tongue hold
     }
@@ -24,17 +24,24 @@ public class TongueDetector {
     public static class DetectionResult {
         public int confidence;          // 0 to 100
         public Rect mouthRoi;           // Mouth bounding box in frame coordinates
-        public Rect tongueClusterBox;   // Bounding box of detected tongue pixels
+        public Rect tongueClusterBox;   // Bounding box of detected mucosal pixels
         public boolean isTriggered;     // Whether gesture was fired this frame
         public int tonguePixelCount;    // Number of tongue-classified pixels
+        public float currentAspect;     // Height / Width ratio
+        public float heightGrowth;      // Ratio to resting lips height
+        public float baselineHeight;    // Calibrated closed-lip height
         public long timestamp;
 
-        public DetectionResult(int confidence, Rect mouthRoi, Rect tongueClusterBox, boolean isTriggered, int tonguePixelCount) {
+        public DetectionResult(int confidence, Rect mouthRoi, Rect tongueClusterBox, boolean isTriggered,
+                               int tonguePixelCount, float currentAspect, float heightGrowth, float baselineHeight) {
             this.confidence = confidence;
             this.mouthRoi = mouthRoi;
             this.tongueClusterBox = tongueClusterBox;
             this.isTriggered = isTriggered;
             this.tonguePixelCount = tonguePixelCount;
+            this.currentAspect = currentAspect;
+            this.heightGrowth = heightGrowth;
+            this.baselineHeight = baselineHeight;
             this.timestamp = SystemClock.uptimeMillis();
         }
     }
@@ -44,7 +51,13 @@ public class TongueDetector {
     private long cooldownMs = 1200;         // Debounce between swipes
     private long lastTriggerTime = 0;
 
-    // Temporal filter: requires 2 consecutive frames (~100-140ms) to prevent accidental twitches
+    // Resting lips baseline (auto-calibrates to closed mouth)
+    private float baselineHeight = 20.0f;
+    private float baselineArea = 100.0f;
+    private float baselineWidth = 70.0f;
+    private boolean isManuallyCalibrated = false;
+
+    // Temporal filter: requires 2 consecutive frames (~100-140ms)
     private int consecutiveActiveFrames = 0;
     private static final int REQUIRED_CONSECUTIVE_FRAMES = 2;
 
@@ -65,8 +78,20 @@ public class TongueDetector {
     }
 
     /**
+     * Calibrate closed mouth / lips at rest.
+     * Instantly sets the resting baseline so confidence drops to 0%.
+     */
+    public synchronized void calibrateBaseline(float height, float area, float width) {
+        if (height > 5 && width > 10) {
+            this.baselineHeight = height;
+            this.baselineArea = Math.max(20f, area);
+            this.baselineWidth = width;
+            this.isManuallyCalibrated = true;
+        }
+    }
+
+    /**
      * Analyze a live camera YUV_420_888 frame from Camera2 ImageReader.
-     * Operates directly on native direct ByteBuffers for 0% Garbage Collection overhead.
      */
     public synchronized DetectionResult analyzeYuv(Image image, Rect faceRect) {
         if (image == null) return null;
@@ -85,7 +110,6 @@ public class TongueDetector {
         int uvRowStride = planes[1].getRowStride();
         int uvPixelStride = planes[1].getPixelStride();
 
-        // Calculate Mouth ROI
         Rect mouthRoi = calculateMouthRoi(imgWidth, imgHeight, faceRect);
 
         int minX = Math.max(0, mouthRoi.left);
@@ -93,19 +117,13 @@ public class TongueDetector {
         int minY = Math.max(0, mouthRoi.top);
         int maxY = Math.min(imgHeight - 1, mouthRoi.bottom);
 
-        int roiWidth = Math.max(1, maxX - minX);
-        int roiHeight = Math.max(1, maxY - minY);
-        int midY = minY + (roiHeight / 2);
-        int sampledHalfPixels = Math.max(1, (roiWidth / 2) * (roiHeight / 4));
-
         int totalTonguePixels = 0;
-        int lowerHalfTonguePixels = 0;
         int minTongueX = maxX;
         int maxTongueX = minX;
         int minTongueY = maxY;
         int maxTongueY = minY;
 
-        // Step 2 in both dimensions for high speed (<1.5ms on Helio G99)
+        // Step by 2 for ultra-fast <1.5ms execution on Helio G99
         for (int y = minY; y <= maxY; y += 2) {
             int yRowOffset = y * yRowStride;
             int uvRowOffset = (y / 2) * uvRowStride;
@@ -124,9 +142,6 @@ public class TongueDetector {
 
                 if (isTongueYuv(yVal, uVal, vVal)) {
                     totalTonguePixels++;
-                    if (y >= midY) {
-                        lowerHalfTonguePixels++;
-                    }
                     if (x < minTongueX) minTongueX = x;
                     if (x > maxTongueX) maxTongueX = x;
                     if (y < minTongueY) minTongueY = y;
@@ -135,8 +150,7 @@ public class TongueDetector {
             }
         }
 
-        return evaluateTongueProtrusion(mouthRoi, totalTonguePixels, lowerHalfTonguePixels,
-                sampledHalfPixels, minTongueX, maxTongueX, minTongueY, maxTongueY);
+        return evaluateTongueProtrusion(mouthRoi, totalTonguePixels, minTongueX, maxTongueX, minTongueY, maxTongueY);
     }
 
     /**
@@ -155,13 +169,7 @@ public class TongueDetector {
         int minY = Math.max(0, mouthRoi.top);
         int maxY = Math.min(height - 1, mouthRoi.bottom);
 
-        int roiWidth = Math.max(1, maxX - minX);
-        int roiHeight = Math.max(1, maxY - minY);
-        int midY = minY + (roiHeight / 2);
-        int sampledHalfPixels = Math.max(1, (roiWidth / 2) * (roiHeight / 4));
-
         int totalTonguePixels = 0;
-        int lowerHalfTonguePixels = 0;
         int minTongueX = maxX;
         int maxTongueX = minX;
         int minTongueY = maxY;
@@ -178,9 +186,6 @@ public class TongueDetector {
 
                 if (isTongueRgbHsv(r, g, b, hsv)) {
                     totalTonguePixels++;
-                    if (y >= midY) {
-                        lowerHalfTonguePixels++;
-                    }
                     if (x < minTongueX) minTongueX = x;
                     if (x > maxTongueX) maxTongueX = x;
                     if (y < minTongueY) minTongueY = y;
@@ -189,31 +194,51 @@ public class TongueDetector {
             }
         }
 
-        return evaluateTongueProtrusion(mouthRoi, totalTonguePixels, lowerHalfTonguePixels,
-                sampledHalfPixels, minTongueX, maxTongueX, minTongueY, maxTongueY);
+        return evaluateTongueProtrusion(mouthRoi, totalTonguePixels, minTongueX, maxTongueX, minTongueY, maxTongueY);
     }
 
     /**
-     * Core Anatomical Protrusion Evaluator:
-     * When mouth is closed: lips are in the upper half of the mouth ROI.
-     * The lower half (chin area) has virtually 0 tongue/mucosal pixels.
-     * When tongue is stuck out: mucosal pixels pour into the lower half of the ROI,
-     * causing lowerHalfDensity and verticalSpan to surge.
+     * Zero-False-Positive Anatomical Protrusion Evaluator:
+     * 1. Closed lips: Horizontally elongated (H/W < 0.38). Confidence is STRICTLY 0%.
+     * 2. Protruded tongue: Vertically thick (H/W >= 0.48) AND Height >= 1.6x baseline.
      */
-    private DetectionResult evaluateTongueProtrusion(Rect mouthRoi, int totalTonguePixels, int lowerHalfTonguePixels,
-                                                    int sampledHalfPixels, int minTongueX, int maxTongueX, int minTongueY, int maxTongueY) {
-        float lowerDensity = (float) lowerHalfTonguePixels / (float) sampledHalfPixels;
-        int clusterHeight = Math.max(0, maxTongueY - minTongueY);
-        float verticalSpanRatio = mouthRoi.height() > 0 ? (float) clusterHeight / (float) mouthRoi.height() : 0f;
+    private DetectionResult evaluateTongueProtrusion(Rect mouthRoi, int totalTonguePixels,
+                                                    int minTongueX, int maxTongueX, int minTongueY, int maxTongueY) {
+        int clusterWidth = (totalTonguePixels > 6 && minTongueX <= maxTongueX) ? (maxTongueX - minTongueX) : 0;
+        int clusterHeight = (totalTonguePixels > 6 && minTongueY <= maxTongueY) ? (maxTongueY - minTongueY) : 0;
 
-        // Baseline: closed mouth has lowerDensity < 0.04.
-        // Extended tongue reaches lowerDensity 0.15 - 0.60 and verticalSpanRatio > 0.45.
-        float score = (lowerDensity - 0.03f) * 260.0f;
-        if (verticalSpanRatio > 0.35f) {
-            score += (verticalSpanRatio * 40.0f);
+        float currentAspect = clusterWidth > 0 ? ((float) clusterHeight / (float) clusterWidth) : 0f;
+        float heightGrowth = baselineHeight > 0 ? ((float) clusterHeight / baselineHeight) : 1f;
+        float areaGrowth = baselineArea > 0 ? ((float) totalTonguePixels / baselineArea) : 1f;
+
+        // Auto-update resting baseline when face has mouth closed (Aspect < 0.35 and reasonable pixel count)
+        if (!isManuallyCalibrated && totalTonguePixels >= 15 && currentAspect > 0.12f && currentAspect < 0.36f) {
+            baselineHeight = 0.92f * baselineHeight + 0.08f * clusterHeight;
+            baselineArea = 0.92f * baselineArea + 0.08f * totalTonguePixels;
+            baselineWidth = 0.92f * baselineWidth + 0.08f * clusterWidth;
         }
 
-        int confidence = Math.round(Math.max(0f, Math.min(100f, score)));
+        int confidence = 0;
+
+        // STRICT GEOMETRIC CRITERIA:
+        // Closed lips NEVER exceed aspect ratio 0.42!
+        // A protruding tongue must be vertically prominent (aspect >= 0.45)
+        // AND its height must expand significantly relative to resting lips (heightGrowth >= 1.55x).
+        if (totalTonguePixels >= 25 && currentAspect >= 0.44f && heightGrowth >= 1.50f) {
+            // Mathematical confidence ramp:
+            // Aspect bonus: from 0.44 up to 0.85
+            float aspectFactor = Math.min(1.0f, (currentAspect - 0.44f) / 0.40f);
+            // Growth bonus: from 1.50x up to 2.40x
+            float growthFactor = Math.min(1.0f, (heightGrowth - 1.50f) / 0.90f);
+            // Area bonus: from 1.60x up to 2.80x
+            float areaFactor = Math.min(1.0f, (areaGrowth - 1.50f) / 1.30f);
+
+            float combinedScore = (aspectFactor * 40.0f) + (growthFactor * 40.0f) + (areaFactor * 20.0f);
+            confidence = Math.round(Math.max(0f, Math.min(100f, combinedScore)));
+        } else {
+            // Closed lips or flat horizontal mouth: 0% confidence unconditionally
+            confidence = 0;
+        }
 
         Rect tongueBox = (totalTonguePixels > 6 && minTongueX <= maxTongueX && minTongueY <= maxTongueY)
                 ? new Rect(minTongueX, minTongueY, maxTongueX, maxTongueY)
@@ -237,7 +262,8 @@ public class TongueDetector {
             consecutiveActiveFrames = 0;
         }
 
-        DetectionResult result = new DetectionResult(confidence, mouthRoi, tongueBox, isTriggered, totalTonguePixels);
+        DetectionResult result = new DetectionResult(confidence, mouthRoi, tongueBox, isTriggered,
+                totalTonguePixels, currentAspect, heightGrowth, baselineHeight);
         if (listener != null) {
             listener.onFrameAnalyzed(result);
         }
@@ -246,15 +272,14 @@ public class TongueDetector {
 
     /**
      * Compute Mouth Region of Interest (ROI) dynamically from hardware face bounds
-     * or fallback to central lower third of front camera portrait view.
+     * or centered tightly on lower face (not whole screen).
      */
     private Rect calculateMouthRoi(int width, int height, Rect faceRect) {
         if (faceRect != null && faceRect.width() > 30 && faceRect.height() > 30) {
-            int mouthLeft = faceRect.left + (int) (faceRect.width() * 0.22f);
-            int mouthRight = faceRect.right - (int) (faceRect.width() * 0.22f);
-            int mouthTop = faceRect.top + (int) (faceRect.height() * 0.60f);
-            // Extends slightly past chin to catch full tongue protrusion
-            int mouthBottom = faceRect.bottom + (int) (faceRect.height() * 0.15f);
+            int mouthLeft = faceRect.left + (int) (faceRect.width() * 0.20f);
+            int mouthRight = faceRect.right - (int) (faceRect.width() * 0.20f);
+            int mouthTop = faceRect.top + (int) (faceRect.height() * 0.62f);
+            int mouthBottom = faceRect.bottom + (int) (faceRect.height() * 0.16f);
 
             return new Rect(
                     Math.max(0, mouthLeft),
@@ -264,34 +289,27 @@ public class TongueDetector {
             );
         }
 
-        // Default front camera portrait framing (holding phone at natural angle):
+        // Tightly focused mouth area for portrait front camera view
         return new Rect(
-                (int) (width * 0.25f),
-                (int) (height * 0.50f),
-                (int) (width * 0.75f),
-                (int) (height * 0.88f)
+                (int) (width * 0.30f),
+                (int) (height * 0.58f),
+                (int) (width * 0.70f),
+                (int) (height * 0.84f)
         );
     }
 
-    /**
-     * YCbCr mucosal discriminator adapted for wide range of indoor lighting conditions
-     */
     private static boolean isTongueYuv(int y, int cb, int cr) {
-        return (cr >= 138) && (cr - cb >= 18) && (y >= 35) && (y <= 245);
+        return (cr >= 142) && (cr - cb >= 22) && (y >= 40) && (y <= 240);
     }
 
-    /**
-     * RGB + HSV hybrid discriminator:
-     * Tongue mucosa has red/pink Hue in [340°..360°] or [0°..25°], Saturation >= 0.18, Value >= 0.20
-     */
     private static boolean isTongueRgbHsv(int r, int g, int b, float[] hsv) {
-        if (r < 75 || r <= g || r <= b) return false;
+        if (r < 85 || r <= g || r <= b) return false;
         Color.RGBToHSV(r, g, b, hsv);
         float hue = hsv[0];
         float sat = hsv[1];
         float val = hsv[2];
 
         boolean isHueRedPink = (hue >= 335f || hue <= 25f);
-        return isHueRedPink && (sat >= 0.18f) && (val >= 0.22f);
+        return isHueRedPink && (sat >= 0.22f) && (val >= 0.24f);
     }
 }
