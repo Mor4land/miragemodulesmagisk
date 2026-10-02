@@ -259,7 +259,9 @@ public class TongueScrollService extends AccessibilityService {
                     Log.e(TAG, "Error processing camera frame", e);
                 }
                 if (image != null) {
-                    image.close();
+                    try {
+                        image.close();
+                    } catch (Exception ignored) {}
                 }
             }, cameraHandler);
 

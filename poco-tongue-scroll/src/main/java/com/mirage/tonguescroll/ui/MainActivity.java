@@ -102,6 +102,17 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            Log.e(TAG, "Uncaught exception in " + t.getName(), e);
+            try {
+                java.io.File logFile = new java.io.File(getExternalFilesDir(null), "crash.log");
+                java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(logFile, true));
+                pw.println("Crash at " + new java.util.Date());
+                e.printStackTrace(pw);
+                pw.close();
+            } catch (Exception ignored) {}
+        });
+
         config = new TongueConfig(this);
 
         // Google ML Kit Neural Face & Lip Contour Detector
@@ -704,22 +715,24 @@ public class MainActivity extends Activity {
     private void onLabMlKitFrameAnalyzed(MlKitTongueDetector.DetectionResult result) {
         if (result == null) return;
         this.lastFrameResult = result;
-        pbConfidence.setProgress(result.confidence);
-        tvConfidenceValue.setText(result.statusText);
+        if (pbConfidence != null) pbConfidence.setProgress(result.confidence);
+        if (tvConfidenceValue != null) tvConfidenceValue.setText(result.statusText);
 
-        if (result.confidence >= config.getSensitivity()) {
-            tvGestureStatus.setText("👅 СВАЙП!");
-            tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
-        } else if (result.isMouthOpen) {
-            tvGestureStatus.setText(String.format("😮 Открыт (%.0f px)", result.mouthAperturePx));
-            tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_SECONDARY);
-        } else {
-            tvGestureStatus.setText("👄 Закрыт");
-            tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_MUTED);
+        if (tvGestureStatus != null) {
+            if (result.confidence >= config.getSensitivity()) {
+                tvGestureStatus.setText("👅 СВАЙП!");
+                tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_ACCENT_PINK_VIVID);
+            } else if (result.isMouthOpen) {
+                tvGestureStatus.setText(String.format(java.util.Locale.US, "😮 Открыт (%.0f px)", result.mouthAperturePx));
+                tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_SECONDARY);
+            } else {
+                tvGestureStatus.setText("👄 Закрыт");
+                tvGestureStatus.setTextColor(MaterialUiHelper.COLOR_TEXT_MUTED);
+            }
         }
 
         if (overlayView != null) {
-            overlayView.updateMlKitResult(result, 320, 240);
+            overlayView.updateMlKitResult(result);
         }
     }
 
@@ -845,21 +858,26 @@ public class MainActivity extends Activity {
             texture.setDefaultBufferSize(640, 480);
             Surface previewSurface = new Surface(texture);
 
-            // Create low-overhead YUV ImageReader for real-time tongue detection (<1.5ms per frame)
+            // Create low-overhead YUV ImageReader for real-time tongue detection
             if (labImageReader != null) {
                 labImageReader.close();
             }
+            labImageReader = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 2);
             labImageReader.setOnImageAvailableListener(reader -> {
                 Image image = null;
                 try {
                     image = reader.acquireLatestImage();
                     if (image != null && labMlDetector != null && !labMlDetector.isBusy()) {
                         labMlDetector.processYuvImage(image, 270);
-                        return; // closed asynchronously by ML Kit task
+                        return; // closed asynchronously in onCompleteListener
                     }
                 } catch (Exception ignored) {
                 }
-                if (image != null) image.close();
+                if (image != null) {
+                    try {
+                        image.close();
+                    } catch (Exception ignored) {}
+                }
             }, labCameraHandler);
 
             final CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);

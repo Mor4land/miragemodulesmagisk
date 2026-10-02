@@ -41,10 +41,18 @@ public class MlKitTongueDetector {
         public float protrusionPx;      // Protrusion depth beyond lower lip (px)
         public boolean isTriggered;     // Whether swipe gesture fired
         public String statusText;       // Human readable status
+        public int frameWidth;
+        public int frameHeight;
         public long timestamp;
 
         public DetectionResult(int confidence, RectF mouthBounds, RectF tongueBox, boolean isMouthOpen,
                                float mouthAperturePx, float protrusionPx, boolean isTriggered, String statusText) {
+            this(confidence, mouthBounds, tongueBox, isMouthOpen, mouthAperturePx, protrusionPx, isTriggered, statusText, 480, 640);
+        }
+
+        public DetectionResult(int confidence, RectF mouthBounds, RectF tongueBox, boolean isMouthOpen,
+                               float mouthAperturePx, float protrusionPx, boolean isTriggered, String statusText,
+                               int frameWidth, int frameHeight) {
             this.confidence = confidence;
             this.mouthBounds = mouthBounds;
             this.tongueBox = tongueBox;
@@ -53,6 +61,8 @@ public class MlKitTongueDetector {
             this.protrusionPx = protrusionPx;
             this.isTriggered = isTriggered;
             this.statusText = statusText;
+            this.frameWidth = frameWidth;
+            this.frameHeight = frameHeight;
             this.timestamp = SystemClock.uptimeMillis();
         }
     }
@@ -103,39 +113,44 @@ public class MlKitTongueDetector {
      */
     public void processYuvImage(@NonNull Image image, int rotationDegrees) {
         if (isProcessing) {
-            image.close();
+            try {
+                image.close();
+            } catch (Exception ignored) {}
             return;
         }
 
         isProcessing = true;
         try {
             InputImage inputImage = InputImage.fromMediaImage(image, rotationDegrees);
-            // Cache planes for pixel verification before image is closed
-            final Image.Plane[] planes = image.getPlanes();
-            final ByteBuffer yBuf = planes[0].getBuffer();
-            final ByteBuffer uBuf = planes[1].getBuffer();
-            final ByteBuffer vBuf = planes[2].getBuffer();
-            final int yRowStride = planes[0].getRowStride();
-            final int uvRowStride = planes[1].getRowStride();
-            final int uvPixelStride = planes[1].getPixelStride();
-            final int imgWidth = image.getWidth();
-            final int imgHeight = image.getHeight();
+            final int imgWidth = inputImage.getWidth();
+            final int imgHeight = inputImage.getHeight();
 
             faceDetector.process(inputImage)
                     .addOnSuccessListener(faces -> {
-                        evaluateFaceDetection(faces, yBuf, uBuf, vBuf, yRowStride, uvRowStride, uvPixelStride, imgWidth, imgHeight);
-                        isProcessing = false;
+                        try {
+                            evaluateFaceDetection(faces, imgWidth, imgHeight);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error evaluating face detection", e);
+                        }
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "ML Kit Face Detection error", e);
+                        notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false,
+                                "Ошибка детекции", imgWidth, imgHeight));
+                    })
+                    .addOnCompleteListener(task -> {
+                        try {
+                            image.close();
+                        } catch (Exception ignored) {}
                         isProcessing = false;
                     });
 
         } catch (Exception e) {
             Log.e(TAG, "Error creating InputImage from MediaImage", e);
+            try {
+                image.close();
+            } catch (Exception ignored) {}
             isProcessing = false;
-        } finally {
-            image.close();
         }
     }
 
@@ -148,14 +163,21 @@ public class MlKitTongueDetector {
         isProcessing = true;
         try {
             InputImage inputImage = InputImage.fromBitmap(bitmap, rotationDegrees);
+            final int imgWidth = inputImage.getWidth();
+            final int imgHeight = inputImage.getHeight();
 
             faceDetector.process(inputImage)
                     .addOnSuccessListener(faces -> {
-                        evaluateBitmapDetection(faces, bitmap);
-                        isProcessing = false;
+                        try {
+                            evaluateBitmapDetection(faces, imgWidth, imgHeight);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error evaluating bitmap detection", e);
+                        }
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "ML Kit Bitmap Face Detection error", e);
+                    })
+                    .addOnCompleteListener(task -> {
                         isProcessing = false;
                     });
 
@@ -165,25 +187,24 @@ public class MlKitTongueDetector {
         }
     }
 
-    private void evaluateFaceDetection(List<Face> faces, ByteBuffer yBuf, ByteBuffer uBuf, ByteBuffer vBuf,
-                                       int yRowStride, int uvRowStride, int uvPixelStride, int width, int height) {
+    private void evaluateFaceDetection(List<Face> faces, int width, int height) {
         if (faces == null || faces.isEmpty()) {
-            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Лицо не обнаружено"));
+            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Лицо не обнаружено", width, height));
             return;
         }
 
         Face face = faces.get(0);
-        analyzeFaceLipContours(face);
+        analyzeFaceLipContours(face, width, height);
     }
 
-    private void evaluateBitmapDetection(List<Face> faces, Bitmap bitmap) {
+    private void evaluateBitmapDetection(List<Face> faces, int width, int height) {
         if (faces == null || faces.isEmpty()) {
-            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Лицо не обнаружено"));
+            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Лицо не обнаружено", width, height));
             return;
         }
 
         Face face = faces.get(0);
-        analyzeFaceLipContours(face);
+        analyzeFaceLipContours(face, width, height);
     }
 
     /**
@@ -192,14 +213,14 @@ public class MlKitTongueDetector {
      * When mouth is closed: aperture <= 6px -> STRICT 0% CONFIDENCE.
      * When mouth is open: checks if mucosal cluster extends down past the lower lip contour.
      */
-    private void analyzeFaceLipContours(Face face) {
+    private void analyzeFaceLipContours(Face face, int frameWidth, int frameHeight) {
         FaceContour upperLipBottom = face.getContour(FaceContour.UPPER_LIP_BOTTOM);
         FaceContour lowerLipTop = face.getContour(FaceContour.LOWER_LIP_TOP);
         FaceContour lowerLipBottom = face.getContour(FaceContour.LOWER_LIP_BOTTOM);
         FaceContour upperLipTop = face.getContour(FaceContour.UPPER_LIP_TOP);
 
         if (upperLipBottom == null || lowerLipTop == null || lowerLipBottom == null) {
-            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Губы не распознаны"));
+            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Губы не распознаны", frameWidth, frameHeight));
             return;
         }
 
@@ -208,15 +229,16 @@ public class MlKitTongueDetector {
         List<PointF> lowBottomPts = lowerLipBottom.getPoints();
         List<PointF> upTopPts = (upperLipTop != null) ? upperLipTop.getPoints() : upBottomPts;
 
-        if (upBottomPts.isEmpty() || lowTopPts.isEmpty() || lowBottomPts.isEmpty()) {
-            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Недостаточно точек контура"));
+        if (upBottomPts == null || lowTopPts == null || lowBottomPts == null ||
+                upBottomPts.size() < 3 || lowTopPts.size() < 3 || lowBottomPts.size() < 3) {
+            notifyResult(new DetectionResult(0, null, null, false, 0f, 0f, false, "Недостаточно точек контура", frameWidth, frameHeight));
             return;
         }
 
         PointF centerUpBottom = upBottomPts.get(upBottomPts.size() / 2);
         PointF centerLowTop = lowTopPts.get(lowTopPts.size() / 2);
         PointF centerLowBottom = lowBottomPts.get(lowBottomPts.size() / 2);
-        PointF centerUpTop = upTopPts.get(upTopPts.size() / 2);
+        PointF centerUpTop = (upTopPts != null && !upTopPts.isEmpty()) ? upTopPts.get(upTopPts.size() / 2) : centerUpBottom;
 
         PointF mouthCornerLeft = upBottomPts.get(0);
         PointF mouthCornerRight = upBottomPts.get(upBottomPts.size() - 1);
@@ -237,7 +259,8 @@ public class MlKitTongueDetector {
         // It is impossible for a tongue to be out. Confidence is STRICTLY 0%.
         if (mouthAperture < 9.0f) {
             notifyResult(new DetectionResult(0, mouthBounds, null, false, mouthAperture, 0f, false,
-                    String.format("👄 Рот закрыт (Зазор: %.1f px) -> 0%%", mouthAperture)));
+                    String.format(java.util.Locale.US, "👄 Рот закрыт (Зазор: %.1f px) -> 0%%", mouthAperture),
+                    frameWidth, frameHeight));
             return;
         }
 
@@ -277,7 +300,11 @@ public class MlKitTongueDetector {
                     lastTriggerTime = now;
                     isTriggered = true;
                     if (listener != null) {
-                        listener.onTongueGestureDetected(confidence, TongueDetector.GestureType.TONGUE_PROTRUDE_DOWN);
+                        try {
+                            listener.onTongueGestureDetected(confidence, TongueDetector.GestureType.TONGUE_PROTRUDE_DOWN);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error in listener callback", e);
+                        }
                     }
                 }
             }
@@ -287,20 +314,24 @@ public class MlKitTongueDetector {
 
         String status;
         if (confidence >= sensitivityThreshold) {
-            status = String.format("👅 ЯЗЫК ВЫСУНУТ (%d%%) [Зазор: %.0f px]", confidence, mouthAperture);
+            status = String.format(java.util.Locale.US, "👅 ЯЗЫК ВЫСУНУТ (%d%%) [Зазор: %.0f px]", confidence, mouthAperture);
         } else if (mouthAperture >= 9.0f) {
-            status = String.format("😮 Рот приоткрыт (Зазор: %.0f px)", mouthAperture);
+            status = String.format(java.util.Locale.US, "😮 Рот приоткрыт (Зазор: %.0f px)", mouthAperture);
         } else {
             status = "👄 Рот закрыт (0%)";
         }
 
         notifyResult(new DetectionResult(confidence, mouthBounds, tongueBox, true,
-                mouthAperture, protrusionPx, isTriggered, status));
+                mouthAperture, protrusionPx, isTriggered, status, frameWidth, frameHeight));
     }
 
     private void notifyResult(DetectionResult result) {
         if (listener != null) {
-            listener.onFrameAnalyzed(result);
+            try {
+                listener.onFrameAnalyzed(result);
+            } catch (Exception e) {
+                Log.e(TAG, "Error notifying frame analyzed", e);
+            }
         }
     }
 

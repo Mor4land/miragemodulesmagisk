@@ -43,11 +43,23 @@ public class CameraOverlayView extends View {
         textPaint.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
     }
 
+    public void updateMlKitResult(MlKitTongueDetector.DetectionResult result) {
+        this.lastResult = result;
+        if (result != null && result.frameWidth > 0 && result.frameHeight > 0) {
+            this.frameWidth = result.frameWidth;
+            this.frameHeight = result.frameHeight;
+        }
+        postInvalidate();
+    }
+
     public void updateMlKitResult(MlKitTongueDetector.DetectionResult result, int fWidth, int fHeight) {
         this.lastResult = result;
         if (fWidth > 0 && fHeight > 0) {
             this.frameWidth = fWidth;
             this.frameHeight = fHeight;
+        } else if (result != null && result.frameWidth > 0 && result.frameHeight > 0) {
+            this.frameWidth = result.frameWidth;
+            this.frameHeight = result.frameHeight;
         }
         postInvalidate();
     }
@@ -86,7 +98,7 @@ public class CameraOverlayView extends View {
             } else if (lastResult.mouthAperturePx < 9f) {
                 label = "👄 Рот закрыт (0%)";
             } else {
-                label = String.format("😮 Рот открыт (%.0f px)", lastResult.mouthAperturePx);
+                label = String.format(java.util.Locale.US, "😮 Рот открыт (%.0f px)", lastResult.mouthAperturePx);
             }
             canvas.drawText(label, left + 8, Math.max(24f, top - 8), textPaint);
         }
