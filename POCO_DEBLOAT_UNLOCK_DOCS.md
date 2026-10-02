@@ -91,7 +91,7 @@
 | **Магазины и пуш-сервисы** | `com.xiaomi.mipicks`, `com.xiaomi.glgm`, `com.xiaomi.payment` | GetApps, игровой центр и неиспользуемые платежи |
 | **Спам-приложения** | `com.mi.globalbrowser`, `com.miui.videoplayer`, `com.miui.player`, `com.miui.cleanmaster` | Тяжелые комбайны с баннерами (заменяются чистыми аналогами) |
 | **Желтые страницы и мусор** | `com.miui.yellowpage`, `com.miui.translation.kingsoft`, `com.miui.translation.youdao`, `com.miui.phrase` | Телеметрия номеров и ненужные словари |
-| **Партнерский софт** | `com.facebook.katana`, `com.facebook.system`, `com.facebook.appmanager`, `com.facebook.services`, `com.zhiliaoapp.musically`, `com.ebay.mobile`, `com.alibaba.aliexpresshd`, `com.booking`, `com.netflix.partner.activation`, `cn.wps.moffice_eng` | Предустановленные сторонние приложения |
+| **Партнерский софт** | `com.facebook.katana`, `com.facebook.system`, `com.facebook.appmanager`, `com.facebook.services`, `com.ebay.mobile`, `com.alibaba.aliexpresshd`, `com.booking`, `com.netflix.partner.activation`, `cn.wps.moffice_eng` | Предустановленные сторонние приложения |
 | **Ненужный Google-софт** | `com.google.android.apps.tachyon`, `com.google.android.apps.subscriptions.red`, `com.google.android.videos`, `com.google.android.apps.magazines`, `com.google.android.apps.podcasts`, `com.google.android.feedback` | Google Meet, Google TV, One, Podcasts, News |
 
 ---

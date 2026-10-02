@@ -185,7 +185,6 @@ if [ "$DEBLOAT_FACEBOOK" = "1" ]; then
 fi
 
 if [ "$DEBLOAT_PARTNER_APPS" = "1" ]; then
-    disable_pkg "com.zhiliaoapp.musically" "TikTok"
     disable_pkg "com.ebay.mobile" "eBay"
     disable_pkg "com.alibaba.aliexpresshd" "AliExpress"
     disable_pkg "com.booking" "Booking.com"
