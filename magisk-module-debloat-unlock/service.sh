@@ -76,3 +76,10 @@ fi
 echo 60 > /proc/sys/vm/swappiness 2>/dev/null
 echo 50 > /proc/sys/vm/vfs_cache_pressure 2>/dev/null
 echo 1 > /proc/sys/vm/stat_interval 2>/dev/null
+
+# 7. Companion App Auto-install
+if [ -f "$MODDIR/MiragePocoOptimizer.apk" ]; then
+    if ! pm path com.mirage.pocom5debloat >/dev/null 2>&1; then
+        pm install -r "$MODDIR/MiragePocoOptimizer.apk" >/dev/null 2>&1
+    fi
+fi

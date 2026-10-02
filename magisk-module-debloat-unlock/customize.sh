@@ -202,7 +202,13 @@ if [ "$DEBLOAT_GOOGLE_BLOAT" = "1" ]; then
     disable_pkg "com.google.android.feedback" "Google Feedback"
 fi
 
-# 5. Permissions
+# 5. Companion APK Installation
+ui_print "- Установка приложения POCO M5 Optimizer..."
+if [ -f "$MODPATH/MiragePocoOptimizer.apk" ]; then
+    pm install -r "$MODPATH/MiragePocoOptimizer.apk" >/dev/null 2>&1 && ui_print "  [Успешно] Приложение POCO M5 Optimizer установлено!" || ui_print "  Приложение будет автоматически установлено при старте"
+fi
+
+# 6. Permissions
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 set_perm "$MODPATH/service.sh" 0 0 0755
 set_perm "$MODPATH/uninstall.sh" 0 0 0755

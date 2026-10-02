@@ -1,9 +1,13 @@
 import os
+import shutil
 import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MODULE_DIR = os.path.join(ROOT, "magisk-module-debloat-unlock")
 DIST_DIR = os.path.join(ROOT, "dist")
+APK_SRC = os.path.join(ROOT, "poco-debloat", "build", "outputs", "apk", "release", "poco-debloat-release.apk")
+APK_IN_MODULE = os.path.join(MODULE_DIR, "MiragePocoOptimizer.apk")
+APK_DIST = os.path.join(DIST_DIR, "MiragePocoOptimizer-v1.0.0.apk")
 ZIP_DEST = os.path.join(DIST_DIR, "MiragePOCOM5-DebloatUnlock-v1.0.0.zip")
 
 FILE_PERMISSIONS = {
@@ -18,6 +22,7 @@ FILE_PERMISSIONS = {
     "device_features_template.xml": 0o644,
     "hosts_adblock": 0o644,
     "system/bin/mirage-debloat": 0o755,
+    "MiragePocoOptimizer.apk": 0o644,
 }
 
 
@@ -39,6 +44,13 @@ def main():
         raise FileNotFoundError(f"Module directory not found: {MODULE_DIR}")
 
     os.makedirs(DIST_DIR, exist_ok=True)
+
+    if os.path.isfile(APK_SRC):
+        shutil.copy2(APK_SRC, APK_IN_MODULE)
+        shutil.copy2(APK_SRC, APK_DIST)
+        print(f"Copied APK -> {APK_DIST} ({os.path.getsize(APK_DIST)} bytes)")
+    elif not os.path.isfile(APK_IN_MODULE):
+        raise FileNotFoundError(f"APK not found at {APK_SRC} and not in module dir!")
 
     print(f"Building Magisk module ZIP: {ZIP_DEST}...")
     with zipfile.ZipFile(ZIP_DEST, "w", zipfile.ZIP_DEFLATED) as zf:
