@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Сценарии</string>
+    <string name="app_description">Автоматизация и быстрые команды в стиле iOS Shortcuts с Dynamic Island для POCO M5</string>
+    <string name="accessibility_service_description">Служба отслеживания переключения приложений для мгновенного выполнения сценариев (вход/выход из приложений).</string>
+</resources>

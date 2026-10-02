@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background rounded square -->
+    <path
+        android:fillColor="#101524"
+        android:pathData="M20,12 L88,12 A8,8 0 0,1 96,20 L96,88 A8,8 0 0,1 88,96 L20,96 A8,8 0 0,1 12,88 L12,20 A8,8 0 0,1 20,12 Z" />
+
+    <!-- Shortcuts diamond upper shape -->
+    <path
+        android:fillColor="#FF2979FF"
+        android:pathData="M54,22 L76,44 A8,8 0 0,1 76,55 L54,77 A8,8 0 0,1 43,77 L21,55 A8,8 0 0,1 21,44 L43,22 A8,8 0 0,1 54,22 Z" />
+
+    <!-- Shortcuts diamond lower overlay (iOS Shortcuts style) -->
+    <path
+        android:fillColor="#FFFF3D71"
+        android:pathData="M65,41 L87,63 A8,8 0 0,1 87,74 L65,96 A8,8 0 0,1 54,96 L32,74 A8,8 0 0,1 32,63 L54,41 A8,8 0 0,1 65,41 Z" />
+
+    <!-- Dynamic Island Pill highlight at top center -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M44,18 L64,18 A3,3 0 0,1 67,21 L67,21 A3,3 0 0,1 64,24 L44,24 A3,3 0 0,1 41,21 L41,21 A3,3 0 0,1 44,18 Z" />
+</vector>

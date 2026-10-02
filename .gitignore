@@ -1,8 +1,14 @@
 .gradle/
 build/
 app/build/
+poco-anim/build/
+poco-audio-emoji/build/
+poco-scenarios/build/
 xposed-stub/build/
 local.properties
 *.iml
 .idea/
 dist/
+__pycache__/
+AntigravityClient/
+screen_empty_response.png
