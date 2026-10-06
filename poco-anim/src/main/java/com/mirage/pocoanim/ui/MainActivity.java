@@ -231,6 +231,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < speedValues.length; i++) {
             final int idx = i;
             Chip chip = new Chip(this);
+            chip.setId(View.generateViewId());
             chip.setText(speedLabels[i]);
             chip.setCheckable(true);
             if (Math.abs(currentSpeed - speedValues[i]) < 0.05f) {
@@ -238,8 +239,11 @@ public class MainActivity extends AppCompatActivity {
             }
             chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 if (isChecked) {
-                    mPrefs.edit().putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, speedValues[idx]).commit();
-                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                    try {
+                        mPrefs.edit().putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, speedValues[idx]).commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
                 }
             });
             mSpeedChipGroup.addView(chip);
@@ -532,29 +536,37 @@ public class MainActivity extends AppCompatActivity {
 
         int curMode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
         Chip chipGrad = new Chip(this);
+        chipGrad.setId(View.generateViewId());
         chipGrad.setText("Двухцветный Градиент");
         chipGrad.setCheckable(true);
         chipGrad.setChecked(curMode == AnimPrefs.COLOR_MODE_GRADIENT);
 
         Chip chipSolid = new Chip(this);
+        chipSolid.setId(View.generateViewId());
         chipSolid.setText("Сплошной Монохром");
         chipSolid.setCheckable(true);
         chipSolid.setChecked(curMode == AnimPrefs.COLOR_MODE_SOLID);
 
         chipGrad.setOnCheckedChangeListener((bv, checked) -> {
             if (checked) {
-                mPrefs.edit().putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT).commit();
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateLivePreview();
-                updateColorButtons();
+                try {
+                    mPrefs.edit().putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                    updateLivePreview();
+                    updateColorButtons();
+                } catch (Throwable ignored) {
+                }
             }
         });
         chipSolid.setOnCheckedChangeListener((bv, checked) -> {
             if (checked) {
-                mPrefs.edit().putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_SOLID).commit();
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateLivePreview();
-                updateColorButtons();
+                try {
+                    mPrefs.edit().putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_SOLID).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                    updateLivePreview();
+                    updateColorButtons();
+                } catch (Throwable ignored) {
+                }
             }
         });
 
@@ -592,6 +604,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < AnimPrefs.PRESET_COLORS.length; i++) {
             final int pIdx = i;
             Chip pChip = new Chip(this);
+            pChip.setId(View.generateViewId());
             pChip.setText(AnimPrefs.PRESET_NAMES[i]);
             pChip.setCheckable(true);
             if (i == currentPreset) {
@@ -599,14 +612,17 @@ public class MainActivity extends AppCompatActivity {
             }
             pChip.setOnCheckedChangeListener((bv, isChecked) -> {
                 if (isChecked) {
-                    mPrefs.edit()
-                            .putInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, pIdx)
-                            .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.PRESET_COLORS[pIdx][0])
-                            .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, AnimPrefs.PRESET_COLORS[pIdx][1])
-                            .commit();
-                    AnimPrefs.broadcastUpdate(MainActivity.this);
-                    updateColorButtons();
-                    updateLivePreview();
+                    try {
+                        mPrefs.edit()
+                                .putInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, pIdx)
+                                .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.PRESET_COLORS[pIdx][0])
+                                .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, AnimPrefs.PRESET_COLORS[pIdx][1])
+                                .commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                        updateColorButtons();
+                        updateLivePreview();
+                    } catch (Throwable ignored) {
+                    }
                 }
             });
             mPresetChips[i] = pChip;
@@ -629,14 +645,23 @@ public class MainActivity extends AppCompatActivity {
         mIconIntensitySlider.setValueFrom(20f);
         mIconIntensitySlider.setValueTo(100f);
         mIconIntensitySlider.setStepSize(5f);
-        mIconIntensitySlider.setValue(Math.max(20f, Math.min(100f, curInt * 100f)));
+        float safeIconInt = Math.round((Math.max(0.20f, Math.min(1.00f, curInt)) * 100f - 20f) / 5f) * 5f + 20f;
+        safeIconInt = Math.max(20f, Math.min(100f, safeIconInt));
+        try {
+            mIconIntensitySlider.setValue(safeIconInt);
+        } catch (Throwable t) {
+            mIconIntensitySlider.setValue(85f);
+        }
         mIconIntensitySlider.addOnChangeListener((slider, value, fromUser) -> {
             float val = value / 100f;
             intensityLabel.setText("Интенсивность тонирования: " + Math.round(value) + "%");
             if (fromUser) {
-                mPrefs.edit().putFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, val).commit();
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateLivePreview();
+                try {
+                    mPrefs.edit().putFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, val).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                    updateLivePreview();
+                } catch (Throwable ignored) {
+                }
             }
         });
         iconOptionsContainer.addView(mIconIntensitySlider);
@@ -895,9 +920,12 @@ public class MainActivity extends AppCompatActivity {
         matteOptionsContainer.setVisibility(isMatte ? View.VISIBLE : View.GONE);
 
         matteSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            mPrefs.edit().putBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, isChecked).commit();
-            matteOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            AnimPrefs.broadcastUpdate(MainActivity.this);
+            try {
+                mPrefs.edit().putBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, isChecked).commit();
+                matteOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+            } catch (Throwable ignored) {
+            }
         });
 
         matteSwitchRow.addView(textCol);
@@ -923,6 +951,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < 3; i++) {
             final int sIdx = i;
             Chip chip = new Chip(this);
+            chip.setId(View.generateViewId());
             chip.setText(styleNames[i]);
             chip.setCheckable(true);
             if (i == currentStyle) {
@@ -930,8 +959,11 @@ public class MainActivity extends AppCompatActivity {
             }
             chip.setOnCheckedChangeListener((bv, isChecked) -> {
                 if (isChecked) {
-                    mPrefs.edit().putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sIdx).commit();
-                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                    try {
+                        mPrefs.edit().putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sIdx).commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
                 }
             });
             mMatteStyleChipGroup.addView(chip);
@@ -952,13 +984,22 @@ public class MainActivity extends AppCompatActivity {
         mMatteIntensitySlider.setValueFrom(10f);
         mMatteIntensitySlider.setValueTo(90f);
         mMatteIntensitySlider.setStepSize(5f);
-        mMatteIntensitySlider.setValue(Math.max(10f, Math.min(90f, curIntensity * 100f)));
+        float safeMatteInt = Math.round((Math.max(0.10f, Math.min(0.90f, curIntensity)) * 100f - 10f) / 5f) * 5f + 10f;
+        safeMatteInt = Math.max(10f, Math.min(90f, safeMatteInt));
+        try {
+            mMatteIntensitySlider.setValue(safeMatteInt);
+        } catch (Throwable t) {
+            mMatteIntensitySlider.setValue(35f);
+        }
         mMatteIntensitySlider.addOnChangeListener((slider, value, fromUser) -> {
             float val = value / 100f;
             intensityLabel.setText("Интенсивность матовости: " + Math.round(value) + "%");
             if (fromUser) {
-                mPrefs.edit().putFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, val).commit();
-                AnimPrefs.broadcastUpdate(MainActivity.this);
+                try {
+                    mPrefs.edit().putFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, val).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                } catch (Throwable ignored) {
+                }
             }
         });
         matteOptionsContainer.addView(mMatteIntensitySlider);

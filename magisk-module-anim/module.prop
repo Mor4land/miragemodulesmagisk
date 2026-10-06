@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.24
-versionCode=25
+version=v1.0.25
+versionCode=26
 author=Mirage
-description=Полный переход на Material 3 (https://m3.material.io/), фикс свайпа в недавние приложения с рабочего стола, независимые фото-виджеты.
+description=Фикс краша при включении матового эффекта обоев, устранение чёрного перекрытия рабочего стола, аппаратный блюр обоев SurfaceFlinger (Android 12+) и защита M3 Slider.

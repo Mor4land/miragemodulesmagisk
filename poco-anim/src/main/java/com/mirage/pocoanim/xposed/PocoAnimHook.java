@@ -1967,76 +1967,58 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         return sCachedColorFilter;
     }
 
-    private static Drawable createMatteDrawable() {
-        if (!sWallpaperMatte) return null;
-        float intensity = Math.max(0.10f, Math.min(0.95f, sWallpaperMatteIntensity));
-        int alpha = (int) (intensity * 255);
-
-        if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_DARK_VELVET) {
-            return new ColorDrawable(Color.argb(alpha, 10, 14, 22));
-        } else if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_FROSTED_GLASS) {
-            return new GradientDrawable(
-                    GradientDrawable.Orientation.TOP_BOTTOM,
-                    new int[]{
-                            Color.argb(Math.min(255, (int) (alpha * 1.35f)), 38, 48, 70),
-                            Color.argb((int) (alpha * 0.80f), 12, 16, 26)
-                    }
-            );
-        } else {
-            return new GradientDrawable(
-                    GradientDrawable.Orientation.TL_BR,
-                    new int[]{
-                            Color.argb(alpha, 24, 22, 38),
-                            Color.argb(alpha, 6, 8, 14)
-                    }
-            );
-        }
-    }
-
     private static void updateMatteEffect(final Activity launcher) {
         if (launcher == null) return;
         launcher.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Drawable matte = sWallpaperMatte ? createMatteDrawable() : null;
+                    // 1. Maintain transparent window background for wallpaper compositing
+                    try {
+                        launcher.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    } catch (Throwable ignored) {
+                    }
 
-                    // 1. DragLayer root
+                    // 2. Hardware background blur on Android 12+ (API 31+)
+                    if (Build.VERSION.SDK_INT >= 31) {
+                        try {
+                            if (sWallpaperMatte) {
+                                int blurRadius = (int) (sWallpaperMatteIntensity * 70f) + 15;
+                                launcher.getWindow().setBackgroundBlurRadius(blurRadius);
+                            } else {
+                                launcher.getWindow().setBackgroundBlurRadius(0);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+
+                    // 3. Clear any background from content or workspace to prevent stacking
+                    try {
+                        View content = launcher.findViewById(android.R.id.content);
+                        if (content != null && content.getBackground() != null) {
+                            content.setBackground(null);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+
+                    try {
+                        Object workspace = XposedHelpers.getObjectField(launcher, "mWorkspace");
+                        if (workspace instanceof View && ((View) workspace).getBackground() != null) {
+                            ((View) workspace).setBackground(null);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+
+                    // 4. Invalidate DragLayer and DecorView to apply overlay draw
                     try {
                         Object dragLayer = XposedHelpers.getObjectField(launcher, "mDragLayer");
                         if (dragLayer instanceof View) {
-                            ((View) dragLayer).setBackground(matte);
+                            ((View) dragLayer).setBackground(null); // Ensure no background drawable stacking
                             ((View) dragLayer).invalidate();
                         }
                     } catch (Throwable ignored) {
                     }
 
-                    // 2. Workspace
-                    try {
-                        Object workspace = XposedHelpers.getObjectField(launcher, "mWorkspace");
-                        if (workspace instanceof View) {
-                            ((View) workspace).setBackground(matte);
-                            ((View) workspace).invalidate();
-                        }
-                    } catch (Throwable ignored) {
-                    }
-
-                    // 3. Activity content & window
-                    try {
-                        View content = launcher.findViewById(android.R.id.content);
-                        if (content != null) {
-                            content.setBackground(matte);
-                            content.invalidate();
-                        }
-                    } catch (Throwable ignored) {
-                    }
-
-                    try {
-                        launcher.getWindow().setBackgroundDrawable(matte != null ? matte : new ColorDrawable(Color.TRANSPARENT));
-                    } catch (Throwable ignored) {
-                    }
-
-                    // 4. Invalidate DecorView
                     try {
                         View decor = launcher.getWindow().getDecorView();
                         if (decor != null) {
@@ -2050,22 +2032,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         });
     }
 
-    private static void hookDrawOnClassHierarchy(Class<?> targetCls, final XC_MethodHook hook) {
-        if (targetCls == null) return;
-        Class<?> curr = targetCls;
-        while (curr != null && curr != ViewGroup.class && curr != View.class && curr != Object.class) {
-            for (Method m : curr.getDeclaredMethods()) {
-                if (("dispatchDraw".equals(m.getName()) || "draw".equals(m.getName()) || "onDraw".equals(m.getName()))
-                        && m.getParameterTypes().length == 1 && m.getParameterTypes()[0] == Canvas.class) {
-                    try {
-                        XposedBridge.hookMethod(m, hook);
-                    } catch (Throwable ignored) {
-                    }
-                }
-            }
-            curr = curr.getSuperclass();
-        }
-    }
+    private static int sLastMatteCanvasHash = 0;
+    private static long sLastMatteDrawNano = 0L;
 
     private static void hookWallpaperMatte(ClassLoader cl) {
         String[] dragLayerClasses = new String[]{
@@ -2073,25 +2041,31 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 "com.mi.android.globallauncher.DragLayer",
                 "com.mi.android.globallauncher.view.DragLayer",
                 "com.android.launcher3.dragndrop.DragLayer",
-                "com.android.launcher3.views.BaseDragLayer",
-                "com.android.launcher3.DragLayer",
-                "com.miui.home.launcher.Workspace",
-                "com.mi.android.globallauncher.Workspace",
-                "com.android.launcher3.Workspace"
+                "com.android.launcher3.DragLayer"
         };
 
         XC_MethodHook matteDrawHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (!sEnabled || !sWallpaperMatte) return;
-                if (param.args != null && param.args.length > 0 && param.args[0] instanceof Canvas && param.thisObject instanceof View) {
-                    Canvas canvas = (Canvas) param.args[0];
-                    View v = (View) param.thisObject;
-                    int w = v.getWidth();
-                    int h = v.getHeight();
-                    if (w > 0 && h > 0) {
-                        drawMatteWallpaperOverlay(canvas, v.getScrollX(), v.getScrollY(), w, h);
-                    }
+                if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof Canvas)) return;
+                if (!(param.thisObject instanceof View)) return;
+
+                Canvas canvas = (Canvas) param.args[0];
+                int cHash = canvas.hashCode();
+                long now = System.nanoTime();
+                // Frame deduplication guard: never draw more than once per frame on the same canvas
+                if (cHash == sLastMatteCanvasHash && (now - sLastMatteDrawNano) < 1_500_000L) {
+                    return;
+                }
+                sLastMatteCanvasHash = cHash;
+                sLastMatteDrawNano = now;
+
+                View v = (View) param.thisObject;
+                int w = v.getWidth();
+                int h = v.getHeight();
+                if (w > 0 && h > 0) {
+                    drawMatteWallpaperOverlay(canvas, w, h);
                 }
             }
         };
@@ -2099,37 +2073,40 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         for (String clsName : dragLayerClasses) {
             Class<?> cls = XposedHelpers.findClassIfExists(clsName, cl);
             if (cls != null) {
-                hookDrawOnClassHierarchy(cls, matteDrawHook);
+                try {
+                    XposedHelpers.findAndHookMethod(cls, "dispatchDraw", Canvas.class, matteDrawHook);
+                } catch (Throwable ignored) {
+                }
             }
         }
     }
 
-    private static void drawMatteWallpaperOverlay(Canvas canvas, int scrollX, int scrollY, int w, int h) {
-        float intensity = Math.max(0.10f, Math.min(0.95f, sWallpaperMatteIntensity));
-        int alpha = (int) (intensity * 255);
+    private static void drawMatteWallpaperOverlay(Canvas canvas, int w, int h) {
+        float intensity = Math.max(0.10f, Math.min(0.90f, sWallpaperMatteIntensity));
+        int baseAlpha = Math.round(intensity * 95f); // 10 to 86 out of 255 (4% to 34% max opacity)
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_DARK_VELVET) {
-            p.setColor(Color.argb(alpha, 10, 14, 22));
-            canvas.drawRect(scrollX, scrollY, scrollX + w, scrollY + h, p);
+            p.setColor(Color.argb(baseAlpha, 10, 14, 22));
+            canvas.drawRect(0, 0, w, h, p);
         } else if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_FROSTED_GLASS) {
             LinearGradient grad = new LinearGradient(
-                    scrollX, scrollY, scrollX, scrollY + h,
-                    Color.argb(Math.min(255, (int) (alpha * 1.35f)), 38, 48, 70),
-                    Color.argb((int) (alpha * 0.80f), 12, 16, 26),
+                    0, 0, 0, h,
+                    Color.argb(Math.min(115, (int) (baseAlpha * 1.15f) + 12), 195, 215, 240),
+                    Color.argb(Math.min(95, baseAlpha), 15, 22, 35),
                     Shader.TileMode.CLAMP
             );
             p.setShader(grad);
-            canvas.drawRect(scrollX, scrollY, scrollX + w, scrollY + h, p);
+            canvas.drawRect(0, 0, w, h, p);
         } else { // DEEP_SATIN
             LinearGradient grad = new LinearGradient(
-                    scrollX, scrollY, scrollX + w, scrollY + h,
-                    Color.argb(alpha, 24, 22, 38),
-                    Color.argb(alpha, 6, 8, 14),
+                    0, 0, w, h,
+                    Color.argb(Math.min(105, (int) (baseAlpha * 1.10f)), 32, 24, 44),
+                    Color.argb(baseAlpha, 12, 16, 26),
                     Shader.TileMode.CLAMP
             );
             p.setShader(grad);
-            canvas.drawRect(scrollX, scrollY, scrollX + w, scrollY + h, p);
+            canvas.drawRect(0, 0, w, h, p);
         }
     }
 

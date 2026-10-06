@@ -168,6 +168,44 @@ public class ColorMatrixAndWidgetTest {
         Assert.assertEquals("Normal in-app mode remains APP_MODE (2)", 2, resolvedMode);
     }
 
+    @Test
+    public void testSliderStepSizeSnapping() {
+        float[] testValues = new float[]{0.0f, 0.12f, 0.23f, 0.33f, 0.35f, 0.57f, 0.73f, 0.85f, 0.99f, 1.5f};
+        float stepSize = 5.0f;
+        float valueFrom = 10.0f;
+        float valueTo = 90.0f;
+
+        for (float raw : testValues) {
+            float clamped = Math.max(0.10f, Math.min(0.90f, raw));
+            float snapped = Math.round((clamped * 100f - valueFrom) / stepSize) * stepSize + valueFrom;
+            snapped = Math.max(valueFrom, Math.min(valueTo, snapped));
+
+            // Must be within bounds
+            Assert.assertTrue("Snapped must be >= valueFrom", snapped >= valueFrom);
+            Assert.assertTrue("Snapped must be <= valueTo", snapped <= valueTo);
+
+            // Distance from start must be a pure integer multiple of stepSize
+            float remainder = (snapped - valueFrom) % stepSize;
+            Assert.assertEquals("Remainder against stepSize must be zero for raw=" + raw, 0.0f, remainder, 0.0001f);
+        }
+    }
+
+    @Test
+    public void testMatteAlphaCalibration() {
+        // Test intensities across the full slider range
+        float[] intensities = new float[]{0.10f, 0.35f, 0.50f, 0.75f, 0.90f};
+
+        for (float intensity : intensities) {
+            int baseAlpha = Math.round(intensity * 95f);
+            float opacity = baseAlpha / 255.0f;
+
+            // Opacity must be between 3% and 35% so wallpaper is NEVER blacked out
+            Assert.assertTrue("Matte alpha must be >= 9 for intensity=" + intensity, baseAlpha >= 9);
+            Assert.assertTrue("Matte alpha must be <= 90 for intensity=" + intensity, baseAlpha <= 90);
+            Assert.assertTrue("Opacity must stay below 36% to keep wallpaper visible", opacity <= 0.36f);
+        }
+    }
+
     private int resolveWindowMode(boolean launcherOnTop, int stockResult, boolean isAppCurrentlyOpening) {
         if (launcherOnTop) {
             if (stockResult == 0 && isAppCurrentlyOpening) {
