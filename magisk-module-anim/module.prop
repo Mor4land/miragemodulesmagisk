@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.22
-versionCode=23
+version=v1.0.23
+versionCode=24
 author=Mirage
-description=Material 3 дизайн, независимые фото/GIF виджеты, ColorMatrix цветокоррекция иконок, матовый эффект обоев и автовозврат к экрану приложения.
+description=Фикс нижней шторки выхода из приложений, Material 3 UI, независимые фото-виджеты, ColorMatrix цветокоррекция и матовый эффект.

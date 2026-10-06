@@ -102,7 +102,7 @@ public class MainActivity extends Activity {
         root.setPadding(pad, dp(24), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Flagship Animations v1.0.22");
+        title.setText("POCO M5 Flagship Animations v1.0.23");
         title.setTextColor(Color.parseColor("#E2E2E6"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);

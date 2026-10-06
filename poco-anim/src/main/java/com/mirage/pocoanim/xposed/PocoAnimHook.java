@@ -678,22 +678,23 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!sEnabled || !sNonStopSwipe) {
                     return;
                 }
-                Object res = param.getResult();
-                if (res instanceof Integer && ((Integer) res) == 0) {
-                    boolean launcherOnTop = callBooleanMethodSafe(param.thisObject, "isLauncherOnTop", false);
-                    if (launcherOnTop) {
+                boolean launcherOnTop = callBooleanMethodSafe(param.thisObject, "isLauncherOnTop", false);
+                if (!launcherOnTop) {
+                    // Inside an app, window mode MUST ALWAYS be APP_MODE (2)!
+                    // Clear stuck launch block flags and force APP_MODE so bottom exit gesture never freezes.
+                    setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                    setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                    setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
+                    param.setResult(2);
+                } else {
+                    Object res = param.getResult();
+                    if (res instanceof Integer && ((Integer) res) == 0) {
                         if (isAppCurrentlyOpening(param.thisObject, cl)) {
                             setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
                             setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
                             setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
                             param.setResult(1);
                         }
-                    } else {
-                        // Crucial fix: inside an app, window mode MUST be APP_MODE (2) so app-to-home exit gestures work!
-                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
-                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
-                        setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
-                        param.setResult(2);
                     }
                 }
             }
@@ -719,15 +720,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     return;
                 }
                 sNavStubViewRef = new WeakReference<>(param.thisObject);
-                setBooleanFieldSafe(param.thisObject, "mDisableTouch", false);
-                setBooleanFieldSafe(param.thisObject, "mIgnoreInputConsumer", false);
 
                 if (param.args != null && param.args.length > 0 && param.args[0] instanceof MotionEvent) {
                     MotionEvent ev = (MotionEvent) param.args[0];
                     if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                        setBooleanFieldSafe(param.thisObject, "mDisableTouch", false);
+                        setBooleanFieldSafe(param.thisObject, "mIgnoreInputConsumer", false);
                         setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
                         setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterExitSmallWindowMode", false);
                         setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                        setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
                         if (sNonStopSwipe && isAppCurrentlyOpening(param.thisObject, cl)) {
                             setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
                             setBooleanFieldSafe(param.thisObject, "mIsAnimatingToRecents", false);
@@ -863,9 +865,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         };
         hookMethodsByName(navStubViewCls, "commonHomeTouchFromDown", connectOpeningOnTouchDown);
-        hookMethodsByName(navStubViewCls, "commonAppTouchFromDown", connectOpeningOnTouchDown);
 
-        // 4c. On touch move during gesture, dynamically update spring towards finger if active
+        // 4c. On touch move during gesture on home screen, dynamically update spring towards finger if active
         XC_MethodHook updateOpeningOnTouchMove = new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
@@ -887,7 +888,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         };
         hookMethodsByName(navStubViewCls, "commonHomeTouchFromMove", updateOpeningOnTouchMove);
 
-        // 5. On ACTION_UP, guide spring smoothly into icon bounds
+        // 5. On ACTION_UP on home screen, guide spring smoothly into icon bounds
         XC_MethodHook actionUpHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
@@ -910,7 +911,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             }
         };
-        hookMethodsByName(navStubViewCls, "actionUpAppTouchResolution", actionUpHook);
         hookMethodsByName(navStubViewCls, "commonHomeTouchFromUpOrCancel", actionUpHook);
 
         // 6. When gesture completely finishes returning to home, safely clean up any leftover opening animation state.
@@ -923,8 +923,17 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     return;
                 }
                 setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
+                setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
+                setBooleanFieldSafe(param.thisObject, "mIsAnimatingToRecents", false);
+                setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
+                setBooleanFieldSafe(param.thisObject, "mDisableTouch", false);
+                setBooleanFieldSafe(param.thisObject, "mIgnoreInputConsumer", false);
+
                 final Object tm = sTransitionManagerRef.get();
                 if (tm != null) {
+                    setBooleanFieldHierarchySafe(tm, "mIsOpenAnimRunning", false);
                     Object spring = getObjectFieldSafe(tm, "mRectFSpringAnim");
                     if (spring != null && callBooleanMethodSafe(spring, "isRunning", false)) {
                         try {
@@ -990,13 +999,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     }
 
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
-        if (getOpeningRectFSpringAnimSafe(cl) != null) {
-            return true;
-        }
-        Object tm = getAppTransitionManagerSafe(cl);
-        if (tm != null && isOpenAnimActive(tm)) {
-            return true;
-        }
         if (navStubView != null) {
             boolean launcherOnTop = callBooleanMethodSafe(navStubView, "isLauncherOnTop", true);
             if (!launcherOnTop) {
@@ -1005,13 +1007,26 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         }
         long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
-        return elapsed >= 0L && elapsed < 350L;
+        if (elapsed < 0L || elapsed > 450L) {
+            return false;
+        }
+        if (getOpeningRectFSpringAnimSafe(cl) != null) {
+            return true;
+        }
+        Object tm = getAppTransitionManagerSafe(cl);
+        if (tm != null && isOpenAnimActive(tm)) {
+            return true;
+        }
+        return false;
     }
 
     private static boolean isOpenAnimActive(Object transitionManager) {
         if (transitionManager != null) {
-            if (getBooleanFieldHierarchySafe(transitionManager, "mIsOpenAnimRunning", false)) {
-                return true;
+            long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
+            if (elapsed >= 0L && elapsed < 450L) {
+                if (getBooleanFieldHierarchySafe(transitionManager, "mIsOpenAnimRunning", false)) {
+                    return true;
+                }
             }
             Object openSpring = getObjectFieldSafe(transitionManager, "mRectFSpringAnim");
             if (openSpring != null && callBooleanMethodSafe(openSpring, "isRunning", false)) {
@@ -2122,7 +2137,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             };
             hookMethodsByName(navStubViewCls, "findClosingShortcutIcon", navCloseHook);
             hookMethodsByName(navStubViewCls, "startAppToHomeAnim", navCloseHook);
-            hookMethodsByName(navStubViewCls, "onFsGestureStart", navCloseHook);
         }
     }
 
@@ -2377,29 +2391,24 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         }
                     }
                     if (cur != pageIndex) {
-                        try {
-                            XposedHelpers.callMethod(workspace, "setCurrentScreen", pageIndex);
-                        } catch (Throwable ignored) {
-                        }
-                        try {
-                            XposedHelpers.callMethod(workspace, "setCurrentPage", pageIndex);
-                        } catch (Throwable ignored) {
-                        }
+                        boolean snapped = false;
                         try {
                             XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex, 0);
+                            snapped = true;
                         } catch (Throwable ignored) {
                         }
-                        try {
-                            XposedHelpers.callMethod(workspace, "snapToPage", pageIndex, 0);
-                        } catch (Throwable ignored) {
+                        if (!snapped) {
+                            try {
+                                XposedHelpers.callMethod(workspace, "snapToPage", pageIndex, 0);
+                                snapped = true;
+                            } catch (Throwable ignored) {
+                            }
                         }
-                        try {
-                            XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex);
-                        } catch (Throwable ignored) {
-                        }
-                        try {
-                            XposedHelpers.callMethod(workspace, "snapToPage", pageIndex);
-                        } catch (Throwable ignored) {
+                        if (!snapped) {
+                            try {
+                                XposedHelpers.callMethod(workspace, "setCurrentScreen", pageIndex);
+                            } catch (Throwable ignored) {
+                            }
                         }
                         if (workspace instanceof View) {
                             View wv = (View) workspace;
