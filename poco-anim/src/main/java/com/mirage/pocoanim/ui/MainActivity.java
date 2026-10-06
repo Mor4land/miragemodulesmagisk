@@ -1015,10 +1015,10 @@ public class MainActivity extends AppCompatActivity {
 
         addM3Divider(layout);
 
-        // 2. Auto-Return to App Page on Exit
+        // 2. Auto-Return to App Page on Exit (Автопереход)
         layout.addView(createSwitchRow(
-                "Возврат на страницу приложения",
-                "Автоматически скроллит рабочий стол на вкладку закрываемого приложения, предотвращая улёт анимации закрытия в пустоту",
+                "Автопереход на экран приложения",
+                "Автоматически переключает рабочий стол на страницу закрываемого приложения, предотвращая вылет анимации в пустоту",
                 AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE,
                 true
         ));

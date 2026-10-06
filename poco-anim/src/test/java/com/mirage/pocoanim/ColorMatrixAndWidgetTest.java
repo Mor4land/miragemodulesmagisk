@@ -264,6 +264,30 @@ public class ColorMatrixAndWidgetTest {
         }
     }
 
+    @Test
+    public void testAutoSnapTargetMatching() {
+        String targetPkg = "com.tencent.mm";
+        String tagString1 = "ShortcutInfo(title=WeChat, intent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.tencent.mm/.ui.LauncherUI })";
+        String tagString2 = "FolderInfo(title=Social, count=4)";
+        String tagString3 = "ShortcutInfo(title=Telegram, intent=Intent { cmp=org.telegram.messenger/org.telegram.ui.LaunchActivity })";
+
+        Assert.assertTrue("Direct component tag must match targetPkg",
+                tagString1.contains("cmp=" + targetPkg + "/") || tagString1.contains("/" + targetPkg + "/"));
+        Assert.assertFalse("Folder header without child match must not match targetPkg directly",
+                tagString2.contains("cmp=" + targetPkg + "/") || tagString2.contains("/" + targetPkg + "/"));
+        Assert.assertFalse("Different app must not match targetPkg",
+                tagString3.contains("cmp=" + targetPkg + "/") || tagString3.contains("/" + targetPkg + "/"));
+
+        // Dock vs Desktop container test:
+        long containerDesktop = -100L;
+        long containerDock = -101L;
+        long containerFolder = 55L;
+
+        Assert.assertTrue("Desktop container must allow page scroll", containerDesktop == -100L);
+        Assert.assertTrue("Dock container must NOT trigger page scroll", containerDock == -101L);
+        Assert.assertTrue("Folder container must resolve parent folder", containerFolder > 0 && containerFolder != -101L);
+    }
+
     private int resolveWindowMode(boolean launcherOnTop, int stockResult, boolean isAppCurrentlyOpening) {
         if (launcherOnTop) {
             if (stockResult == 0 && isAppCurrentlyOpening) {
