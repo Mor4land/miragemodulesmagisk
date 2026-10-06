@@ -301,11 +301,19 @@ public class MainActivity extends AppCompatActivity {
         addSectionHeader(contentRoot, "ОБОИ И РАБОЧИЙ СТОЛ");
         contentRoot.addView(createDesktopCard());
 
-        // 8. Section: Системные виджеты
+        // 8. Section: Сетка и минимализм
+        addSectionHeader(contentRoot, "СЕТКА И МИНИМАЛИЗМ");
+        contentRoot.addView(createGridAndLabelsCard());
+
+        // 9. Section: Парящий островной док и папки
+        addSectionHeader(contentRoot, "ПАРЯЩИЙ ДОК И ПАПКИ");
+        contentRoot.addView(createDockAndFoldersCard());
+
+        // 10. Section: Системные виджеты
         addSectionHeader(contentRoot, "СИСТЕМНЫЕ ФОТО-ВИДЖЕТЫ");
         contentRoot.addView(createWidgetManagementCard());
 
-        // 9. Section: Действия и рестарт
+        // 11. Section: Действия и рестарт
         addSectionHeader(contentRoot, "ОБСЛУЖИВАНИЕ И РЕСТАРТ");
         contentRoot.addView(createMaintenanceCard());
 
@@ -1012,6 +1020,314 @@ public class MainActivity extends AppCompatActivity {
                 "Возврат на страницу приложения",
                 "Автоматически скроллит рабочий стол на вкладку закрываемого приложения, предотвращая улёт анимации закрытия в пустоту",
                 AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE,
+                true
+        ));
+
+        card.addView(layout);
+        return card;
+    }
+
+    private MaterialCardView createGridAndLabelsCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        // 1. Hide Desktop Labels Switch
+        layout.addView(createSwitchRow(
+                "Скрыть подписи на рабочем столе",
+                "Убирает названия приложений на главном экране для ультра-минималистичного стиля Nothing OS / iOS",
+                AnimPrefs.KEY_HIDE_DESKTOP_LABELS,
+                false
+        ));
+        addM3Divider(layout);
+
+        // 2. Hide Dock Labels Switch
+        layout.addView(createSwitchRow(
+                "Скрыть подписи в доке",
+                "Убирает текстовые подписи под нижними закрепленными иконками",
+                AnimPrefs.KEY_HIDE_DOCK_LABELS,
+                false
+        ));
+        addM3Divider(layout);
+
+        // 3. Icon Scale Slider (70% - 130%)
+        final TextView scaleLabel = new TextView(this);
+        float curScale = mPrefs.getFloat(AnimPrefs.KEY_ICON_SCALE, 1.0f);
+        scaleLabel.setText("Масштаб размера иконок: " + Math.round(curScale * 100) + "%");
+        scaleLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        scaleLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        scaleLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        scaleLabel.setPadding(0, dp(6), 0, dp(2));
+        layout.addView(scaleLabel);
+
+        Slider scaleSlider = new Slider(this);
+        scaleSlider.setValueFrom(70f);
+        scaleSlider.setValueTo(130f);
+        scaleSlider.setStepSize(5f);
+        float safeScale = Math.round((Math.max(0.70f, Math.min(1.30f, curScale)) * 100f - 70f) / 5f) * 5f + 70f;
+        safeScale = Math.max(70f, Math.min(130f, safeScale));
+        try {
+            scaleSlider.setValue(safeScale);
+        } catch (Throwable t) {
+            scaleSlider.setValue(100f);
+        }
+        scaleSlider.addOnChangeListener((slider, value, fromUser) -> {
+            float val = value / 100f;
+            scaleLabel.setText("Масштаб размера иконок: " + Math.round(value) + "%");
+            if (fromUser) {
+                try {
+                    mPrefs.edit().putFloat(AnimPrefs.KEY_ICON_SCALE, val).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                } catch (Throwable ignored) {
+                }
+            }
+        });
+        layout.addView(scaleSlider);
+        addM3Divider(layout);
+
+        // 4. Custom Grid Switch & Options
+        LinearLayout gridSwitchRow = new LinearLayout(this);
+        gridSwitchRow.setOrientation(LinearLayout.HORIZONTAL);
+        gridSwitchRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout textCol = new LinearLayout(this);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        colLp.rightMargin = dp(12);
+        textCol.setLayoutParams(colLp);
+
+        TextView title = new TextView(this);
+        title.setText("Расширенная сетка и док");
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        textCol.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText("Снимает системное ограничение 4×6 / 5×6 и позволяет настроить плотность сетки и лимит иконок дока");
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, 0);
+        textCol.addView(desc);
+
+        final LinearLayout gridOptionsContainer = new LinearLayout(this);
+        gridOptionsContainer.setOrientation(LinearLayout.VERTICAL);
+        gridOptionsContainer.setPadding(0, dp(8), 0, 0);
+
+        MaterialSwitch gridSwitch = new MaterialSwitch(this);
+        boolean isGrid = mPrefs.getBoolean(AnimPrefs.KEY_CUSTOM_GRID, false);
+        gridSwitch.setChecked(isGrid);
+        gridOptionsContainer.setVisibility(isGrid ? View.VISIBLE : View.GONE);
+
+        gridSwitch.setOnCheckedChangeListener((bv, isChecked) -> {
+            try {
+                mPrefs.edit().putBoolean(AnimPrefs.KEY_CUSTOM_GRID, isChecked).commit();
+                gridOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+            } catch (Throwable ignored) {
+            }
+        });
+
+        gridSwitchRow.addView(textCol);
+        gridSwitchRow.addView(gridSwitch);
+        layout.addView(gridSwitchRow);
+
+        // Columns ChipGroup
+        TextView colLabel = new TextView(this);
+        colLabel.setText("Колонки рабочего стола (столбцы):");
+        colLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        colLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        colLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        colLabel.setPadding(0, dp(6), 0, dp(4));
+        gridOptionsContainer.addView(colLabel);
+
+        ChipGroup colGroup = new ChipGroup(this);
+        colGroup.setSingleSelection(true);
+        colGroup.setSelectionRequired(true);
+        int curCols = mPrefs.getInt(AnimPrefs.KEY_GRID_COLUMNS, 5);
+        int[] colVals = new int[]{4, 5, 6};
+        for (int c : colVals) {
+            Chip cChip = new Chip(this);
+            cChip.setId(View.generateViewId());
+            cChip.setText(c + " колонки");
+            cChip.setCheckable(true);
+            if (c == curCols) cChip.setChecked(true);
+            cChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
+                    try {
+                        mPrefs.edit().putInt(AnimPrefs.KEY_GRID_COLUMNS, c).commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            colGroup.addView(cChip);
+        }
+        gridOptionsContainer.addView(colGroup);
+
+        // Rows ChipGroup
+        TextView rowLabel = new TextView(this);
+        rowLabel.setText("Строки рабочего стола (ряды):");
+        rowLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        rowLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        rowLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        rowLabel.setPadding(0, dp(6), 0, dp(4));
+        gridOptionsContainer.addView(rowLabel);
+
+        ChipGroup rowGroup = new ChipGroup(this);
+        rowGroup.setSingleSelection(true);
+        rowGroup.setSelectionRequired(true);
+        int curRows = mPrefs.getInt(AnimPrefs.KEY_GRID_ROWS, 7);
+        int[] rowVals = new int[]{6, 7, 8};
+        for (int r : rowVals) {
+            Chip rChip = new Chip(this);
+            rChip.setId(View.generateViewId());
+            rChip.setText(r + " строк");
+            rChip.setCheckable(true);
+            if (r == curRows) rChip.setChecked(true);
+            rChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
+                    try {
+                        mPrefs.edit().putInt(AnimPrefs.KEY_GRID_ROWS, r).commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            rowGroup.addView(rChip);
+        }
+        gridOptionsContainer.addView(rowGroup);
+
+        // Hotseat Count ChipGroup
+        TextView hotseatLabel = new TextView(this);
+        hotseatLabel.setText("Лимит иконок в нижнем доке (Hotseat):");
+        hotseatLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        hotseatLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        hotseatLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        hotseatLabel.setPadding(0, dp(6), 0, dp(4));
+        gridOptionsContainer.addView(hotseatLabel);
+
+        ChipGroup hotseatGroup = new ChipGroup(this);
+        hotseatGroup.setSingleSelection(true);
+        hotseatGroup.setSelectionRequired(true);
+        int curHotseat = mPrefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, 5);
+        int[] hotseatVals = new int[]{5, 6, 7};
+        for (int h : hotseatVals) {
+            Chip hChip = new Chip(this);
+            hChip.setId(View.generateViewId());
+            hChip.setText(h + " иконок");
+            hChip.setCheckable(true);
+            if (h == curHotseat) hChip.setChecked(true);
+            hChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
+                    try {
+                        mPrefs.edit().putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, h).commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            hotseatGroup.addView(hChip);
+        }
+        gridOptionsContainer.addView(hotseatGroup);
+
+        layout.addView(gridOptionsContainer);
+        card.addView(layout);
+        return card;
+    }
+
+    private MaterialCardView createDockAndFoldersCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        // 1. Floating Dock Switch & Options
+        LinearLayout dockSwitchRow = new LinearLayout(this);
+        dockSwitchRow.setOrientation(LinearLayout.HORIZONTAL);
+        dockSwitchRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout textCol = new LinearLayout(this);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        colLp.rightMargin = dp(12);
+        textCol.setLayoutParams(colLp);
+
+        TextView title = new TextView(this);
+        title.setText("Парящий островной док");
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        textCol.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText("Элегантная полупрозрачная капсула со скругленными краями под нижними иконками в стиле iPadOS / macOS");
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, 0);
+        textCol.addView(desc);
+
+        final LinearLayout dockOptionsContainer = new LinearLayout(this);
+        dockOptionsContainer.setOrientation(LinearLayout.VERTICAL);
+        dockOptionsContainer.setPadding(0, dp(8), 0, 0);
+
+        MaterialSwitch dockSwitch = new MaterialSwitch(this);
+        boolean isDock = mPrefs.getBoolean(AnimPrefs.KEY_FLOATING_DOCK, false);
+        dockSwitch.setChecked(isDock);
+        dockOptionsContainer.setVisibility(isDock ? View.VISIBLE : View.GONE);
+
+        dockSwitch.setOnCheckedChangeListener((bv, isChecked) -> {
+            try {
+                mPrefs.edit().putBoolean(AnimPrefs.KEY_FLOATING_DOCK, isChecked).commit();
+                dockOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+            } catch (Throwable ignored) {
+            }
+        });
+
+        dockSwitchRow.addView(textCol);
+        dockSwitchRow.addView(dockSwitch);
+        layout.addView(dockSwitchRow);
+
+        // Dock Style Chips
+        TextView styleLabel = new TextView(this);
+        styleLabel.setText("Стиль островного дока:");
+        styleLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        styleLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        styleLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        styleLabel.setPadding(0, dp(6), 0, dp(4));
+        dockOptionsContainer.addView(styleLabel);
+
+        ChipGroup styleGroup = new ChipGroup(this);
+        styleGroup.setSingleSelection(true);
+        styleGroup.setSelectionRequired(true);
+        int curStyle = mPrefs.getInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, AnimPrefs.DOCK_STYLE_FROSTED_GLASS);
+        String[] styleNames = new String[]{"Матовое стекло", "Тёмный бархат", "Киберпанк Неон"};
+        for (int i = 0; i < styleNames.length; i++) {
+            final int sIdx = i;
+            Chip dChip = new Chip(this);
+            dChip.setId(View.generateViewId());
+            dChip.setText(styleNames[i]);
+            dChip.setCheckable(true);
+            if (i == curStyle) dChip.setChecked(true);
+            dChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
+                    try {
+                        mPrefs.edit().putInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, sIdx).commit();
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            styleGroup.addView(dChip);
+        }
+        dockOptionsContainer.addView(styleGroup);
+        layout.addView(dockOptionsContainer);
+
+        addM3Divider(layout);
+
+        // 2. Super Folders 2x2 Switch
+        layout.addView(createSwitchRow(
+                "Большие папки 2×2 (HyperOS Super Folders)",
+                "Разблокирует флагманский формат папок 2×2 в меню редактирования папок с быстрым запуском приложений в 1 клик",
+                AnimPrefs.KEY_SUPER_FOLDERS,
                 true
         ));
 

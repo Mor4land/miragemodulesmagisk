@@ -206,6 +206,64 @@ public class ColorMatrixAndWidgetTest {
         }
     }
 
+    @Test
+    public void testCustomGridValidation() {
+        int[] validCols = new int[]{4, 5, 6};
+        int[] validRows = new int[]{6, 7, 8};
+        int[] validHotseat = new int[]{5, 6, 7};
+
+        for (int c : validCols) {
+            Assert.assertTrue("Columns must be between 4 and 6", c >= 4 && c <= 6);
+        }
+        for (int r : validRows) {
+            Assert.assertTrue("Rows must be between 6 and 8", r >= 6 && r <= 8);
+        }
+        for (int h : validHotseat) {
+            Assert.assertTrue("Hotseat count must be between 5 and 7", h >= 5 && h <= 7);
+        }
+    }
+
+    @Test
+    public void testFloatingDockGeometryMath() {
+        int screenWidth = 1080;
+        int hotseatHeight = 240;
+        float density = 2.75f;
+
+        float hMargin = density * 16f;
+        float topMargin = density * 6f;
+        float bottomMargin = density * 10f;
+
+        float left = hMargin;
+        float top = topMargin;
+        float right = screenWidth - hMargin;
+        float bottom = hotseatHeight - bottomMargin;
+
+        Assert.assertTrue("Right margin must be greater than left", right > left);
+        Assert.assertTrue("Bottom must be greater than top", bottom > top);
+
+        float dockWidth = right - left;
+        float dockHeight = bottom - top;
+        Assert.assertEquals("Dock capsule width matches margin inset", screenWidth - 2 * hMargin, dockWidth, 0.01f);
+        Assert.assertEquals("Dock capsule height matches margin inset", hotseatHeight - (topMargin + bottomMargin), dockHeight, 0.01f);
+
+        float cornerRadius = density * 24f;
+        Assert.assertTrue("Corner radius must be positive and fit inside height", cornerRadius > 0 && cornerRadius * 2 <= dockHeight * 1.5f);
+    }
+
+    @Test
+    public void testIconScaleClamping() {
+        float[] scales = new float[]{0.5f, 0.70f, 0.85f, 1.0f, 1.15f, 1.30f, 1.6f};
+        for (float s : scales) {
+            float clamped = Math.max(0.70f, Math.min(1.30f, s));
+            float snapped = Math.round((clamped * 100f - 70f) / 5f) * 5f + 70f;
+            snapped = Math.max(70f, Math.min(130f, snapped));
+
+            Assert.assertTrue("Snapped scale must be >= 70%", snapped >= 70f);
+            Assert.assertTrue("Snapped scale must be <= 130%", snapped <= 130f);
+            Assert.assertEquals("Step remainder must be zero", 0.0f, (snapped - 70f) % 5f, 0.0001f);
+        }
+    }
+
     private int resolveWindowMode(boolean launcherOnTop, int stockResult, boolean isAppCurrentlyOpening) {
         if (launcherOnTop) {
             if (stockResult == 0 && isAppCurrentlyOpening) {

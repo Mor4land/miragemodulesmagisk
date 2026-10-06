@@ -37,6 +37,22 @@ public final class AnimPrefs {
     public static final String KEY_WALLPAPER_MATTE_STYLE = "wallpaper_matte_style"; // 0 = Dark Velvet, 1 = Frosted Glass, 2 = Deep Satin
     public static final String KEY_AUTO_SNAP_TO_APP_PAGE = "auto_snap_to_app_page";
 
+    // Desktop Grid, Labels, Floating Dock & Super Folders
+    public static final String KEY_HIDE_DESKTOP_LABELS = "hide_desktop_labels";
+    public static final String KEY_HIDE_DOCK_LABELS = "hide_dock_labels";
+    public static final String KEY_ICON_SCALE = "icon_scale";
+    public static final String KEY_FLOATING_DOCK = "floating_dock";
+    public static final String KEY_FLOATING_DOCK_STYLE = "floating_dock_style"; // 0 = Frosted Glass, 1 = Dark Velvet, 2 = Cyber Neon
+    public static final String KEY_SUPER_FOLDERS = "super_folders";
+    public static final String KEY_CUSTOM_GRID = "custom_grid";
+    public static final String KEY_GRID_COLUMNS = "grid_columns";
+    public static final String KEY_GRID_ROWS = "grid_rows";
+    public static final String KEY_HOTSEAT_MAX_COUNT = "hotseat_max_count";
+
+    public static final int DOCK_STYLE_FROSTED_GLASS = 0;
+    public static final int DOCK_STYLE_DARK_VELVET = 1;
+    public static final int DOCK_STYLE_CYBER_NEON = 2;
+
     public static final int MATTE_STYLE_DARK_VELVET = 0;
     public static final int MATTE_STYLE_FROSTED_GLASS = 1;
     public static final int MATTE_STYLE_DEEP_SATIN = 2;
@@ -147,6 +163,16 @@ public final class AnimPrefs {
         intent.putExtra(KEY_WALLPAPER_MATTE_INTENSITY, prefs.getFloat(KEY_WALLPAPER_MATTE_INTENSITY, 0.35f));
         intent.putExtra(KEY_WALLPAPER_MATTE_STYLE, prefs.getInt(KEY_WALLPAPER_MATTE_STYLE, MATTE_STYLE_DARK_VELVET));
         intent.putExtra(KEY_AUTO_SNAP_TO_APP_PAGE, prefs.getBoolean(KEY_AUTO_SNAP_TO_APP_PAGE, true));
+        intent.putExtra(KEY_HIDE_DESKTOP_LABELS, prefs.getBoolean(KEY_HIDE_DESKTOP_LABELS, false));
+        intent.putExtra(KEY_HIDE_DOCK_LABELS, prefs.getBoolean(KEY_HIDE_DOCK_LABELS, false));
+        intent.putExtra(KEY_ICON_SCALE, prefs.getFloat(KEY_ICON_SCALE, 1.0f));
+        intent.putExtra(KEY_FLOATING_DOCK, prefs.getBoolean(KEY_FLOATING_DOCK, false));
+        intent.putExtra(KEY_FLOATING_DOCK_STYLE, prefs.getInt(KEY_FLOATING_DOCK_STYLE, DOCK_STYLE_FROSTED_GLASS));
+        intent.putExtra(KEY_SUPER_FOLDERS, prefs.getBoolean(KEY_SUPER_FOLDERS, true));
+        intent.putExtra(KEY_CUSTOM_GRID, prefs.getBoolean(KEY_CUSTOM_GRID, false));
+        intent.putExtra(KEY_GRID_COLUMNS, prefs.getInt(KEY_GRID_COLUMNS, 5));
+        intent.putExtra(KEY_GRID_ROWS, prefs.getInt(KEY_GRID_ROWS, 7));
+        intent.putExtra(KEY_HOTSEAT_MAX_COUNT, prefs.getInt(KEY_HOTSEAT_MAX_COUNT, 5));
         context.sendBroadcast(intent);
         try {
             Intent pIntent = new Intent(intent);

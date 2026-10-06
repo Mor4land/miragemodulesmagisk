@@ -63,6 +63,16 @@ public class AnimPrefsProvider extends ContentProvider {
             bundle.putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, prefs.getInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, AnimPrefs.MATTE_STYLE_DARK_VELVET));
 
             bundle.putBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, prefs.getBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, true));
+            bundle.putBoolean(AnimPrefs.KEY_HIDE_DESKTOP_LABELS, prefs.getBoolean(AnimPrefs.KEY_HIDE_DESKTOP_LABELS, false));
+            bundle.putBoolean(AnimPrefs.KEY_HIDE_DOCK_LABELS, prefs.getBoolean(AnimPrefs.KEY_HIDE_DOCK_LABELS, false));
+            bundle.putFloat(AnimPrefs.KEY_ICON_SCALE, prefs.getFloat(AnimPrefs.KEY_ICON_SCALE, 1.0f));
+            bundle.putBoolean(AnimPrefs.KEY_FLOATING_DOCK, prefs.getBoolean(AnimPrefs.KEY_FLOATING_DOCK, false));
+            bundle.putInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, prefs.getInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, AnimPrefs.DOCK_STYLE_FROSTED_GLASS));
+            bundle.putBoolean(AnimPrefs.KEY_SUPER_FOLDERS, prefs.getBoolean(AnimPrefs.KEY_SUPER_FOLDERS, true));
+            bundle.putBoolean(AnimPrefs.KEY_CUSTOM_GRID, prefs.getBoolean(AnimPrefs.KEY_CUSTOM_GRID, false));
+            bundle.putInt(AnimPrefs.KEY_GRID_COLUMNS, prefs.getInt(AnimPrefs.KEY_GRID_COLUMNS, 5));
+            bundle.putInt(AnimPrefs.KEY_GRID_ROWS, prefs.getInt(AnimPrefs.KEY_GRID_ROWS, 7));
+            bundle.putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, prefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, 5));
 
             return bundle;
         }

@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.25
-versionCode=26
+version=v1.0.26
+versionCode=27
 author=Mirage
-description=Фикс краша при включении матового эффекта обоев, устранение чёрного перекрытия рабочего стола, аппаратный блюр обоев SurfaceFlinger (Android 12+) и защита M3 Slider.
+description=Скрытие названий иконок (No-label mode), масштабирование иконок 70%-130%, кастомная сетка (4-6 колонок, 6-8 строк), парящий островной док (iPadOS/macOS) и разблокировка больших папок HyperOS 2x2.

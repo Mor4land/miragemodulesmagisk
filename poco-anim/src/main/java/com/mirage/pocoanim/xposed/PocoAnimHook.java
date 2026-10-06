@@ -39,6 +39,7 @@ import java.lang.reflect.Array;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -85,6 +86,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile float sWallpaperMatteIntensity = 0.35f;
     private static volatile int sWallpaperMatteStyle = AnimPrefs.MATTE_STYLE_DARK_VELVET;
     private static volatile boolean sAutoSnapToAppPage = true;
+    private static volatile boolean sHideDesktopLabels = false;
+    private static volatile boolean sHideDockLabels = false;
+    private static volatile float sIconScale = 1.0f;
+    private static volatile boolean sFloatingDock = false;
+    private static volatile int sFloatingDockStyle = AnimPrefs.DOCK_STYLE_FROSTED_GLASS;
+    private static volatile boolean sSuperFolders = true;
+    private static volatile boolean sCustomGrid = false;
+    private static volatile int sGridColumns = 5;
+    private static volatile int sGridRows = 7;
+    private static volatile int sHotseatMaxCount = 5;
     private static final ThreadLocal<Boolean> sDrawingThemedIcon = new ThreadLocal<>();
     private static final ThreadLocal<Integer> sThemeSaveCount = new ThreadLocal<>();
     private static volatile WeakReference<Activity> sLauncherActivityRef = new WeakReference<>(null);
@@ -138,6 +149,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         hookLauncherLifecycle(lpparam.classLoader);
         hookIconThemingAndBounce(lpparam.classLoader);
         hookWallpaperMatte(lpparam.classLoader);
+        hookHotseatFloatingDock(lpparam.classLoader);
         hookAutoSnapToAppPage(lpparam.classLoader);
     }
 
@@ -168,6 +180,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sWallpaperMatteIntensity = xPrefs.getFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, sWallpaperMatteIntensity);
                 sWallpaperMatteStyle = xPrefs.getInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sWallpaperMatteStyle);
                 sAutoSnapToAppPage = xPrefs.getBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, sAutoSnapToAppPage);
+                sHideDesktopLabels = xPrefs.getBoolean(AnimPrefs.KEY_HIDE_DESKTOP_LABELS, sHideDesktopLabels);
+                sHideDockLabels = xPrefs.getBoolean(AnimPrefs.KEY_HIDE_DOCK_LABELS, sHideDockLabels);
+                sIconScale = xPrefs.getFloat(AnimPrefs.KEY_ICON_SCALE, sIconScale);
+                sFloatingDock = xPrefs.getBoolean(AnimPrefs.KEY_FLOATING_DOCK, sFloatingDock);
+                sFloatingDockStyle = xPrefs.getInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, sFloatingDockStyle);
+                sSuperFolders = xPrefs.getBoolean(AnimPrefs.KEY_SUPER_FOLDERS, sSuperFolders);
+                sCustomGrid = xPrefs.getBoolean(AnimPrefs.KEY_CUSTOM_GRID, sCustomGrid);
+                sGridColumns = xPrefs.getInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns);
+                sGridRows = xPrefs.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
+                sHotseatMaxCount = xPrefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
             }
         } catch (Throwable ignored) {
         }
@@ -196,6 +218,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         sWallpaperMatteIntensity = b.getFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, sWallpaperMatteIntensity);
         sWallpaperMatteStyle = b.getInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sWallpaperMatteStyle);
         sAutoSnapToAppPage = b.getBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, sAutoSnapToAppPage);
+        sHideDesktopLabels = b.getBoolean(AnimPrefs.KEY_HIDE_DESKTOP_LABELS, sHideDesktopLabels);
+        sHideDockLabels = b.getBoolean(AnimPrefs.KEY_HIDE_DOCK_LABELS, sHideDockLabels);
+        sIconScale = b.getFloat(AnimPrefs.KEY_ICON_SCALE, sIconScale);
+        sFloatingDock = b.getBoolean(AnimPrefs.KEY_FLOATING_DOCK, sFloatingDock);
+        sFloatingDockStyle = b.getInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, sFloatingDockStyle);
+        sSuperFolders = b.getBoolean(AnimPrefs.KEY_SUPER_FOLDERS, sSuperFolders);
+        sCustomGrid = b.getBoolean(AnimPrefs.KEY_CUSTOM_GRID, sCustomGrid);
+        sGridColumns = b.getInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns);
+        sGridRows = b.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
+        sHotseatMaxCount = b.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
     }
 
     private static void queryProviderPrefs(Context context) {
@@ -250,6 +282,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sWallpaperMatteIntensity = cache.getFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, sWallpaperMatteIntensity);
                 sWallpaperMatteStyle = cache.getInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sWallpaperMatteStyle);
                 sAutoSnapToAppPage = cache.getBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, sAutoSnapToAppPage);
+                sHideDesktopLabels = cache.getBoolean(AnimPrefs.KEY_HIDE_DESKTOP_LABELS, sHideDesktopLabels);
+                sHideDockLabels = cache.getBoolean(AnimPrefs.KEY_HIDE_DOCK_LABELS, sHideDockLabels);
+                sIconScale = cache.getFloat(AnimPrefs.KEY_ICON_SCALE, sIconScale);
+                sFloatingDock = cache.getBoolean(AnimPrefs.KEY_FLOATING_DOCK, sFloatingDock);
+                sFloatingDockStyle = cache.getInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, sFloatingDockStyle);
+                sSuperFolders = cache.getBoolean(AnimPrefs.KEY_SUPER_FOLDERS, sSuperFolders);
+                sCustomGrid = cache.getBoolean(AnimPrefs.KEY_CUSTOM_GRID, sCustomGrid);
+                sGridColumns = cache.getInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns);
+                sGridRows = cache.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
+                sHotseatMaxCount = cache.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
             }
         } catch (Throwable ignored) {
         }
@@ -285,6 +327,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     .putFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, sWallpaperMatteIntensity)
                     .putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sWallpaperMatteStyle)
                     .putBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, sAutoSnapToAppPage)
+                    .putBoolean(AnimPrefs.KEY_HIDE_DESKTOP_LABELS, sHideDesktopLabels)
+                    .putBoolean(AnimPrefs.KEY_HIDE_DOCK_LABELS, sHideDockLabels)
+                    .putFloat(AnimPrefs.KEY_ICON_SCALE, sIconScale)
+                    .putBoolean(AnimPrefs.KEY_FLOATING_DOCK, sFloatingDock)
+                    .putInt(AnimPrefs.KEY_FLOATING_DOCK_STYLE, sFloatingDockStyle)
+                    .putBoolean(AnimPrefs.KEY_SUPER_FOLDERS, sSuperFolders)
+                    .putBoolean(AnimPrefs.KEY_CUSTOM_GRID, sCustomGrid)
+                    .putInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns)
+                    .putInt(AnimPrefs.KEY_GRID_ROWS, sGridRows)
+                    .putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount)
                     .apply();
         } catch (Throwable ignored) {
         }
@@ -371,6 +423,60 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         hookBooleanMethodWhenEnabled(cls, "isMiuiLiteVersion", false);
         hookBooleanMethodWhenEnabled(cls, "supportIconTextShadow", true);
         hookBooleanMethodWhenEnabled(cls, "keepStatusBarShowingForBetterPerformance", false);
+
+        // 1. Big Folders 2x2 / 3x3 Unlock
+        XC_MethodHook superFolderHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (sEnabled && sSuperFolders) {
+                    param.setResult(true);
+                }
+            }
+        };
+        hookMethodsByName(cls, "isSupportBigFolder", superFolderHook);
+        hookMethodsByName(cls, "isSupportFolder2x2", superFolderHook);
+        hookMethodsByName(cls, "supportFolder2x2", superFolderHook);
+        hookMethodsByName(cls, "isSupportFolder3x3", superFolderHook);
+        hookMethodsByName(cls, "isSupportSuperFolder", superFolderHook);
+        hookMethodsByName(cls, "isSupportBigFolderAnim", superFolderHook);
+        hookMethodsByName(cls, "isSupportFoldAnimation", superFolderHook);
+        hookMethodsByName(cls, "isSupportFolderBlur", superFolderHook);
+
+        // 2. Custom Grid (Columns & Rows)
+        XC_MethodHook gridColHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (sEnabled && sCustomGrid && sGridColumns >= 4) {
+                    param.setResult(sGridColumns);
+                }
+            }
+        };
+        hookMethodsByName(cls, "getCellCountX", gridColHook);
+        hookMethodsByName(cls, "getWorkspaceCellCountX", gridColHook);
+
+        XC_MethodHook gridRowHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (sEnabled && sCustomGrid && sGridRows >= 5) {
+                    param.setResult(sGridRows);
+                }
+            }
+        };
+        hookMethodsByName(cls, "getCellCountY", gridRowHook);
+        hookMethodsByName(cls, "getWorkspaceCellCountY", gridRowHook);
+
+        // 3. Hotseat Max Count
+        XC_MethodHook hotseatCountHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (sEnabled && sCustomGrid && sHotseatMaxCount >= 4) {
+                    param.setResult(sHotseatMaxCount);
+                }
+            }
+        };
+        hookMethodsByName(cls, "getHotseatMaxCount", hotseatCountHook);
+        hookMethodsByName(cls, "getHotseatCount", hotseatCountHook);
+        hookMethodsByName(cls, "getMaxHotseatCount", hotseatCountHook);
 
         hookMethodsByReturnType(cls, "isDefaultIcon", boolean.class, new XC_MethodHook() {
             @Override
@@ -1608,6 +1714,55 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         return orig != null ? orig : curr;
     }
 
+    private static boolean isInsideHotseat(View v) {
+        if (v == null) return false;
+        ViewParent p = v.getParent();
+        while (p != null) {
+            String pName = p.getClass().getName();
+            if (pName.contains("Hotseat") || pName.contains("hotseat")) {
+                return true;
+            }
+            if (p instanceof View) {
+                p = ((View) p).getParent();
+            } else {
+                break;
+            }
+        }
+        return false;
+    }
+
+    private static TextView findTitleTextView(View host) {
+        if (host == null) return null;
+        if (host instanceof TextView && !(host instanceof ImageView)) {
+            return (TextView) host;
+        }
+        try {
+            Object obj = XposedHelpers.getObjectField(host, "mTitleTextView");
+            if (obj instanceof TextView) return (TextView) obj;
+        } catch (Throwable ignored) {
+        }
+        try {
+            Object obj = XposedHelpers.getObjectField(host, "mTitle");
+            if (obj instanceof TextView) return (TextView) obj;
+        } catch (Throwable ignored) {
+        }
+        try {
+            Object obj = XposedHelpers.callMethod(host, "getTitleView");
+            if (obj instanceof TextView) return (TextView) obj;
+        } catch (Throwable ignored) {
+        }
+        if (host instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) host;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                View child = vg.getChildAt(i);
+                if (child instanceof TextView && !(child instanceof ImageView)) {
+                    return (TextView) child;
+                }
+            }
+        }
+        return null;
+    }
+
     private static void syncShortcutIcon(View iconView) {
         if (iconView == null) return;
         try {
@@ -1615,6 +1770,36 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             if (iconImg instanceof ImageView) {
                 syncImageViewIcon((ImageView) iconImg);
             }
+
+            // 1. Icon scaling
+            if (iconImg != null) {
+                if (sEnabled && Math.abs(sIconScale - 1.0f) > 0.01f) {
+                    iconImg.setScaleX(sIconScale);
+                    iconImg.setScaleY(sIconScale);
+                    iconImg.setPivotX(iconImg.getWidth() / 2f);
+                    iconImg.setPivotY(iconImg.getHeight() / 2f);
+                } else if (iconImg.getScaleX() != 1.0f || iconImg.getScaleY() != 1.0f) {
+                    iconImg.setScaleX(1.0f);
+                    iconImg.setScaleY(1.0f);
+                }
+            }
+
+            // 2. Hide icon labels (Desktop vs Dock)
+            TextView titleView = findTitleTextView(iconView);
+            if (titleView != null) {
+                boolean insideDock = isInsideHotseat(iconView);
+                boolean shouldHide = sEnabled && (insideDock ? sHideDockLabels : sHideDesktopLabels);
+                if (shouldHide) {
+                    if (titleView.getVisibility() != View.GONE) {
+                        titleView.setVisibility(View.GONE);
+                    }
+                } else {
+                    if (titleView.getVisibility() == View.GONE) {
+                        titleView.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
             if (iconView instanceof TextView) {
                 Drawable[] compounds = ((TextView) iconView).getCompoundDrawables();
                 if (compounds != null && compounds.length > 1 && compounds[1] != null) {
@@ -2108,6 +2293,89 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             p.setShader(grad);
             canvas.drawRect(0, 0, w, h, p);
         }
+    }
+
+    private static void hookHotseatFloatingDock(ClassLoader cl) {
+        String[] hotseatClasses = new String[]{
+                "com.miui.home.launcher.Hotseat",
+                "com.mi.android.globallauncher.Hotseat",
+                "com.mi.android.globallauncher.view.Hotseat",
+                "com.android.launcher3.Hotseat"
+        };
+
+        XC_MethodHook dockDrawHook = new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (!sEnabled || !sFloatingDock) return;
+                if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof Canvas)) return;
+                if (!(param.thisObject instanceof View)) return;
+
+                View hotseat = (View) param.thisObject;
+                int w = hotseat.getWidth();
+                int h = hotseat.getHeight();
+                if (w <= 0 || h <= 0) return;
+
+                Canvas canvas = (Canvas) param.args[0];
+                drawFloatingDockCapsule(canvas, hotseat, w, h);
+            }
+        };
+
+        for (String clsName : hotseatClasses) {
+            Class<?> cls = XposedHelpers.findClassIfExists(clsName, cl);
+            if (cls != null) {
+                try {
+                    XposedHelpers.findAndHookMethod(cls, "dispatchDraw", Canvas.class, dockDrawHook);
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+    }
+
+    private static void drawFloatingDockCapsule(Canvas canvas, View hotseat, int w, int h) {
+        float density = hotseat.getContext().getResources().getDisplayMetrics().density;
+        float hMargin = density * 16f;
+        float topMargin = density * 6f;
+        float bottomMargin = density * 10f;
+
+        float left = hMargin;
+        float top = topMargin;
+        float right = w - hMargin;
+        float bottom = h - bottomMargin;
+        if (right <= left || bottom <= top) return;
+
+        float cornerRadius = density * 24f;
+        RectF rect = new RectF(left, top, right, bottom);
+
+        Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        strokePaint.setStyle(Paint.Style.STROKE);
+        strokePaint.setStrokeWidth(density * 1.0f);
+
+        if (sFloatingDockStyle == AnimPrefs.DOCK_STYLE_DARK_VELVET) {
+            fillPaint.setColor(Color.argb(190, 18, 22, 32));
+            strokePaint.setColor(Color.argb(70, 255, 255, 255));
+        } else if (sFloatingDockStyle == AnimPrefs.DOCK_STYLE_CYBER_NEON) {
+            LinearGradient grad = new LinearGradient(
+                    left, top, right, bottom,
+                    Color.argb(175, 12, 18, 38),
+                    Color.argb(195, 28, 14, 46),
+                    Shader.TileMode.CLAMP
+            );
+            fillPaint.setShader(grad);
+            strokePaint.setColor(Color.argb(120, 0, 229, 255));
+        } else {
+            LinearGradient grad = new LinearGradient(
+                    left, top, left, bottom,
+                    Color.argb(180, 48, 56, 76),
+                    Color.argb(150, 24, 30, 44),
+                    Shader.TileMode.CLAMP
+            );
+            fillPaint.setShader(grad);
+            strokePaint.setColor(Color.argb(90, 255, 255, 255));
+        }
+
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, fillPaint);
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, strokePaint);
     }
 
     private static void hookAutoSnapToAppPage(final ClassLoader cl) {
