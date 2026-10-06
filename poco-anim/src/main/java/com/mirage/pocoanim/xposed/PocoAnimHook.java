@@ -121,6 +121,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
     private static volatile WeakReference<Object> sTransitionManagerRef = new WeakReference<>(null);
     private static volatile long sLastOpenAnimStartMs = 0L;
+    private static volatile String sLastClosingPackage = null;
     private static volatile Class<?> sConnectAnimMgrCls = null;
     private static volatile boolean sConnectAnimMgrClsLookedUp = false;
 
@@ -776,44 +777,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         });
 
-        // 2. Window mode resolution during gestures: protect in-app exit gestures (APP_MODE=2) and desktop launch catch (HOME_MODE=1)
-        hookMethodsByName(navStubViewCls, "getCurrentWindowMode", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                if (!sEnabled || !sNonStopSwipe) {
-                    return;
-                }
-                boolean launcherOnTop = isLauncherOnTopSafe(param.thisObject, cl);
-                if (launcherOnTop) {
-                    // 1. User is on the desktop / launcher.
-                    // NEVER force APP_MODE (2)! Doing so breaks Recents and desktop gestures.
-                    Object res = param.getResult();
-                    if (res instanceof Integer && ((Integer) res) == 0) {
-                        // If stock MIUI dropped the gesture (mode 0) while an app open animation was active,
-                        // recover to HOME_MODE (1) so the swipe can break the opening animation.
-                        if (isAppCurrentlyOpening(param.thisObject, cl)) {
-                            setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
-                            setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
-                            setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
-                            param.setResult(1);
-                        }
-                    }
-                } else {
-                    // 2. User is genuinely inside an external app (!launcherOnTop).
-                    // If stuck launch flags caused mode to be != 2 (0 or 1), unstick them and force APP_MODE (2)
-                    // so the bottom exit gesture / pill never freezes.
-                    Object res = param.getResult();
-                    if (res instanceof Integer && ((Integer) res) != 2) {
-                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
-                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
-                        setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
-                        param.setResult(2);
-                    }
-                }
-            }
-        });
-
-        // 3. Bypass DeviceLevelUtils.isUseSimpleAnim() restriction in NavStubView.needBreakOpenAnim()
+        // 2. Bypass DeviceLevelUtils.isUseSimpleAnim() restriction in NavStubView.needBreakOpenAnim()
         hookMethodsByReturnType(navStubViewCls, "needBreakOpenAnim", boolean.class, new XC_MethodHook() {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
@@ -1145,7 +1109,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         if (launcher != null) {
             return callBooleanMethodSafe(launcher, "isResumed", false) || launcher.hasWindowFocus();
         }
-        return true;
+        return false;
     }
 
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
@@ -1789,11 +1753,11 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 boolean insideDock = isInsideHotseat(iconView);
                 boolean shouldHide = sEnabled && (insideDock ? sHideDockLabels : sHideDesktopLabels);
                 if (shouldHide) {
-                    if (titleView.getVisibility() != View.GONE) {
-                        titleView.setVisibility(View.GONE);
+                    if (titleView.getVisibility() != View.INVISIBLE) {
+                        titleView.setVisibility(View.INVISIBLE);
                     }
                 } else {
-                    if (titleView.getVisibility() == View.GONE) {
+                    if (titleView.getVisibility() != View.VISIBLE) {
                         titleView.setVisibility(View.VISIBLE);
                     }
                 }
@@ -1809,7 +1773,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     }
                 }
             }
-            iconView.invalidate();
         } catch (Throwable ignored) {
         }
     }
@@ -1826,7 +1789,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             } else {
                 iv.clearColorFilter();
             }
-            iv.invalidate();
         } catch (Throwable ignored) {
         }
     }
@@ -1844,6 +1806,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static void refreshAllIconsInViewTree(View root) {
         if (root == null) return;
         syncAnyIconView(root);
+        root.invalidate();
         if (root instanceof ViewGroup) {
             ViewGroup vg = (ViewGroup) root;
             int count = vg.getChildCount();
@@ -1910,7 +1873,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         XC_MethodHook iconDrawSyncHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (!sEnabled || !sIconThemeEnabled) return;
+                if (!sEnabled) return;
+                boolean needsSync = sIconThemeEnabled || Math.abs(sIconScale - 1.0f) > 0.01f || sHideDesktopLabels || sHideDockLabels;
+                if (!needsSync) return;
                 if (param.thisObject instanceof View) {
                     syncAnyIconView((View) param.thisObject);
                 }
@@ -2157,47 +2122,10 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             @Override
             public void run() {
                 try {
-                    // 1. Maintain transparent window background for wallpaper compositing
-                    try {
-                        launcher.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                    } catch (Throwable ignored) {
-                    }
-
-                    // 2. Hardware background blur on Android 12+ (API 31+)
-                    if (Build.VERSION.SDK_INT >= 31) {
-                        try {
-                            if (sWallpaperMatte) {
-                                int blurRadius = (int) (sWallpaperMatteIntensity * 70f) + 15;
-                                launcher.getWindow().setBackgroundBlurRadius(blurRadius);
-                            } else {
-                                launcher.getWindow().setBackgroundBlurRadius(0);
-                            }
-                        } catch (Throwable ignored) {
-                        }
-                    }
-
-                    // 3. Clear any background from content or workspace to prevent stacking
-                    try {
-                        View content = launcher.findViewById(android.R.id.content);
-                        if (content != null && content.getBackground() != null) {
-                            content.setBackground(null);
-                        }
-                    } catch (Throwable ignored) {
-                    }
-
-                    try {
-                        Object workspace = XposedHelpers.getObjectField(launcher, "mWorkspace");
-                        if (workspace instanceof View && ((View) workspace).getBackground() != null) {
-                            ((View) workspace).setBackground(null);
-                        }
-                    } catch (Throwable ignored) {
-                    }
-
-                    // 4. Invalidate DragLayer and DecorView to apply overlay draw
+                    // Invalidate DragLayer and DecorView to apply overlay draw safely on Canvas
                     try {
                         Object dragLayer = XposedHelpers.getObjectField(launcher, "mDragLayer");
                         if (dragLayer instanceof View) {
-                            ((View) dragLayer).setBackground(null); // Ensure no background drawable stacking
                             ((View) dragLayer).invalidate();
                         }
                     } catch (Throwable ignored) {
@@ -2310,6 +2238,10 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!(param.thisObject instanceof View)) return;
 
                 View hotseat = (View) param.thisObject;
+                if (hotseat.getVisibility() != View.VISIBLE) return;
+                float alpha = hotseat.getAlpha();
+                if (alpha < 0.05f) return;
+
                 int w = hotseat.getWidth();
                 int h = hotseat.getHeight();
                 if (w <= 0 || h <= 0) return;
@@ -2331,6 +2263,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     }
 
     private static void drawFloatingDockCapsule(Canvas canvas, View hotseat, int w, int h) {
+        float viewAlpha = Math.max(0f, Math.min(1f, hotseat.getAlpha()));
+        if (viewAlpha < 0.05f) return;
+
         float density = hotseat.getContext().getResources().getDisplayMetrics().density;
         float hMargin = density * 16f;
         float topMargin = density * 6f;
@@ -2351,26 +2286,26 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         strokePaint.setStrokeWidth(density * 1.0f);
 
         if (sFloatingDockStyle == AnimPrefs.DOCK_STYLE_DARK_VELVET) {
-            fillPaint.setColor(Color.argb(190, 18, 22, 32));
-            strokePaint.setColor(Color.argb(70, 255, 255, 255));
+            fillPaint.setColor(Color.argb((int) (190 * viewAlpha), 18, 22, 32));
+            strokePaint.setColor(Color.argb((int) (70 * viewAlpha), 255, 255, 255));
         } else if (sFloatingDockStyle == AnimPrefs.DOCK_STYLE_CYBER_NEON) {
             LinearGradient grad = new LinearGradient(
                     left, top, right, bottom,
-                    Color.argb(175, 12, 18, 38),
-                    Color.argb(195, 28, 14, 46),
+                    Color.argb((int) (175 * viewAlpha), 12, 18, 38),
+                    Color.argb((int) (195 * viewAlpha), 28, 14, 46),
                     Shader.TileMode.CLAMP
             );
             fillPaint.setShader(grad);
-            strokePaint.setColor(Color.argb(120, 0, 229, 255));
+            strokePaint.setColor(Color.argb((int) (120 * viewAlpha), 0, 229, 255));
         } else {
             LinearGradient grad = new LinearGradient(
                     left, top, left, bottom,
-                    Color.argb(180, 48, 56, 76),
-                    Color.argb(150, 24, 30, 44),
+                    Color.argb((int) (180 * viewAlpha), 48, 56, 76),
+                    Color.argb((int) (150 * viewAlpha), 24, 30, 44),
                     Shader.TileMode.CLAMP
             );
             fillPaint.setShader(grad);
-            strokePaint.setColor(Color.argb(90, 255, 255, 255));
+            strokePaint.setColor(Color.argb((int) (90 * viewAlpha), 255, 255, 255));
         }
 
         canvas.drawRoundRect(rect, cornerRadius, cornerRadius, fillPaint);
@@ -2392,9 +2327,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     protected void beforeHookedMethod(MethodHookParam param) {
                         extractAndSyncClosingApp(param, cl);
                     }
+
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        if (param.getResult() == null && sEnabled && sAutoSnapToAppPage && sLastClosingPackage != null) {
+                            View icon = findShortcutIconForApp(param.thisObject, sLastClosingPackage, cl);
+                            if (icon != null) {
+                                param.setResult(icon);
+                            }
+                        }
+                    }
                 };
                 hookMethodsByName(cls, "getShowingShortcutIcon", snapHook);
-                hookMethodsByName(cls, "getShortcutIcon", snapHook);
                 hookMethodsByName(cls, "findClosingShortcutIcon", snapHook);
             }
         }
@@ -2525,6 +2469,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
 
             if (targetPkg != null && !targetPkg.isEmpty()) {
+                sLastClosingPackage = targetPkg;
                 syncWorkspacePageForClosingApp(launcher, targetPkg, 0, cl);
             }
         } catch (Throwable ignored) {
@@ -2571,7 +2516,49 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
 
         try {
+            Object comp = XposedHelpers.callMethod(obj, "getTargetComponent");
+            String pkg = extractTargetPackageFromObject(comp);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object comp = XposedHelpers.callMethod(obj, "getComponentName");
+            String pkg = extractTargetPackageFromObject(comp);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object pkg = XposedHelpers.callMethod(obj, "getPackageName");
+            String pkgStr = extractTargetPackageFromObject(pkg);
+            if (pkgStr != null) return pkgStr;
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object in = XposedHelpers.callMethod(obj, "getIntent");
+            String pkg = extractTargetPackageFromObject(in);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
             Object comp = XposedHelpers.getObjectField(obj, "componentName");
+            String pkg = extractTargetPackageFromObject(comp);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object comp = XposedHelpers.getObjectField(obj, "mComponentName");
+            String pkg = extractTargetPackageFromObject(comp);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object comp = XposedHelpers.getObjectField(obj, "activityComponent");
             String pkg = extractTargetPackageFromObject(comp);
             if (pkg != null) return pkg;
         } catch (Throwable ignored) {
@@ -2585,6 +2572,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
 
         try {
+            Object pkgField = XposedHelpers.getObjectField(obj, "mPackageName");
+            String pkg = extractTargetPackageFromObject(pkgField);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
             Object intentField = XposedHelpers.getObjectField(obj, "intent");
             String pkg = extractTargetPackageFromObject(intentField);
             if (pkg != null) return pkg;
@@ -2592,7 +2586,17 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
 
         try {
+            Object intentField = XposedHelpers.getObjectField(obj, "mIntent");
+            String pkg = extractTargetPackageFromObject(intentField);
+            if (pkg != null) return pkg;
+        } catch (Throwable ignored) {
+        }
+
+        try {
             Object taskInfo = XposedHelpers.getObjectField(obj, "taskInfo");
+            if (taskInfo == null) {
+                taskInfo = XposedHelpers.getObjectField(obj, "mTaskInfo");
+            }
             if (taskInfo != null) {
                 try {
                     Object topAct = XposedHelpers.getObjectField(taskInfo, "topActivity");
@@ -2612,6 +2616,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     if (pkg != null) return pkg;
                 } catch (Throwable ignored) {
                 }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Object target = XposedHelpers.getObjectField(obj, "mTarget");
+            if (target == null) {
+                target = XposedHelpers.getObjectField(obj, "target");
+            }
+            if (target != null) {
+                String pkg = extractTargetPackageFromObject(target);
+                if (pkg != null) return pkg;
             }
         } catch (Throwable ignored) {
         }
@@ -2784,6 +2800,60 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         return false;
     }
 
+    private static View findShortcutIconForApp(Object launcher, String targetPkg, ClassLoader cl) {
+        if (launcher == null || targetPkg == null || targetPkg.isEmpty()) return null;
+        try {
+            Object workspace = XposedHelpers.getObjectField(launcher, "mWorkspace");
+            if (workspace == null) return null;
+            int screenCount = 0;
+            try {
+                screenCount = (Integer) XposedHelpers.callMethod(workspace, "getScreenCount");
+            } catch (Throwable t) {
+                if (workspace instanceof ViewGroup) {
+                    screenCount = ((ViewGroup) workspace).getChildCount();
+                }
+            }
+            for (int i = 0; i < screenCount; i++) {
+                View cell = null;
+                try {
+                    cell = (View) XposedHelpers.callMethod(workspace, "getCellLayoutAt", i);
+                } catch (Throwable t) {
+                    if (workspace instanceof ViewGroup && i < ((ViewGroup) workspace).getChildCount()) {
+                        cell = ((ViewGroup) workspace).getChildAt(i);
+                    }
+                }
+                if (cell instanceof ViewGroup) {
+                    View icon = findShortcutViewInViewGroup((ViewGroup) cell, targetPkg);
+                    if (icon != null) {
+                        return icon;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static View findShortcutViewInViewGroup(ViewGroup vg, String targetPkg) {
+        if (vg == null || targetPkg == null) return null;
+        int count = vg.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = vg.getChildAt(i);
+            if (child == null) continue;
+            Object tag = child.getTag();
+            if (tag != null && matchTargetPackage(tag, targetPkg)) {
+                return child;
+            }
+            if (child instanceof ViewGroup) {
+                View found = findShortcutViewInViewGroup((ViewGroup) child, targetPkg);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
     private static void postSnapToScreen(final Object workspace, final Object launcher, final int pageIndex) {
         if (workspace == null || pageIndex < 0) return;
         Runnable snapRunnable = new Runnable() {
@@ -2800,7 +2870,33 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         }
                     }
                     if (cur != pageIndex) {
-                        // 1. Immediately switch current screen synchronously so getShowingShortcutIcon succeeds NOW
+                        boolean snapped = false;
+                        try {
+                            XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex);
+                            snapped = true;
+                        } catch (Throwable ignored) {
+                        }
+                        if (!snapped) {
+                            try {
+                                XposedHelpers.callMethod(workspace, "snapToPage", pageIndex);
+                                snapped = true;
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                        if (!snapped) {
+                            try {
+                                XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex, 250);
+                                snapped = true;
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                        if (!snapped) {
+                            try {
+                                XposedHelpers.callMethod(workspace, "snapToPage", pageIndex, 250);
+                                snapped = true;
+                            } catch (Throwable ignored) {
+                            }
+                        }
                         try {
                             XposedHelpers.callMethod(workspace, "setCurrentScreen", pageIndex);
                         } catch (Throwable ignored) {
@@ -2809,17 +2905,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             XposedHelpers.callMethod(workspace, "setCurrentPage", pageIndex);
                         } catch (Throwable ignored) {
                         }
-                        // 2. Also snapToScreen / snapToPage with 0 velocity so scroll and page indicator dots settle cleanly
-                        try {
-                            XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex, 0);
-                        } catch (Throwable ignored) {
-                        }
-                        try {
-                            XposedHelpers.callMethod(workspace, "snapToPage", pageIndex, 0);
-                        } catch (Throwable ignored) {
-                        }
                         if (workspace instanceof View) {
-                            ((View) workspace).invalidate();
+                            View wv = (View) workspace;
+                            int w = wv.getWidth();
+                            if (w > 0 && !snapped) {
+                                wv.scrollTo(pageIndex * w, 0);
+                            }
+                            wv.invalidate();
                         }
                         XposedBridge.log(TAG + ": Snapped workspace to screen index " + pageIndex);
                     }
@@ -2905,11 +2997,17 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 Object info = infos.get(0);
                 if (info != null) {
                     long container = getLongFieldSafe(info, "container");
+                    if (container == -1L) {
+                        container = getLongFieldSafe(info, "mContainer");
+                    }
                     if (container == -101L) { // Dock / Hotseat: already visible across all pages!
                         return;
                     }
                     if (container == -100L) { // Desktop
                         targetScreenId = getLongFieldSafe(info, "screenId");
+                        if (targetScreenId == -1L) {
+                            targetScreenId = getLongFieldSafe(info, "mScreenId");
+                        }
                     } else if (container > 0) { // Inside Folder
                         try {
                             Object folderInfo = XposedHelpers.callMethod(launcher, "getFolderInfoById", container);
@@ -2917,6 +3015,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                                 Object itemInfo = XposedHelpers.callMethod(folderInfo, "getItemInfo");
                                 if (itemInfo != null) {
                                     targetScreenId = getLongFieldSafe(itemInfo, "screenId");
+                                    if (targetScreenId == -1L) {
+                                        targetScreenId = getLongFieldSafe(itemInfo, "mScreenId");
+                                    }
                                 }
                             }
                         } catch (Throwable ignored) {
@@ -2935,7 +3036,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     try {
                         List<?> order = (List<?>) XposedHelpers.getObjectField(workspace, "mScreenOrder");
                         if (order != null) {
-                            screenIdx = order.indexOf(targetScreenId);
+                            for (int idx = 0; idx < order.size(); idx++) {
+                                Object item = order.get(idx);
+                                if (item instanceof Number && ((Number) item).longValue() == targetScreenId) {
+                                    screenIdx = idx;
+                                    break;
+                                }
+                            }
                         }
                     } catch (Throwable ignored) {
                     }

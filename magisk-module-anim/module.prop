@@ -1,6 +1,6 @@
 id=mirage_poco_animations
 name=POCO M5 Flagship Animations (POCO Launcher / MIUI Home)
-version=v1.0.27
-versionCode=28
+version=v1.0.28
+versionCode=29
 author=Mirage
 description=Скрытие названий иконок (No-label mode), масштабирование иконок 70%-130%, кастомная сетка (4-6 колонок, 6-8 строк), парящий островной док (iPadOS/macOS) и разблокировка больших папок HyperOS 2x2.
