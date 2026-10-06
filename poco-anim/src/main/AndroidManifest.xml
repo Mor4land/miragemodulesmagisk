@@ -64,6 +64,11 @@
                 android:resource="@xml/widget_photo_info" />
         </receiver>
 
+        <provider
+            android:name=".provider.AnimPrefsProvider"
+            android:authorities="com.mirage.pocoanim.provider"
+            android:exported="true" />
+
     </application>
 
 </manifest>

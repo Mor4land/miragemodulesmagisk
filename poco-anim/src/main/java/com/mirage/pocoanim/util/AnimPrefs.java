@@ -142,6 +142,7 @@ public final class AnimPrefs {
         intent.putExtra(KEY_ICON_CUSTOM_COLOR_2, prefs.getInt(KEY_ICON_CUSTOM_COLOR_2, DEFAULT_COLOR_2));
         intent.putExtra(KEY_ICON_GRADIENT_PRESET, prefs.getInt(KEY_ICON_GRADIENT_PRESET, 0));
         intent.putExtra(KEY_ICON_TINT_INTENSITY, prefs.getFloat(KEY_ICON_TINT_INTENSITY, 0.85f));
+        intent.putExtra(KEY_ICON_BOUNCE_ANIM, prefs.getBoolean(KEY_ICON_BOUNCE_ANIM, true));
         intent.putExtra(KEY_WALLPAPER_MATTE, prefs.getBoolean(KEY_WALLPAPER_MATTE, false));
         intent.putExtra(KEY_WALLPAPER_MATTE_INTENSITY, prefs.getFloat(KEY_WALLPAPER_MATTE_INTENSITY, 0.35f));
         intent.putExtra(KEY_WALLPAPER_MATTE_STYLE, prefs.getInt(KEY_WALLPAPER_MATTE_STYLE, MATTE_STYLE_DARK_VELVET));

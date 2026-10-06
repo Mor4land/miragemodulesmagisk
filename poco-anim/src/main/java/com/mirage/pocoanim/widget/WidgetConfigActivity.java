@@ -8,13 +8,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Shader;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -35,16 +33,25 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+/**
+ * Modern borderless photo & GIF widget configuration activity.
+ * Supports intelligent aspect ratio preservation, center crop modes, and smooth rounded corners.
+ */
 public class WidgetConfigActivity extends Activity {
 
     private static final int REQUEST_PICK_IMAGE = 1001;
 
+    public static final int CROP_MODE_ORIGINAL = 0;
+    public static final int CROP_MODE_SQUARE = 1;
+    public static final int CROP_MODE_WIDE_16_9 = 2;
+    public static final int CROP_MODE_WIDE_2_1 = 3;
+    public static final int CROP_MODE_TALL_9_16 = 4;
+
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private Bitmap mSelectedSourceBitmap = null;
 
-    private int mCornerRadiusDp = 24;
-    private int mBorderStyle = 1; // 0 = None, 1 = Cyber Neon, 2 = Minimal White, 3 = Frosted Glass
-    private boolean mCenterCrop = true;
+    private int mCornerRadiusDp = 24; // Default HyperOS / POCO radius
+    private int mCropMode = CROP_MODE_ORIGINAL; // Default: preserve original aspect without bad crops
 
     private ImageView mPreviewImageView;
     private TextView mPreviewHintText;
@@ -85,7 +92,7 @@ public class WidgetConfigActivity extends Activity {
         ScrollView scrollView = new ScrollView(this);
         scrollView.setBackgroundColor(Color.parseColor("#0B0E14"));
 
-        LinearLayout root = new LinearLayout(this);
+        final LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(18), dp(24), dp(18), dp(32));
 
@@ -98,7 +105,7 @@ public class WidgetConfigActivity extends Activity {
         root.addView(title);
 
         TextView subTitle = new TextView(this);
-        subTitle.setText("Кастомный виджет рабочего стола с поддержкой фото, картинок, скруглений и неоновых рамок.");
+        subTitle.setText("Кастомный виджет без рамок с оригинальными пропорциями и скруглением HyperOS.");
         subTitle.setTextSize(13);
         subTitle.setTextColor(Color.parseColor("#8E99B0"));
         subTitle.setPadding(0, dp(4), 0, dp(18));
@@ -108,167 +115,155 @@ public class WidgetConfigActivity extends Activity {
         LinearLayout previewCard = new LinearLayout(this);
         previewCard.setOrientation(LinearLayout.VERTICAL);
         previewCard.setGravity(Gravity.CENTER);
-        previewCard.setPadding(dp(16), dp(20), dp(16), dp(20));
-        GradientDrawable previewCardBg = new GradientDrawable();
-        previewCardBg.setColor(Color.parseColor("#141824"));
-        previewCardBg.setCornerRadius(dp(16));
-        previewCardBg.setStroke(dp(1), Color.parseColor("#262C3C"));
-        previewCard.setBackground(previewCardBg);
+        GradientDrawable previewBg = new GradientDrawable();
+        previewBg.setColor(Color.parseColor("#151922"));
+        previewBg.setCornerRadius(dp(16));
+        previewCard.setBackground(previewBg);
+        previewCard.setPadding(dp(16), dp(16), dp(16), dp(16));
 
         FrameLayout previewFrame = new FrameLayout(this);
-        LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(dp(220), dp(220));
+        LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(dp(240), dp(240));
         previewFrame.setLayoutParams(frameLp);
 
         mPreviewImageView = new ImageView(this);
         mPreviewImageView.setLayoutParams(new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER
         ));
+        mPreviewImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         previewFrame.addView(mPreviewImageView);
 
         mPreviewHintText = new TextView(this);
         mPreviewHintText.setText("Нажмите кнопку ниже,\nчтобы выбрать фото или GIF");
-        mPreviewHintText.setTextSize(12);
-        mPreviewHintText.setTextColor(Color.parseColor("#5C677D"));
+        mPreviewHintText.setTextSize(14);
+        mPreviewHintText.setTextColor(Color.parseColor("#6C7A9C"));
         mPreviewHintText.setGravity(Gravity.CENTER);
-        FrameLayout.LayoutParams hintLp = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
+        mPreviewHintText.setLayoutParams(new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 Gravity.CENTER
-        );
-        mPreviewHintText.setLayoutParams(hintLp);
+        ));
         previewFrame.addView(mPreviewHintText);
 
         previewCard.addView(previewFrame);
         root.addView(previewCard);
 
-        // 1. Pick Image Button
-        Button pickBtn = new Button(this);
-        pickBtn.setText("📁 Выбрать фото / GIF из галереи");
-        pickBtn.setTextSize(14);
-        pickBtn.setTextColor(Color.WHITE);
-        pickBtn.setTypeface(null, android.graphics.Typeface.BOLD);
-        pickBtn.setAllCaps(false);
+        // 1. Pick Photo Button
+        Button pickButton = new Button(this);
+        pickButton.setText("📁 Выбрать фото из галереи");
+        pickButton.setTextSize(14);
+        pickButton.setTextColor(Color.WHITE);
+        pickButton.setTypeface(null, android.graphics.Typeface.BOLD);
+        pickButton.setAllCaps(false);
         GradientDrawable pickBtnBg = new GradientDrawable();
-        pickBtnBg.setColor(Color.parseColor("#00E5FF"));
+        pickBtnBg.setColor(Color.parseColor("#1E2638"));
         pickBtnBg.setCornerRadius(dp(12));
-        pickBtn.setTextColor(Color.parseColor("#06101E"));
-        pickBtn.setBackground(pickBtnBg);
+        pickBtnBg.setStroke(dp(1), Color.parseColor("#323E5A"));
+        pickButton.setBackground(pickBtnBg);
         LinearLayout.LayoutParams pickBtnLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 dp(48)
         );
-        pickBtnLp.setMargins(0, dp(16), 0, dp(20));
-        pickBtn.setLayoutParams(pickBtnLp);
-        pickBtn.setOnClickListener(new View.OnClickListener() {
+        pickBtnLp.setMargins(0, dp(16), 0, dp(16));
+        pickButton.setLayoutParams(pickBtnLp);
+        pickButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent pickIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                Intent pickIntent = new Intent(Intent.ACTION_PICK);
                 pickIntent.setType("image/*");
-                startActivityForResult(Intent.createChooser(pickIntent, "Выберите изображение или GIF"), REQUEST_PICK_IMAGE);
+                startActivityForResult(pickIntent, REQUEST_PICK_IMAGE);
             }
         });
-        root.addView(pickBtn);
+        root.addView(pickButton);
 
-        // 2. Corner Radius Options
-        addSectionHeader(root, "Скругление углов (Радиус):");
+        // 2. Proportions / Crop Mode Options
+        addSectionHeader(root, "Пропорции и вырезка (без искажений):");
+        LinearLayout cropRow1 = new LinearLayout(this);
+        cropRow1.setOrientation(LinearLayout.HORIZONTAL);
+        addOptionButton(cropRow1, "Оригинал", mCropMode == CROP_MODE_ORIGINAL, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCropMode = CROP_MODE_ORIGINAL;
+                refreshOptions();
+            }
+        });
+        addOptionButton(cropRow1, "Квадрат 1:1", mCropMode == CROP_MODE_SQUARE, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCropMode = CROP_MODE_SQUARE;
+                refreshOptions();
+            }
+        });
+        root.addView(cropRow1);
+
+        LinearLayout cropRow2 = new LinearLayout(this);
+        cropRow2.setOrientation(LinearLayout.HORIZONTAL);
+        addOptionButton(cropRow2, "Широкий 16:9", mCropMode == CROP_MODE_WIDE_16_9, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCropMode = CROP_MODE_WIDE_16_9;
+                refreshOptions();
+            }
+        });
+        addOptionButton(cropRow2, "Виджет 2:1", mCropMode == CROP_MODE_WIDE_2_1, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCropMode = CROP_MODE_WIDE_2_1;
+                refreshOptions();
+            }
+        });
+        addOptionButton(cropRow2, "Портрет 9:16", mCropMode == CROP_MODE_TALL_9_16, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCropMode = CROP_MODE_TALL_9_16;
+                refreshOptions();
+            }
+        });
+        root.addView(cropRow2);
+
+        // 3. Corner Radius Options
+        addSectionHeader(root, "Скругление углов:");
         LinearLayout radiusRow = new LinearLayout(this);
         radiusRow.setOrientation(LinearLayout.HORIZONTAL);
-        addOptionButton(radiusRow, "Прямой (0dp)", mCornerRadiusDp == 0, new View.OnClickListener() {
+        addOptionButton(radiusRow, "Прямой (0)", mCornerRadiusDp == 0, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCornerRadiusDp = 0;
-                refreshOptions(root);
-                updatePreview();
+                refreshOptions();
             }
         });
-        addOptionButton(radiusRow, "Мягкий (16dp)", mCornerRadiusDp == 16, new View.OnClickListener() {
+        addOptionButton(radiusRow, "16 dp", mCornerRadiusDp == 16, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCornerRadiusDp = 16;
-                refreshOptions(root);
-                updatePreview();
+                refreshOptions();
             }
         });
-        addOptionButton(radiusRow, "HyperOS (26dp)", mCornerRadiusDp == 24 || mCornerRadiusDp == 26, new View.OnClickListener() {
+        addOptionButton(radiusRow, "24 dp (POCO)", mCornerRadiusDp == 24, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mCornerRadiusDp = 26;
-                refreshOptions(root);
-                updatePreview();
+                mCornerRadiusDp = 24;
+                refreshOptions();
+            }
+        });
+        addOptionButton(radiusRow, "36 dp", mCornerRadiusDp == 36, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCornerRadiusDp = 36;
+                refreshOptions();
             }
         });
         addOptionButton(radiusRow, "Круг", mCornerRadiusDp >= 99, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCornerRadiusDp = 999;
-                refreshOptions(root);
-                updatePreview();
+                refreshOptions();
             }
         });
         root.addView(radiusRow);
 
-        // 3. Border Style Options
-        addSectionHeader(root, "Стиль рамки (Бордюр):");
-        LinearLayout borderRow = new LinearLayout(this);
-        borderRow.setOrientation(LinearLayout.HORIZONTAL);
-        addOptionButton(borderRow, "Без рамки", mBorderStyle == 0, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBorderStyle = 0;
-                refreshOptions(root);
-                updatePreview();
-            }
-        });
-        addOptionButton(borderRow, "Кибер Неон", mBorderStyle == 1, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBorderStyle = 1;
-                refreshOptions(root);
-                updatePreview();
-            }
-        });
-        addOptionButton(borderRow, "Белый", mBorderStyle == 2, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBorderStyle = 2;
-                refreshOptions(root);
-                updatePreview();
-            }
-        });
-        addOptionButton(borderRow, "Стекло", mBorderStyle == 3, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mBorderStyle = 3;
-                refreshOptions(root);
-                updatePreview();
-            }
-        });
-        root.addView(borderRow);
-
-        // 4. Scale Type Options
-        addSectionHeader(root, "Заполнение (Scale):");
-        LinearLayout scaleRow = new LinearLayout(this);
-        scaleRow.setOrientation(LinearLayout.HORIZONTAL);
-        addOptionButton(scaleRow, "Заполнить (Crop)", mCenterCrop, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCenterCrop = true;
-                refreshOptions(root);
-                updatePreview();
-            }
-        });
-        addOptionButton(scaleRow, "Вписать (Fit)", !mCenterCrop, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCenterCrop = false;
-                refreshOptions(root);
-                updatePreview();
-            }
-        });
-        root.addView(scaleRow);
-
-        // 5. Save & Apply Button
+        // 4. Save & Apply Button
         mSaveButton = new Button(this);
         mSaveButton.setText("✅ Сохранить и применить виджет");
         mSaveButton.setTextSize(15);
@@ -298,32 +293,32 @@ public class WidgetConfigActivity extends Activity {
         setContentView(scrollView);
     }
 
-    private void addSectionHeader(LinearLayout root, String title) {
-        TextView tv = new TextView(this);
-        tv.setText(title);
-        tv.setTextSize(13);
-        tv.setTextColor(Color.parseColor("#A0ABC0"));
-        tv.setTypeface(null, android.graphics.Typeface.BOLD);
-        tv.setPadding(0, dp(14), 0, dp(6));
-        root.addView(tv);
+    private void addSectionHeader(LinearLayout parent, String text) {
+        TextView header = new TextView(this);
+        header.setText(text);
+        header.setTextSize(13);
+        header.setTextColor(Color.parseColor("#A0ABC0"));
+        header.setTypeface(null, android.graphics.Typeface.BOLD);
+        header.setPadding(0, dp(14), 0, dp(6));
+        parent.addView(header);
     }
 
-    private void addOptionButton(LinearLayout row, String title, boolean isSelected, View.OnClickListener listener) {
+    private void addOptionButton(LinearLayout row, String text, boolean selected, View.OnClickListener listener) {
         Button btn = new Button(this);
-        btn.setText(title);
+        btn.setText(text);
         btn.setTextSize(11);
         btn.setAllCaps(false);
         btn.setOnClickListener(listener);
 
         GradientDrawable bg = new GradientDrawable();
-        if (isSelected) {
-            bg.setColor(Color.parseColor("#1F2E47"));
-            bg.setStroke(dp(1), Color.parseColor("#00E5FF"));
-            btn.setTextColor(Color.parseColor("#00E5FF"));
+        if (selected) {
+            bg.setColor(Color.parseColor("#00E5FF"));
+            btn.setTextColor(Color.parseColor("#051622"));
+            btn.setTypeface(null, android.graphics.Typeface.BOLD);
         } else {
-            bg.setColor(Color.parseColor("#141824"));
-            bg.setStroke(dp(1), Color.parseColor("#262C3C"));
-            btn.setTextColor(Color.parseColor("#8E99B0"));
+            bg.setColor(Color.parseColor("#182030"));
+            btn.setTextColor(Color.parseColor("#D0D8E8"));
+            bg.setStroke(dp(1), Color.parseColor("#26344E"));
         }
         bg.setCornerRadius(dp(10));
         btn.setBackground(bg);
@@ -334,9 +329,9 @@ public class WidgetConfigActivity extends Activity {
         row.addView(btn);
     }
 
-    private void refreshOptions(View root) {
-        // Simple UI refresh to toggle selected button states
+    private void refreshOptions() {
         buildUi();
+        updatePreview();
     }
 
     @Override
@@ -367,7 +362,11 @@ public class WidgetConfigActivity extends Activity {
         }
     }
 
-    private Bitmap createProcessedBitmap(int targetSize) {
+    /**
+     * Creates a high-resolution processed bitmap with anti-aliased rounded corners
+     * and strictly without any borders or distortion.
+     */
+    private Bitmap createProcessedBitmap(int maxDimension) {
         if (mSelectedSourceBitmap == null) {
             return null;
         }
@@ -376,70 +375,85 @@ public class WidgetConfigActivity extends Activity {
         int srcH = mSelectedSourceBitmap.getHeight();
         if (srcW <= 0 || srcH <= 0) return null;
 
-        Bitmap output = Bitmap.createBitmap(targetSize, targetSize, Bitmap.Config.ARGB_8888);
+        Rect srcRect;
+        float targetAspect;
+
+        switch (mCropMode) {
+            case CROP_MODE_SQUARE:
+                targetAspect = 1.0f;
+                int minSquare = Math.min(srcW, srcH);
+                int sqLeft = (srcW - minSquare) / 2;
+                int sqTop = (srcH - minSquare) / 2;
+                srcRect = new Rect(sqLeft, sqTop, sqLeft + minSquare, sqTop + minSquare);
+                break;
+            case CROP_MODE_WIDE_16_9:
+                targetAspect = 16.0f / 9.0f;
+                srcRect = computeAspectCropRect(srcW, srcH, targetAspect);
+                break;
+            case CROP_MODE_WIDE_2_1:
+                targetAspect = 2.0f;
+                srcRect = computeAspectCropRect(srcW, srcH, targetAspect);
+                break;
+            case CROP_MODE_TALL_9_16:
+                targetAspect = 9.0f / 16.0f;
+                srcRect = computeAspectCropRect(srcW, srcH, targetAspect);
+                break;
+            case CROP_MODE_ORIGINAL:
+            default:
+                targetAspect = (float) srcW / (float) srcH;
+                srcRect = new Rect(0, 0, srcW, srcH);
+                break;
+        }
+
+        int dstW;
+        int dstH;
+        if (targetAspect >= 1.0f) {
+            dstW = maxDimension;
+            dstH = Math.max(1, Math.round(maxDimension / targetAspect));
+        } else {
+            dstH = maxDimension;
+            dstW = Math.max(1, Math.round(maxDimension * targetAspect));
+        }
+
+        Bitmap output = Bitmap.createBitmap(dstW, dstH, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
 
-        RectF dstRect = new RectF(0, 0, targetSize, targetSize);
-        float radius = (mCornerRadiusDp >= 999) ? targetSize / 2f : dp(mCornerRadiusDp);
+        RectF dstRect = new RectF(0, 0, dstW, dstH);
+        float radius;
+        if (mCornerRadiusDp >= 999) {
+            radius = Math.min(dstW, dstH) / 2f;
+        } else {
+            radius = dp(mCornerRadiusDp) * ((float) Math.min(dstW, dstH) / Math.max(1, dp(240)));
+        }
 
-        // 1. Draw rounded mask
+        // 1. Draw smooth anti-aliased mask
         Paint maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         maskPaint.setColor(Color.WHITE);
-        canvas.drawRoundRect(dstRect, radius, radius, maskPaint);
+        if (radius > 0) {
+            canvas.drawRoundRect(dstRect, radius, radius, maskPaint);
+        } else {
+            canvas.drawRect(dstRect, maskPaint);
+        }
 
-        // 2. Draw scaled bitmap inside mask using SRC_IN
+        // 2. Draw cropped source bitmap inside mask using SRC_IN (no borders)
         Paint imagePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
         imagePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-
-        Rect srcRect;
-        if (mCenterCrop) {
-            if (srcW > srcH) {
-                int left = (srcW - srcH) / 2;
-                srcRect = new Rect(left, 0, left + srcH, srcH);
-            } else {
-                int top = (srcH - srcW) / 2;
-                srcRect = new Rect(0, top, srcW, top + srcW);
-            }
-            canvas.drawBitmap(mSelectedSourceBitmap, srcRect, dstRect, imagePaint);
-        } else {
-            srcRect = new Rect(0, 0, srcW, srcH);
-            float scale = Math.min((float) targetSize / srcW, (float) targetSize / srcH);
-            float w = srcW * scale;
-            float h = srcH * scale;
-            float dx = (targetSize - w) / 2f;
-            float dy = (targetSize - h) / 2f;
-            RectF fitDst = new RectF(dx, dy, dx + w, dy + h);
-            canvas.drawBitmap(mSelectedSourceBitmap, srcRect, fitDst, imagePaint);
-        }
-
-        // 3. Draw border if enabled
-        if (mBorderStyle > 0) {
-            Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            borderPaint.setStyle(Paint.Style.STROKE);
-            float strokeW = dp(3);
-            borderPaint.setStrokeWidth(strokeW);
-            RectF borderRect = new RectF(strokeW / 2f, strokeW / 2f, targetSize - strokeW / 2f, targetSize - strokeW / 2f);
-
-            if (mBorderStyle == 1) {
-                // Cyber Neon (Cyan -> Fuchsia)
-                LinearGradient grad = new LinearGradient(
-                        0, 0, targetSize, targetSize,
-                        Color.parseColor("#00E5FF"),
-                        Color.parseColor("#E040FB"),
-                        Shader.TileMode.CLAMP
-                );
-                borderPaint.setShader(grad);
-            } else if (mBorderStyle == 2) {
-                // Minimal White
-                borderPaint.setColor(Color.parseColor("#E0FFFFFF"));
-            } else if (mBorderStyle == 3) {
-                // Frosted Glass Rim
-                borderPaint.setColor(Color.parseColor("#4DFFFFFF"));
-            }
-            canvas.drawRoundRect(borderRect, radius, radius, borderPaint);
-        }
+        canvas.drawBitmap(mSelectedSourceBitmap, srcRect, dstRect, imagePaint);
 
         return output;
+    }
+
+    private Rect computeAspectCropRect(int srcW, int srcH, float targetAspect) {
+        float srcAspect = (float) srcW / (float) srcH;
+        if (srcAspect > targetAspect) {
+            int cropW = Math.round(srcH * targetAspect);
+            int left = (srcW - cropW) / 2;
+            return new Rect(left, 0, left + cropW, srcH);
+        } else {
+            int cropH = Math.round(srcW / targetAspect);
+            int top = (srcH - cropH) / 2;
+            return new Rect(0, top, srcW, top + cropH);
+        }
     }
 
     private void updatePreview() {
@@ -480,8 +494,8 @@ public class WidgetConfigActivity extends Activity {
                 }
             }
 
-            // Save processed 720x720 high-resolution bitmap to internal storage
-            Bitmap finalBm = createProcessedBitmap(720);
+            // Save high-resolution 1080px bitmap to internal storage (borderless, perfect aspect)
+            Bitmap finalBm = createProcessedBitmap(1080);
             if (finalBm != null) {
                 File widgetDir = new File(getFilesDir(), "widgets");
                 if (!widgetDir.exists()) {
