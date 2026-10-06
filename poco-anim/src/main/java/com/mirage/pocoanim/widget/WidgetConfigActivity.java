@@ -478,34 +478,58 @@ public class WidgetConfigActivity extends Activity {
 
         try {
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+            File widgetDir = new File(getFilesDir(), "widgets");
+            if (!widgetDir.exists()) {
+                widgetDir.mkdirs();
+            }
+
+            // Save high-resolution 1080px bitmap to internal storage (borderless, perfect aspect)
+            Bitmap finalBm = createProcessedBitmap(1080);
+            if (finalBm != null) {
+                // 1. Always save latest_widget.png
+                File latestFile = new File(widgetDir, "latest_widget.png");
+                FileOutputStream lfos = new FileOutputStream(latestFile);
+                finalBm.compress(Bitmap.CompressFormat.PNG, 100, lfos);
+                lfos.flush();
+                lfos.close();
+
+                // 2. Save for current widget id if known
+                if (mAppWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                    File targetFile = new File(widgetDir, "widget_" + mAppWidgetId + ".png");
+                    FileOutputStream fos = new FileOutputStream(targetFile);
+                    finalBm.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                    fos.flush();
+                    fos.close();
+                }
+
+                // 3. Update ALL existing widgets on launcher so old purple borders are overwritten
+                ComponentName provider = new ComponentName(this, MiragePhotoWidgetProvider.class);
+                int[] allIds = appWidgetManager.getAppWidgetIds(provider);
+                if (allIds != null) {
+                    for (int id : allIds) {
+                        File f = new File(widgetDir, "widget_" + id + ".png");
+                        FileOutputStream fos = new FileOutputStream(f);
+                        finalBm.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                        fos.flush();
+                        fos.close();
+                        MiragePhotoWidgetProvider.updateAppWidget(this, appWidgetManager, id);
+                    }
+                }
+            }
 
             if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
                 // Launched directly from app to pin a new widget
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported()) {
                     ComponentName provider = new ComponentName(this, MiragePhotoWidgetProvider.class);
                     appWidgetManager.requestPinAppWidget(provider, null, null);
-                    Toast.makeText(this, "Запрос на добавление виджета отправлен на рабочий стол!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Виджет обновлен и отправлен на рабочий стол!", Toast.LENGTH_LONG).show();
                     finish();
                     return;
                 } else {
-                    Toast.makeText(this, "Добавьте виджет через системное меню виджетов рабочего стола", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Все виджеты на рабочем столе успешно обновлены!", Toast.LENGTH_LONG).show();
                     finish();
                     return;
                 }
-            }
-
-            // Save high-resolution 1080px bitmap to internal storage (borderless, perfect aspect)
-            Bitmap finalBm = createProcessedBitmap(1080);
-            if (finalBm != null) {
-                File widgetDir = new File(getFilesDir(), "widgets");
-                if (!widgetDir.exists()) {
-                    widgetDir.mkdirs();
-                }
-                File targetFile = new File(widgetDir, "widget_" + mAppWidgetId + ".png");
-                FileOutputStream fos = new FileOutputStream(targetFile);
-                finalBm.compress(Bitmap.CompressFormat.PNG, 100, fos);
-                fos.flush();
-                fos.close();
             }
 
             MiragePhotoWidgetProvider.updateAppWidget(this, appWidgetManager, mAppWidgetId);
@@ -513,7 +537,7 @@ public class WidgetConfigActivity extends Activity {
             Intent resultValue = new Intent();
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
             setResult(RESULT_OK, resultValue);
-            Toast.makeText(this, "Виджет успешно сохранен!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Виджет успешно сохранен без рамок!", Toast.LENGTH_SHORT).show();
             finish();
         } catch (Throwable t) {
             Toast.makeText(this, "Ошибка сохранения: " + t.getMessage(), Toast.LENGTH_LONG).show();

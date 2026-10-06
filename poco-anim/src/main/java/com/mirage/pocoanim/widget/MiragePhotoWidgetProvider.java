@@ -52,6 +52,13 @@ public class MiragePhotoWidgetProvider extends AppWidgetProvider {
             File widgetDir = new File(context.getFilesDir(), "widgets");
             File imgFile = new File(widgetDir, "widget_" + appWidgetId + ".png");
 
+            if (!imgFile.exists()) {
+                File latestFile = new File(widgetDir, "latest_widget.png");
+                if (latestFile.exists()) {
+                    imgFile = latestFile;
+                }
+            }
+
             if (imgFile.exists()) {
                 Bitmap bitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                 if (bitmap != null) {
