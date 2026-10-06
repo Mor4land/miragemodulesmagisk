@@ -20,6 +20,8 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Shader;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
@@ -91,11 +93,15 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static final int TAG_ORIGINAL_DRAWABLE = 0x7F0A8802;
     private static final int TAG_THEME_HASH = 0x7F0A8803;
 
+    private static volatile ColorMatrixColorFilter sCachedColorFilter = null;
+    private static volatile int sCachedColorFilterHash = -1;
+
     private static int getThemeConfigHash() {
         return (sIconThemeEnabled ? 1 : 0) * 31
                 + sIconColorMode * 17
                 + sIconColor1 * 13
                 + sIconColor2 * 7
+                + sIconGradientPreset * 3
                 + Float.floatToIntBits(sIconTintIntensity);
     }
 
@@ -1080,6 +1086,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             if (name.contains("Launcher") || name.contains("MainActivity") || name.contains("Home")) {
                                 sLauncherActivityRef = new WeakReference<>(activity);
                                 initLauncherContext(activity, cl);
+                                updateMatteEffect(activity);
                             }
                         }
                     } catch (Throwable ignored) {
@@ -1101,6 +1108,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                                 sLauncherActivityRef = new WeakReference<>(activity);
                                 queryProviderPrefs(activity);
                                 updateRuntimeFieldsPostInit(cl);
+                                updateMatteEffect(activity);
                                 View decor = activity.getWindow().getDecorView();
                                 if (decor != null) {
                                     refreshAllIconsInViewTree(decor);
@@ -1226,6 +1234,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             @Override
             public void run() {
                 try {
+                    updateMatteEffect(launcher);
                     View decor = launcher.getWindow().getDecorView();
                     if (decor != null) {
                         refreshAllIconsInViewTree(decor);
@@ -1466,31 +1475,15 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 original.setBounds(oldBounds);
             }
 
-            int c1 = sIconColor1;
-            int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
-
-            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
-            int c1WithAlpha = Color.argb(alpha, Color.red(c1), Color.green(c1), Color.blue(c1));
-            int c2WithAlpha = Color.argb(alpha, Color.red(c2), Color.green(c2), Color.blue(c2));
-
+            Bitmap output = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas outCanvas = new Canvas(output);
             Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-            if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
-                paint.setColor(c1WithAlpha);
-            } else {
-                LinearGradient gradient = new LinearGradient(
-                        0, 0, w, h,
-                        c1WithAlpha, c2WithAlpha,
-                        Shader.TileMode.CLAMP
-                );
-                paint.setShader(gradient);
-            }
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-            paint.setAlpha(alpha);
-
-            canvas.drawRect(0, 0, w, h, paint);
+            paint.setColorFilter(getActiveColorCorrectionFilter());
+            outCanvas.drawBitmap(bitmap, 0, 0, paint);
+            bitmap.recycle();
 
             Resources res = (context != null) ? context.getResources() : Resources.getSystem();
-            return new ThemedGradientDrawable(res, bitmap);
+            return new ThemedGradientDrawable(res, output);
         } catch (Throwable t) {
             return original;
         }
@@ -1508,31 +1501,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
             Bitmap output = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(output);
-            Paint basePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-            canvas.drawBitmap(original, 0, 0, basePaint);
-
-            int c1 = sIconColor1;
-            int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
-
-            int alpha = (int) (Math.max(0.1f, Math.min(1.0f, intensity)) * 255);
-            int c1WithAlpha = Color.argb(alpha, Color.red(c1), Color.green(c1), Color.blue(c1));
-            int c2WithAlpha = Color.argb(alpha, Color.red(c2), Color.green(c2), Color.blue(c2));
-
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
-                paint.setColor(c1WithAlpha);
-            } else {
-                LinearGradient gradient = new LinearGradient(
-                        0, 0, w, h,
-                        c1WithAlpha, c2WithAlpha,
-                        Shader.TileMode.CLAMP
-                );
-                paint.setShader(gradient);
-            }
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-            paint.setAlpha(alpha);
-
-            canvas.drawRect(0, 0, w, h, paint);
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+            paint.setColorFilter(getActiveColorCorrectionFilter());
+            canvas.drawBitmap(original, 0, 0, paint);
             return output;
         } catch (Throwable t) {
             return original;
@@ -1587,23 +1558,10 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             if (iconView instanceof TextView) {
                 Drawable[] compounds = ((TextView) iconView).getCompoundDrawables();
                 if (compounds != null && compounds.length > 1 && compounds[1] != null) {
-                    Drawable orig = (Drawable) iconView.getTag(TAG_ORIGINAL_DRAWABLE);
                     if (sEnabled && sIconThemeEnabled) {
-                        if (orig == null && !(compounds[1] instanceof ThemedGradientDrawable)) {
-                            orig = compounds[1];
-                            iconView.setTag(TAG_ORIGINAL_DRAWABLE, orig);
-                        }
-                        if (orig != null) {
-                            Drawable themed = applyGradientToDrawable(iconView.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
-                            if (themed != null) {
-                                themed.setBounds(compounds[1].getBounds());
-                                ((TextView) iconView).setCompoundDrawables(compounds[0], themed, compounds[2], compounds[3]);
-                            }
-                        }
-                    } else if (orig != null) {
-                        orig.setBounds(compounds[1].getBounds());
-                        ((TextView) iconView).setCompoundDrawables(compounds[0], orig, compounds[2], compounds[3]);
-                        iconView.setTag(TAG_ORIGINAL_DRAWABLE, null);
+                        compounds[1].setColorFilter(getActiveColorCorrectionFilter());
+                    } else {
+                        compounds[1].clearColorFilter();
                     }
                 }
             }
@@ -1615,40 +1573,14 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static void syncImageViewIcon(ImageView iv) {
         if (iv == null) return;
         try {
+            Drawable orig = getUnderlyingOriginalDrawable(iv);
+            if (orig != null && iv.getDrawable() != orig) {
+                iv.setImageDrawable(orig);
+            }
             if (sEnabled && sIconThemeEnabled) {
-                if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
-                    Drawable orig = getUnderlyingOriginalDrawable(iv);
-                    if (orig != null && iv.getDrawable() != orig) {
-                        iv.setImageDrawable(orig);
-                    }
-                    int alpha = (int) (Math.max(0.15f, Math.min(1.0f, sIconTintIntensity)) * 255);
-                    int color = Color.argb(alpha, Color.red(sIconColor1), Color.green(sIconColor1), Color.blue(sIconColor1));
-                    iv.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
-                } else {
-                    iv.clearColorFilter();
-                    Drawable orig = getUnderlyingOriginalDrawable(iv);
-                    if (orig != null) {
-                        int currentHash = getThemeConfigHash();
-                        Object tagHash = iv.getTag(TAG_THEME_HASH);
-                        Drawable curr = iv.getDrawable();
-                        if (tagHash instanceof Integer && ((Integer) tagHash) == currentHash && (curr instanceof ThemedGradientDrawable)) {
-                            return;
-                        }
-                        Drawable themed = applyGradientToDrawable(iv.getContext(), orig, sIconGradientPreset, sIconTintIntensity);
-                        if (themed != null) {
-                            iv.setImageDrawable(themed);
-                            iv.setTag(TAG_THEME_HASH, currentHash);
-                        }
-                    }
-                }
+                iv.setColorFilter(getActiveColorCorrectionFilter());
             } else {
                 iv.clearColorFilter();
-                Drawable orig = (Drawable) iv.getTag(TAG_ORIGINAL_DRAWABLE);
-                if (orig != null) {
-                    iv.setImageDrawable(orig);
-                    iv.setTag(TAG_ORIGINAL_DRAWABLE, null);
-                    iv.setTag(TAG_THEME_HASH, null);
-                }
             }
             iv.invalidate();
         } catch (Throwable ignored) {
@@ -1748,12 +1680,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (param.args == null) return;
                 for (int i = 0; i < param.args.length; i++) {
                     Object arg = param.args[i];
-                    if (arg instanceof Drawable && !(arg instanceof ThemedGradientDrawable)) {
-                        Context ctx = (param.thisObject instanceof View) ? ((View) param.thisObject).getContext() : null;
-                        Drawable themed = applyGradientToDrawable(ctx, (Drawable) arg, sIconGradientPreset, sIconTintIntensity);
-                        if (themed != null) {
-                            param.args[i] = themed;
-                        }
+                    if (arg instanceof Drawable) {
+                        ((Drawable) arg).setColorFilter(getActiveColorCorrectionFilter());
                     } else if (arg instanceof Bitmap) {
                         Bitmap themedBm = applyGradientToBitmap((Bitmap) arg, sIconGradientPreset, sIconTintIntensity);
                         if (themedBm != null) {
@@ -1825,7 +1753,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         Rect bounds = d.getBounds();
                         if (bounds != null && bounds.width() > 0 && bounds.height() > 0) {
                             Canvas canvas = (Canvas) param.args[0];
-                            int sc = canvas.saveLayer(bounds.left, bounds.top, bounds.right, bounds.bottom, null);
+                            Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+                            p.setColorFilter(getActiveColorCorrectionFilter());
+                            int sc = canvas.saveLayer(bounds.left, bounds.top, bounds.right, bounds.bottom, p);
                             sThemeSaveCount.set(sc);
                             sDrawingThemedIcon.set(Boolean.TRUE);
                         }
@@ -1838,11 +1768,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     sThemeSaveCount.set(null);
                     if (sc != null) {
                         try {
-                            if (param.thisObject instanceof Drawable && param.args != null && param.args.length > 0 && param.args[0] instanceof Canvas) {
-                                Drawable d = (Drawable) param.thisObject;
-                                Rect bounds = d.getBounds();
+                            if (param.args != null && param.args.length > 0 && param.args[0] instanceof Canvas) {
                                 Canvas canvas = (Canvas) param.args[0];
-                                applyThemedMaskOnCanvas(canvas, bounds.left, bounds.top, bounds.width(), bounds.height());
                                 canvas.restoreToCount(sc);
                             }
                         } finally {
@@ -1867,7 +1794,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         Rect bounds = d.getBounds();
                         if (bounds != null && bounds.width() > 0 && bounds.height() > 0) {
                             Canvas canvas = (Canvas) param.args[0];
-                            int sc = canvas.saveLayer(bounds.left, bounds.top, bounds.right, bounds.bottom, null);
+                            Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+                            p.setColorFilter(getActiveColorCorrectionFilter());
+                            int sc = canvas.saveLayer(bounds.left, bounds.top, bounds.right, bounds.bottom, p);
                             sThemeSaveCount.set(sc);
                             sDrawingThemedIcon.set(Boolean.TRUE);
                         }
@@ -1880,11 +1809,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     sThemeSaveCount.set(null);
                     if (sc != null) {
                         try {
-                            if (param.thisObject instanceof Drawable && param.args != null && param.args.length > 0 && param.args[0] instanceof Canvas) {
-                                Drawable d = (Drawable) param.thisObject;
-                                Rect bounds = d.getBounds();
+                            if (param.args != null && param.args.length > 0 && param.args[0] instanceof Canvas) {
                                 Canvas canvas = (Canvas) param.args[0];
-                                applyThemedMaskOnCanvas(canvas, bounds.left, bounds.top, bounds.width(), bounds.height());
                                 canvas.restoreToCount(sc);
                             }
                         } finally {
@@ -1897,33 +1823,187 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         }
     }
 
-    private static void applyThemedMaskOnCanvas(Canvas canvas, int x, int y, int w, int h) {
-        if (w <= 0 || h <= 0) return;
-        try {
-            canvas.save();
-            canvas.clipRect(x, y, x + w, y + h);
+    private static ColorMatrixColorFilter createColorCorrectionFilter(int color1, int color2, boolean isDuotone, float intensity) {
+        float i = Math.max(0.05f, Math.min(1.0f, intensity));
+        ColorMatrix cm = new ColorMatrix();
 
-            int c1 = sIconColor1;
-            int c2 = (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) ? sIconColor1 : sIconColor2;
-            int alpha = (int) (Math.max(0.15f, Math.min(1.0f, sIconTintIntensity)) * 255);
-            int c1A = Color.argb(alpha, Color.red(c1), Color.green(c1), Color.blue(c1));
-            int c2A = Color.argb(alpha, Color.red(c2), Color.green(c2), Color.blue(c2));
+        float lr = 0.299f;
+        float lg = 0.587f;
+        float lb = 0.114f;
 
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-            if (sIconColorMode == AnimPrefs.COLOR_MODE_SOLID) {
-                paint.setColor(c1A);
-            } else {
-                LinearGradient gradient = new LinearGradient(
-                        x, y, x + w, y + h,
-                        c1A, c2A,
-                        Shader.TileMode.CLAMP
-                );
-                paint.setShader(gradient);
+        if (!isDuotone) {
+            float r = Color.red(color1) / 255f;
+            float g = Color.green(color1) / 255f;
+            float b = Color.blue(color1) / 255f;
+
+            float max = Math.max(r, Math.max(g, b));
+            if (max > 0.001f) {
+                r /= max;
+                g /= max;
+                b /= max;
             }
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-            canvas.drawRect(x, y, x + w, y + h, paint);
-            canvas.restore();
-        } catch (Throwable ignored) {
+
+            float shadowScale = 0.85f;
+            r *= shadowScale;
+            g *= shadowScale;
+            b *= shadowScale;
+
+            float[] mat = new float[]{
+                    (1f - i) + i * lr * r,  i * lg * r,           i * lb * r,           0f, 0f,
+                    i * lr * g,           (1f - i) + i * lg * g,  i * lb * g,           0f, 0f,
+                    i * lr * b,           i * lg * b,           (1f - i) + i * lb * b,  0f, 0f,
+                    0f,                    0f,                    0f,                    1f, 0f
+            };
+            cm.set(mat);
+        } else {
+            float r1 = Color.red(color1) / 255f;
+            float g1 = Color.green(color1) / 255f;
+            float b1 = Color.blue(color1) / 255f;
+
+            float r2 = Color.red(color2) / 255f;
+            float g2 = Color.green(color2) / 255f;
+            float b2 = Color.blue(color2) / 255f;
+
+            float max2 = Math.max(r2, Math.max(g2, b2));
+            if (max2 > 0.001f) {
+                r2 /= max2;
+                g2 /= max2;
+                b2 /= max2;
+            }
+
+            float shadowScale = 0.35f;
+            float rs = r1 * shadowScale;
+            float gs = g1 * shadowScale;
+            float bs = b1 * shadowScale;
+
+            float dr = r2 - rs;
+            float dg = g2 - gs;
+            float db = b2 - bs;
+
+            float[] mat = new float[]{
+                    (1f - i) + i * lr * dr,  i * lg * dr,           i * lb * dr,           0f, i * rs * 255f,
+                    i * lr * dg,           (1f - i) + i * lg * dg,  i * lb * dg,           0f, i * gs * 255f,
+                    i * lr * db,           i * lg * db,           (1f - i) + i * lb * db,  0f, i * bs * 255f,
+                    0f,                    0f,                    0f,                    1f, 0f
+            };
+            cm.set(mat);
+        }
+        return new ColorMatrixColorFilter(cm);
+    }
+
+    private static ColorMatrixColorFilter getActiveColorCorrectionFilter() {
+        int hash = getThemeConfigHash();
+        if (sCachedColorFilter == null || sCachedColorFilterHash != hash) {
+            int c1 = sIconColor1;
+            int c2 = sIconColor2;
+            boolean isDuotone = (sIconColorMode == AnimPrefs.COLOR_MODE_GRADIENT);
+            if (isDuotone && sIconGradientPreset >= 0 && sIconGradientPreset < AnimPrefs.PRESET_COLORS.length) {
+                c1 = AnimPrefs.PRESET_COLORS[sIconGradientPreset][0];
+                c2 = AnimPrefs.PRESET_COLORS[sIconGradientPreset][1];
+            }
+            sCachedColorFilter = createColorCorrectionFilter(c1, c2, isDuotone, sIconTintIntensity);
+            sCachedColorFilterHash = hash;
+        }
+        return sCachedColorFilter;
+    }
+
+    private static Drawable createMatteDrawable() {
+        if (!sWallpaperMatte) return null;
+        float intensity = Math.max(0.10f, Math.min(0.95f, sWallpaperMatteIntensity));
+        int alpha = (int) (intensity * 255);
+
+        if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_DARK_VELVET) {
+            return new ColorDrawable(Color.argb(alpha, 10, 14, 22));
+        } else if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_FROSTED_GLASS) {
+            return new GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    new int[]{
+                            Color.argb(Math.min(255, (int) (alpha * 1.35f)), 38, 48, 70),
+                            Color.argb((int) (alpha * 0.80f), 12, 16, 26)
+                    }
+            );
+        } else {
+            return new GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    new int[]{
+                            Color.argb(alpha, 24, 22, 38),
+                            Color.argb(alpha, 6, 8, 14)
+                    }
+            );
+        }
+    }
+
+    private static void updateMatteEffect(final Activity launcher) {
+        if (launcher == null) return;
+        launcher.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Drawable matte = sWallpaperMatte ? createMatteDrawable() : null;
+
+                    // 1. DragLayer root
+                    try {
+                        Object dragLayer = XposedHelpers.getObjectField(launcher, "mDragLayer");
+                        if (dragLayer instanceof View) {
+                            ((View) dragLayer).setBackground(matte);
+                            ((View) dragLayer).invalidate();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+
+                    // 2. Workspace
+                    try {
+                        Object workspace = XposedHelpers.getObjectField(launcher, "mWorkspace");
+                        if (workspace instanceof View) {
+                            ((View) workspace).setBackground(matte);
+                            ((View) workspace).invalidate();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+
+                    // 3. Activity content & window
+                    try {
+                        View content = launcher.findViewById(android.R.id.content);
+                        if (content != null) {
+                            content.setBackground(matte);
+                            content.invalidate();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+
+                    try {
+                        launcher.getWindow().setBackgroundDrawable(matte != null ? matte : new ColorDrawable(Color.TRANSPARENT));
+                    } catch (Throwable ignored) {
+                    }
+
+                    // 4. Invalidate DecorView
+                    try {
+                        View decor = launcher.getWindow().getDecorView();
+                        if (decor != null) {
+                            decor.invalidate();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        });
+    }
+
+    private static void hookDrawOnClassHierarchy(Class<?> targetCls, final XC_MethodHook hook) {
+        if (targetCls == null) return;
+        Class<?> curr = targetCls;
+        while (curr != null && curr != ViewGroup.class && curr != View.class && curr != Object.class) {
+            for (Method m : curr.getDeclaredMethods()) {
+                if (("dispatchDraw".equals(m.getName()) || "draw".equals(m.getName()) || "onDraw".equals(m.getName()))
+                        && m.getParameterTypes().length == 1 && m.getParameterTypes()[0] == Canvas.class) {
+                    try {
+                        XposedBridge.hookMethod(m, hook);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+            curr = curr.getSuperclass();
         }
     }
 
@@ -1934,9 +2014,11 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 "com.mi.android.globallauncher.view.DragLayer",
                 "com.android.launcher3.dragndrop.DragLayer",
                 "com.android.launcher3.views.BaseDragLayer",
-                "com.android.launcher3.DragLayer"
+                "com.android.launcher3.DragLayer",
+                "com.miui.home.launcher.Workspace",
+                "com.mi.android.globallauncher.Workspace",
+                "com.android.launcher3.Workspace"
         };
-        boolean hookedAny = false;
 
         XC_MethodHook matteDrawHook = new XC_MethodHook() {
             @Override
@@ -1948,7 +2030,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     int w = v.getWidth();
                     int h = v.getHeight();
                     if (w > 0 && h > 0) {
-                        drawMatteWallpaperOverlay(canvas, w, h);
+                        drawMatteWallpaperOverlay(canvas, v.getScrollX(), v.getScrollY(), w, h);
                     }
                 }
             }
@@ -1957,58 +2039,37 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         for (String clsName : dragLayerClasses) {
             Class<?> cls = XposedHelpers.findClassIfExists(clsName, cl);
             if (cls != null) {
-                try {
-                    XposedHelpers.findAndHookMethod(cls, "dispatchDraw", Canvas.class, matteDrawHook);
-                    hookedAny = true;
-                } catch (Throwable ignored) {
-                }
-            }
-        }
-
-        if (!hookedAny) {
-            String[] workspaceClasses = new String[]{
-                    "com.miui.home.launcher.Workspace",
-                    "com.mi.android.globallauncher.Workspace",
-                    "com.android.launcher3.Workspace"
-            };
-            for (String wsName : workspaceClasses) {
-                Class<?> cls = XposedHelpers.findClassIfExists(wsName, cl);
-                if (cls != null) {
-                    try {
-                        XposedHelpers.findAndHookMethod(cls, "dispatchDraw", Canvas.class, matteDrawHook);
-                    } catch (Throwable ignored) {
-                    }
-                }
+                hookDrawOnClassHierarchy(cls, matteDrawHook);
             }
         }
     }
 
-    private static void drawMatteWallpaperOverlay(Canvas canvas, int w, int h) {
-        float intensity = Math.max(0.08f, Math.min(0.95f, sWallpaperMatteIntensity));
+    private static void drawMatteWallpaperOverlay(Canvas canvas, int scrollX, int scrollY, int w, int h) {
+        float intensity = Math.max(0.10f, Math.min(0.95f, sWallpaperMatteIntensity));
         int alpha = (int) (intensity * 255);
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_DARK_VELVET) {
             p.setColor(Color.argb(alpha, 10, 14, 22));
-            canvas.drawRect(0, 0, w, h, p);
+            canvas.drawRect(scrollX, scrollY, scrollX + w, scrollY + h, p);
         } else if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_FROSTED_GLASS) {
             LinearGradient grad = new LinearGradient(
-                    0, 0, 0, h,
-                    Color.argb(Math.min(255, (int) (alpha * 1.30f)), 38, 48, 70),
-                    Color.argb((int) (alpha * 0.75f), 12, 16, 26),
+                    scrollX, scrollY, scrollX, scrollY + h,
+                    Color.argb(Math.min(255, (int) (alpha * 1.35f)), 38, 48, 70),
+                    Color.argb((int) (alpha * 0.80f), 12, 16, 26),
                     Shader.TileMode.CLAMP
             );
             p.setShader(grad);
-            canvas.drawRect(0, 0, w, h, p);
-        } else { // DEEP_MIDNIGHT
+            canvas.drawRect(scrollX, scrollY, scrollX + w, scrollY + h, p);
+        } else { // DEEP_SATIN
             LinearGradient grad = new LinearGradient(
-                    0, 0, w, h,
-                    Color.argb(alpha, 22, 24, 38),
+                    scrollX, scrollY, scrollX + w, scrollY + h,
+                    Color.argb(alpha, 24, 22, 38),
                     Color.argb(alpha, 6, 8, 14),
                     Shader.TileMode.CLAMP
             );
             p.setShader(grad);
-            canvas.drawRect(0, 0, w, h, p);
+            canvas.drawRect(scrollX, scrollY, scrollX + w, scrollY + h, p);
         }
     }
 
