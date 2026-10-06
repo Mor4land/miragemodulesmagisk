@@ -1,6 +1,5 @@
 package com.mirage.pocoanim.widget;
 
-import android.app.Activity;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -22,7 +21,6 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
@@ -31,16 +29,30 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.color.DynamicColors;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.slider.Slider;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
 /**
- * Material 3 Borderless Photo & GIF Widget Configuration Activity.
- * Provides per-widget image isolation, intelligent aspect ratio cropping,
- * custom corner radii, and home screen widget switching.
+ * Authentic Material 3 Photo & GIF Widget Configuration Activity.
+ * Implements per-widget photo isolation, smart aspect ratio cropping,
+ * custom corner radius, and home screen widget switching.
  */
-public class WidgetConfigActivity extends Activity {
+public class WidgetConfigActivity extends AppCompatActivity {
 
     private static final int REQUEST_PICK_IMAGE = 1001;
 
@@ -50,34 +62,23 @@ public class WidgetConfigActivity extends Activity {
     public static final int CROP_MODE_WIDE_2_1 = 3;
     public static final int CROP_MODE_TALL_9_16 = 4;
 
-    // Material 3 Dark Palette Tokens
-    private static final int M3_SURFACE = Color.parseColor("#111318");
-    private static final int M3_SURFACE_CONTAINER = Color.parseColor("#1D2024");
-    private static final int M3_SURFACE_CONTAINER_HIGH = Color.parseColor("#272A2F");
-    private static final int M3_SURFACE_CONTAINER_HIGHEST = Color.parseColor("#32353A");
-    private static final int M3_PRIMARY = Color.parseColor("#A8C7FA");
-    private static final int M3_ON_PRIMARY = Color.parseColor("#003355");
-    private static final int M3_TERTIARY = Color.parseColor("#A5D6A7");
-    private static final int M3_ON_TERTIARY = Color.parseColor("#0A3818");
-    private static final int M3_ON_SURFACE = Color.parseColor("#E2E2E6");
-    private static final int M3_ON_SURFACE_VARIANT = Color.parseColor("#C4C7D0");
-    private static final int M3_OUTLINE = Color.parseColor("#44474E");
-    private static final int M3_OUTLINE_VARIANT = Color.parseColor("#2A2D35");
-
     private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     private Bitmap mSelectedSourceBitmap = null;
 
     private int mCornerRadiusDp = 24; // Default HyperOS / POCO radius
-    private int mCropMode = CROP_MODE_ORIGINAL; // Default: preserve original aspect
+    private int mCropMode = CROP_MODE_ORIGINAL;
 
     private ImageView mPreviewImageView;
     private TextView mPreviewHintText;
-    private Button mSaveButton;
+    private MaterialButton mSaveButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        DynamicColors.applyIfAvailable(this);
         super.onCreate(savedInstanceState);
         setResult(RESULT_CANCELED);
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         Intent intent = getIntent();
         Bundle extras = intent != null ? intent.getExtras() : null;
@@ -85,7 +86,6 @@ public class WidgetConfigActivity extends Activity {
             mAppWidgetId = extras.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
-        // If intent did not specify a widget ID, check if there's only one existing widget on the launcher
         if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             try {
                 AppWidgetManager awm = AppWidgetManager.getInstance(this);
@@ -125,51 +125,71 @@ public class WidgetConfigActivity extends Activity {
         );
     }
 
+    private float dpf(float value) {
+        return TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                value,
+                getResources().getDisplayMetrics()
+        );
+    }
+
+    private int getM3Color(int attrResId, int fallbackColor) {
+        return MaterialColors.getColor(this, attrResId, fallbackColor);
+    }
+
     private void buildUi() {
+        LinearLayout outerRoot = new LinearLayout(this);
+        outerRoot.setOrientation(LinearLayout.VERTICAL);
+        outerRoot.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurface, Color.parseColor("#141218")));
+
+        // 1. Material 3 Toolbar
+        MaterialToolbar toolbar = new MaterialToolbar(this);
+        toolbar.setTitle(mAppWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID
+                ? "Настройка Виджета #" + mAppWidgetId
+                : "Новый Фото-виджет");
+        toolbar.setSubtitle("Material 3 Безрамочный стиль");
+        toolbar.setTitleTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        toolbar.setSubtitleTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        toolbar.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurface, Color.parseColor("#141218")));
+        toolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        toolbar.setNavigationOnClickListener(v -> finish());
+        outerRoot.addView(toolbar);
+
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
+            int statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            v.setPadding(v.getPaddingLeft(), statusBarInset, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(M3_SURFACE);
         scrollView.setFillViewport(true);
+        scrollView.setClipToPadding(false);
 
         final LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18), dp(24), dp(18), dp(36));
+        int padH = dp(16);
+        root.setPadding(padH, dp(12), padH, dp(48));
 
-        // 1. Header Title
-        TextView title = new TextView(this);
-        title.setText("🖼️ Фото & GIF Виджет");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-        title.setTextColor(M3_ON_SURFACE);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        root.addView(title);
+        ViewCompat.setOnApplyWindowInsetsListener(scrollView, (v, insets) -> {
+            int navBarInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            root.setPadding(padH, dp(12), padH, dp(48) + navBarInset);
+            return insets;
+        });
 
-        TextView subTitle = new TextView(this);
-        subTitle.setText("Материальный M3 виджет без рамок с изолированными фото для каждого элемента рабочего стола.");
-        subTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        subTitle.setTextColor(M3_ON_SURFACE_VARIANT);
-        subTitle.setPadding(0, dp(4), 0, dp(16));
-        root.addView(subTitle);
-
-        // 2. Active Widget Selector (if widgets are placed on launcher)
+        // 2. Active Widget Selector (if multiple widgets exist on home screen)
         buildWidgetSelectorCard(root);
 
         // 3. M3 Preview Card Container
-        LinearLayout previewCard = new LinearLayout(this);
-        previewCard.setOrientation(LinearLayout.VERTICAL);
-        previewCard.setGravity(Gravity.CENTER);
-        GradientDrawable previewCardBg = new GradientDrawable();
-        previewCardBg.setColor(M3_SURFACE_CONTAINER);
-        previewCardBg.setCornerRadius(dp(28));
-        previewCardBg.setStroke(dp(1), M3_OUTLINE_VARIANT);
-        previewCard.setBackground(previewCardBg);
-        previewCard.setPadding(dp(16), dp(18), dp(16), dp(18));
+        MaterialCardView previewCard = createM3Card();
+        LinearLayout previewCardLayout = createCardContentLayout();
+        previewCardLayout.setGravity(Gravity.CENTER);
 
         FrameLayout previewFrame = new FrameLayout(this);
         LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(dp(240), dp(240));
         previewFrame.setLayoutParams(frameLp);
         GradientDrawable frameBg = new GradientDrawable();
-        frameBg.setColor(Color.parseColor("#13151A"));
+        frameBg.setColor(getM3Color(com.google.android.material.R.attr.colorSurfaceContainerHighest, Color.parseColor("#2B2930")));
         frameBg.setCornerRadius(dp(20));
-        frameBg.setStroke(dp(1), M3_OUTLINE_VARIANT);
         previewFrame.setBackground(frameBg);
 
         mPreviewImageView = new ImageView(this);
@@ -184,7 +204,7 @@ public class WidgetConfigActivity extends Activity {
         mPreviewHintText = new TextView(this);
         mPreviewHintText.setText("Нажмите кнопку ниже,\nчтобы выбрать фото или GIF");
         mPreviewHintText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        mPreviewHintText.setTextColor(M3_ON_SURFACE_VARIANT);
+        mPreviewHintText.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
         mPreviewHintText.setGravity(Gravity.CENTER);
         mPreviewHintText.setLayoutParams(new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -193,154 +213,162 @@ public class WidgetConfigActivity extends Activity {
         ));
         previewFrame.addView(mPreviewHintText);
 
-        previewCard.addView(previewFrame);
+        previewCardLayout.addView(previewFrame);
+        previewCard.addView(previewCardLayout);
         root.addView(previewCard);
 
-        // 4. M3 Pick Photo Button (Tonal Pill)
-        Button pickButton = new Button(this);
-        pickButton.setText("📁 Выбрать изображение из галереи");
-        pickButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        pickButton.setTextColor(M3_ON_SURFACE);
-        pickButton.setTypeface(Typeface.DEFAULT_BOLD);
-        pickButton.setAllCaps(false);
-        GradientDrawable pickBtnBg = new GradientDrawable();
-        pickBtnBg.setColor(M3_SURFACE_CONTAINER_HIGH);
-        pickBtnBg.setCornerRadius(dp(24));
-        pickBtnBg.setStroke(dp(1), M3_SURFACE_CONTAINER_HIGHEST);
-        pickButton.setBackground(pickBtnBg);
+        // 4. M3 Pick Photo Button
+        MaterialButton pickButton = new MaterialButton(this);
+        pickButton.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSecondaryContainer, Color.parseColor("#4A4458")));
+        pickButton.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSecondaryContainer, Color.WHITE));
+        pickButton.setText("Выбрать изображение из галереи");
+        pickButton.setIconResource(android.R.drawable.ic_menu_gallery);
         LinearLayout.LayoutParams pickBtnLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(48)
+                ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        pickBtnLp.setMargins(0, dp(16), 0, dp(16));
+        pickBtnLp.setMargins(0, dp(4), 0, dp(12));
         pickButton.setLayoutParams(pickBtnLp);
-        pickButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent pickIntent = new Intent(Intent.ACTION_PICK);
-                pickIntent.setType("image/*");
-                startActivityForResult(pickIntent, REQUEST_PICK_IMAGE);
-            }
+        pickButton.setOnClickListener(v -> {
+            Intent pickIntent = new Intent(Intent.ACTION_PICK);
+            pickIntent.setType("image/*");
+            startActivityForResult(pickIntent, REQUEST_PICK_IMAGE);
         });
         root.addView(pickButton);
 
         // 5. Proportions / Crop Mode Options
-        addSectionHeader(root, "ПРОПОРЦИИ И ВЫРЕЗКА (БЕЗ ИСКАЖЕНИЙ)");
-        LinearLayout cropRow1 = new LinearLayout(this);
-        cropRow1.setOrientation(LinearLayout.HORIZONTAL);
-        addOptionChip(cropRow1, "Оригинал", mCropMode == CROP_MODE_ORIGINAL, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCropMode = CROP_MODE_ORIGINAL;
-                refreshOptions();
-            }
-        });
-        addOptionChip(cropRow1, "Квадрат 1:1", mCropMode == CROP_MODE_SQUARE, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCropMode = CROP_MODE_SQUARE;
-                refreshOptions();
-            }
-        });
-        root.addView(cropRow1);
+        addSectionHeader(root, "ПРОПОРЦИИ И ВЫРЕЗКА");
+        MaterialCardView cropCard = createM3Card();
+        LinearLayout cropLayout = createCardContentLayout();
 
-        LinearLayout cropRow2 = new LinearLayout(this);
-        cropRow2.setOrientation(LinearLayout.HORIZONTAL);
-        addOptionChip(cropRow2, "Широкий 16:9", mCropMode == CROP_MODE_WIDE_16_9, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCropMode = CROP_MODE_WIDE_16_9;
-                refreshOptions();
+        ChipGroup cropChipGroup = new ChipGroup(this);
+        cropChipGroup.setSingleSelection(true);
+        cropChipGroup.setSelectionRequired(true);
+
+        final int[] modes = new int[]{
+                CROP_MODE_ORIGINAL, CROP_MODE_SQUARE, CROP_MODE_WIDE_16_9, CROP_MODE_WIDE_2_1, CROP_MODE_TALL_9_16
+        };
+        final String[] modeLabels = new String[]{
+                "Оригинал", "Квадрат 1:1", "Широкий 16:9", "Виджет 2:1", "Портрет 9:16"
+        };
+
+        for (int i = 0; i < modes.length; i++) {
+            final int m = modes[i];
+            Chip chip = new Chip(this);
+            chip.setText(modeLabels[i]);
+            chip.setCheckable(true);
+            if (mCropMode == m) {
+                chip.setChecked(true);
             }
-        });
-        addOptionChip(cropRow2, "Виджет 2:1", mCropMode == CROP_MODE_WIDE_2_1, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCropMode = CROP_MODE_WIDE_2_1;
-                refreshOptions();
-            }
-        });
-        addOptionChip(cropRow2, "Портрет 9:16", mCropMode == CROP_MODE_TALL_9_16, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCropMode = CROP_MODE_TALL_9_16;
-                refreshOptions();
-            }
-        });
-        root.addView(cropRow2);
+            chip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
+                    mCropMode = m;
+                    updatePreview();
+                }
+            });
+            cropChipGroup.addView(chip);
+        }
+        cropLayout.addView(cropChipGroup);
+        cropCard.addView(cropLayout);
+        root.addView(cropCard);
 
         // 6. Corner Radius Options
         addSectionHeader(root, "СКРУГЛЕНИЕ УГЛОВ");
-        LinearLayout radiusRow = new LinearLayout(this);
-        radiusRow.setOrientation(LinearLayout.HORIZONTAL);
-        addOptionChip(radiusRow, "Прямой (0)", mCornerRadiusDp == 0, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCornerRadiusDp = 0;
-                refreshOptions();
-            }
-        });
-        addOptionChip(radiusRow, "16 dp", mCornerRadiusDp == 16, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCornerRadiusDp = 16;
-                refreshOptions();
-            }
-        });
-        addOptionChip(radiusRow, "24 dp (POCO)", mCornerRadiusDp == 24, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCornerRadiusDp = 24;
-                refreshOptions();
-            }
-        });
-        addOptionChip(radiusRow, "36 dp", mCornerRadiusDp == 36, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCornerRadiusDp = 36;
-                refreshOptions();
-            }
-        });
-        addOptionChip(radiusRow, "Круг", mCornerRadiusDp >= 99, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCornerRadiusDp = 999;
-                refreshOptions();
-            }
-        });
-        root.addView(radiusRow);
+        MaterialCardView radiusCard = createM3Card();
+        LinearLayout radiusLayout = createCardContentLayout();
 
-        // 7. Save & Apply Button (M3 Tertiary Mint Filled Pill)
-        mSaveButton = new Button(this);
+        final TextView radiusLabel = new TextView(this);
+        radiusLabel.setText("Радиус: " + (mCornerRadiusDp >= 999 ? "Полный круг" : mCornerRadiusDp + " dp"));
+        radiusLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        radiusLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        radiusLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        radiusLayout.addView(radiusLabel);
+
+        Slider radiusSlider = new Slider(this);
+        radiusSlider.setValueFrom(0f);
+        radiusSlider.setValueTo(64f);
+        radiusSlider.setStepSize(4f);
+        radiusSlider.setValue(Math.min(64f, mCornerRadiusDp));
+        radiusSlider.addOnChangeListener((slider, value, fromUser) -> {
+            mCornerRadiusDp = Math.round(value);
+            radiusLabel.setText("Радиус: " + mCornerRadiusDp + " dp");
+            updatePreview();
+        });
+        radiusLayout.addView(radiusSlider);
+
+        ChipGroup presetRadiusGroup = new ChipGroup(this);
+        presetRadiusGroup.setSingleSelection(true);
+
+        Chip chipPoco = new Chip(this);
+        chipPoco.setText("24 dp (POCO M5)");
+        chipPoco.setCheckable(true);
+        chipPoco.setChecked(mCornerRadiusDp == 24);
+        chipPoco.setOnClickListener(v -> {
+            mCornerRadiusDp = 24;
+            radiusSlider.setValue(24f);
+            radiusLabel.setText("Радиус: 24 dp");
+            updatePreview();
+        });
+        presetRadiusGroup.addView(chipPoco);
+
+        Chip chipCircle = new Chip(this);
+        chipCircle.setText("Круг / Овал");
+        chipCircle.setCheckable(true);
+        chipCircle.setChecked(mCornerRadiusDp >= 999);
+        chipCircle.setOnClickListener(v -> {
+            mCornerRadiusDp = 999;
+            radiusLabel.setText("Радиус: Полный круг");
+            updatePreview();
+        });
+        presetRadiusGroup.addView(chipCircle);
+
+        radiusLayout.addView(presetRadiusGroup);
+        radiusCard.addView(radiusLayout);
+        root.addView(radiusCard);
+
+        // 7. Save & Apply Button
+        mSaveButton = new MaterialButton(this);
         if (mAppWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-            mSaveButton.setText("✅ Сохранить в Виджет #" + mAppWidgetId);
+            mSaveButton.setText("Сохранить в Виджет #" + mAppWidgetId);
         } else {
-            mSaveButton.setText("✅ Закрепить новый виджет на рабочем столе");
+            mSaveButton.setText("Закрепить новый виджет на рабочем столе");
         }
-        mSaveButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-        mSaveButton.setTextColor(M3_ON_TERTIARY);
-        mSaveButton.setTypeface(Typeface.DEFAULT_BOLD);
-        mSaveButton.setAllCaps(false);
-        GradientDrawable saveBtnBg = new GradientDrawable();
-        saveBtnBg.setColor(M3_TERTIARY);
-        saveBtnBg.setCornerRadius(dp(26));
-        mSaveButton.setBackground(saveBtnBg);
         LinearLayout.LayoutParams saveBtnLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(52)
+                ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        saveBtnLp.setMargins(0, dp(28), 0, dp(12));
+        saveBtnLp.setMargins(0, dp(16), 0, dp(16));
         mSaveButton.setLayoutParams(saveBtnLp);
-        mSaveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveAndApplyWidget();
-            }
-        });
+        mSaveButton.setOnClickListener(v -> saveAndApplyWidget());
         root.addView(mSaveButton);
 
         scrollView.addView(root);
-        setContentView(scrollView);
+        outerRoot.addView(scrollView);
+        setContentView(outerRoot);
+    }
+
+    private MaterialCardView createM3Card() {
+        MaterialCardView card = new MaterialCardView(this);
+        card.setRadius(dpf(18));
+        card.setCardElevation(0);
+        card.setStrokeWidth(dp(1));
+        card.setStrokeColor(getM3Color(com.google.android.material.R.attr.colorOutlineVariant, Color.parseColor("#36343B")));
+        card.setCardBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurfaceContainerLow, Color.parseColor("#1D1B20")));
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        lp.bottomMargin = dp(12);
+        card.setLayoutParams(lp);
+        return card;
+    }
+
+    private LinearLayout createCardContentLayout() {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp(16), dp(16), dp(16), dp(16));
+        return layout;
     }
 
     private void buildWidgetSelectorCard(LinearLayout root) {
@@ -350,120 +378,67 @@ public class WidgetConfigActivity extends Activity {
             int[] activeIds = awm.getAppWidgetIds(provider);
 
             if (activeIds != null && activeIds.length > 0) {
-                addSectionHeader(root, "АКТИВНЫЙ ВИДЖЕТ НА РАБОЧЕМ СТОЛЕ");
+                addSectionHeader(root, "ВЫБОР ВИДЖЕТА НА РАБОЧЕМ СТОЛЕ");
+                MaterialCardView selectorCard = createM3Card();
+                LinearLayout layout = createCardContentLayout();
 
                 HorizontalScrollView hsv = new HorizontalScrollView(this);
                 hsv.setHorizontalScrollBarEnabled(false);
-                LinearLayout chipContainer = new LinearLayout(this);
-                chipContainer.setOrientation(LinearLayout.HORIZONTAL);
-                chipContainer.setPadding(0, 0, 0, dp(14));
+                ChipGroup chipGroup = new ChipGroup(this);
+                chipGroup.setSingleSelection(true);
+                chipGroup.setSelectionRequired(true);
 
                 // Chip: Add new widget
-                boolean isNewSelected = (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID);
-                Button newChip = createSelectorChip("➕ Новый виджет", isNewSelected, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+                Chip newChip = new Chip(this);
+                newChip.setText("➕ Новый виджет");
+                newChip.setCheckable(true);
+                newChip.setChecked(mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID);
+                newChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                    if (isChecked) {
                         mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
                         loadBitmapForCurrentWidget();
-                        refreshOptions();
+                        buildUi();
+                        updatePreview();
                     }
                 });
-                chipContainer.addView(newChip);
+                chipGroup.addView(newChip);
 
                 // Chips for placed widgets
                 for (int i = 0; i < activeIds.length; i++) {
                     final int targetId = activeIds[i];
-                    boolean isTargetSelected = (mAppWidgetId == targetId);
-                    String label = "Виджет #" + (i + 1) + " (ID:" + targetId + ")";
-                    Button widgetChip = createSelectorChip(label, isTargetSelected, new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
+                    Chip widgetChip = new Chip(this);
+                    widgetChip.setText("Виджет #" + (i + 1) + " (ID:" + targetId + ")");
+                    widgetChip.setCheckable(true);
+                    widgetChip.setChecked(mAppWidgetId == targetId);
+                    widgetChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                        if (isChecked) {
                             mAppWidgetId = targetId;
                             loadBitmapForCurrentWidget();
-                            refreshOptions();
+                            buildUi();
+                            updatePreview();
                         }
                     });
-                    chipContainer.addView(widgetChip);
+                    chipGroup.addView(widgetChip);
                 }
 
-                hsv.addView(chipContainer);
-                root.addView(hsv);
+                hsv.addView(chipGroup);
+                layout.addView(hsv);
+                selectorCard.addView(layout);
+                root.addView(selectorCard);
             }
         } catch (Throwable ignored) {
         }
-    }
-
-    private Button createSelectorChip(String text, boolean selected, View.OnClickListener listener) {
-        Button chip = new Button(this);
-        chip.setText(text);
-        chip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        chip.setAllCaps(false);
-        chip.setOnClickListener(listener);
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(18));
-        if (selected) {
-            bg.setColor(M3_PRIMARY);
-            chip.setTextColor(M3_ON_PRIMARY);
-            chip.setTypeface(Typeface.DEFAULT_BOLD);
-        } else {
-            bg.setColor(M3_SURFACE_CONTAINER_HIGH);
-            chip.setTextColor(M3_ON_SURFACE);
-            bg.setStroke(dp(1), M3_OUTLINE_VARIANT);
-            chip.setTypeface(Typeface.DEFAULT);
-        }
-        chip.setBackground(bg);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                dp(38)
-        );
-        lp.rightMargin = dp(8);
-        chip.setLayoutParams(lp);
-        chip.setPadding(dp(16), 0, dp(16), 0);
-        return chip;
     }
 
     private void addSectionHeader(LinearLayout parent, String text) {
         TextView header = new TextView(this);
         header.setText(text);
         header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        header.setTextColor(M3_PRIMARY);
+        header.setTextColor(getM3Color(com.google.android.material.R.attr.colorPrimary, Color.parseColor("#D0BCFF")));
         header.setTypeface(Typeface.DEFAULT_BOLD);
-        header.setPadding(dp(2), dp(14), dp(2), dp(6));
+        header.setLetterSpacing(0.06f);
+        header.setPadding(dp(4), dp(10), dp(4), dp(4));
         parent.addView(header);
-    }
-
-    private void addOptionChip(LinearLayout row, String text, boolean selected, View.OnClickListener listener) {
-        Button btn = new Button(this);
-        btn.setText(text);
-        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-        btn.setAllCaps(false);
-        btn.setOnClickListener(listener);
-
-        GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(16));
-        if (selected) {
-            bg.setColor(M3_PRIMARY);
-            btn.setTextColor(M3_ON_PRIMARY);
-            btn.setTypeface(Typeface.DEFAULT_BOLD);
-        } else {
-            bg.setColor(M3_SURFACE_CONTAINER_HIGH);
-            btn.setTextColor(M3_ON_SURFACE);
-            bg.setStroke(dp(1), M3_OUTLINE_VARIANT);
-            btn.setTypeface(Typeface.DEFAULT);
-        }
-        btn.setBackground(bg);
-
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(38), 1.0f);
-        lp.setMargins(dp(3), 0, dp(3), dp(6));
-        btn.setLayoutParams(lp);
-        row.addView(btn);
-    }
-
-    private void refreshOptions() {
-        buildUi();
-        updatePreview();
     }
 
     @Override
@@ -486,7 +461,7 @@ public class WidgetConfigActivity extends Activity {
                 if (decoded != null) {
                     mSelectedSourceBitmap = decoded;
                     updatePreview();
-                    Toast.makeText(this, "Изображение успешно загружено!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Изображение загружено!", Toast.LENGTH_SHORT).show();
                 }
             }
         } catch (Throwable t) {
@@ -494,10 +469,6 @@ public class WidgetConfigActivity extends Activity {
         }
     }
 
-    /**
-     * Creates a high-resolution processed bitmap with anti-aliased rounded corners
-     * and strictly without any borders or distortion.
-     */
     private Bitmap createProcessedBitmap(int maxDimension) {
         if (mSelectedSourceBitmap == null) {
             return null;
@@ -558,7 +529,6 @@ public class WidgetConfigActivity extends Activity {
             radius = dp(mCornerRadiusDp) * ((float) Math.min(dstW, dstH) / Math.max(1, dp(240)));
         }
 
-        // 1. Draw smooth anti-aliased mask
         Paint maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         maskPaint.setColor(Color.WHITE);
         if (radius > 0) {
@@ -567,7 +537,6 @@ public class WidgetConfigActivity extends Activity {
             canvas.drawRect(dstRect, maskPaint);
         }
 
-        // 2. Draw cropped source bitmap inside mask using SRC_IN (no borders)
         Paint imagePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
         imagePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(mSelectedSourceBitmap, srcRect, dstRect, imagePaint);
@@ -615,14 +584,12 @@ public class WidgetConfigActivity extends Activity {
                 widgetDir.mkdirs();
             }
 
-            // Save high-resolution 1080px bitmap to internal storage (borderless, perfect aspect)
             Bitmap finalBm = createProcessedBitmap(1080);
             if (finalBm == null) {
                 Toast.makeText(this, "Ошибка обработки изображения", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Always save latest_widget.png as template/backup
             File latestFile = new File(widgetDir, "latest_widget.png");
             FileOutputStream lfos = new FileOutputStream(latestFile);
             finalBm.compress(Bitmap.CompressFormat.PNG, 100, lfos);
@@ -630,14 +597,12 @@ public class WidgetConfigActivity extends Activity {
             lfos.close();
 
             if (mAppWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                // Save ONLY to this specific widget file — NEVER touch other placed widgets!
                 File targetFile = new File(widgetDir, "widget_" + mAppWidgetId + ".png");
                 FileOutputStream fos = new FileOutputStream(targetFile);
                 finalBm.compress(Bitmap.CompressFormat.PNG, 100, fos);
                 fos.flush();
                 fos.close();
 
-                // Update ONLY this widget on the launcher
                 MiragePhotoWidgetProvider.updateAppWidget(this, appWidgetManager, mAppWidgetId);
 
                 Intent resultValue = new Intent();
@@ -646,7 +611,6 @@ public class WidgetConfigActivity extends Activity {
                 Toast.makeText(this, "Виджет #" + mAppWidgetId + " успешно обновлен!", Toast.LENGTH_SHORT).show();
                 finish();
             } else {
-                // New widget to pin: write pending_new_widget.png
                 File pendingFile = new File(widgetDir, "pending_new_widget.png");
                 FileOutputStream fos = new FileOutputStream(pendingFile);
                 finalBm.compress(Bitmap.CompressFormat.PNG, 100, fos);

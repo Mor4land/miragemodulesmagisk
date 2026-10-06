@@ -5,7 +5,7 @@
         android:allowBackup="true"
         android:label="POCO M5 Flagship Animations"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+        android:theme="@style/Theme.PocoAnim">
 
         <meta-data
             android:name="xposedmodule"
@@ -23,7 +23,8 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:label="POCO Animations">
+            android:label="POCO Animations"
+            android:theme="@style/Theme.PocoAnim">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -46,7 +47,7 @@
             android:name=".widget.WidgetConfigActivity"
             android:exported="true"
             android:label="Настройка фото-виджета"
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
+            android:theme="@style/Theme.PocoAnim">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>

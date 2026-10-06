@@ -134,4 +134,52 @@ public class ColorMatrixAndWidgetTest {
         Assert.assertNotEquals(keyIconTheme, keyMatte);
         Assert.assertNotEquals(keyMatte, keySnap);
     }
+
+    @Test
+    public void testWindowModeResolutionLogic() {
+        // 1. User on Launcher (desktop / recents):
+        // Normal home swipe (returns 1 HOME_MODE) must NEVER be altered to 2 (APP_MODE)
+        boolean launcherOnTop = true;
+        int stockResult = 1; // HOME_MODE
+        boolean openingActive = false;
+        int resolvedMode = resolveWindowMode(launcherOnTop, stockResult, openingActive);
+        Assert.assertEquals("Desktop gesture to Recents must preserve HOME_MODE (1)", 1, resolvedMode);
+
+        // 2. User on Launcher during active launch break:
+        // Stock dropped to 0 (GESTURE_NONE) -> restored to 1 (HOME_MODE)
+        stockResult = 0;
+        openingActive = true;
+        resolvedMode = resolveWindowMode(launcherOnTop, stockResult, openingActive);
+        Assert.assertEquals("Interrupted launch must be recovered to HOME_MODE (1)", 1, resolvedMode);
+
+        // 3. User inside an app:
+        // Stuck flags caused stock to return 1 or 0 -> must force APP_MODE (2)
+        launcherOnTop = false;
+        stockResult = 1; // Stuck mIsLaunchingNewTask flag
+        resolvedMode = resolveWindowMode(launcherOnTop, stockResult, false);
+        Assert.assertEquals("In-app exit gesture must force APP_MODE (2)", 2, resolvedMode);
+
+        stockResult = 0; // Stuck block flag
+        resolvedMode = resolveWindowMode(launcherOnTop, stockResult, false);
+        Assert.assertEquals("In-app exit gesture with 0 mode must force APP_MODE (2)", 2, resolvedMode);
+
+        stockResult = 2; // Normal in-app mode
+        resolvedMode = resolveWindowMode(launcherOnTop, stockResult, false);
+        Assert.assertEquals("Normal in-app mode remains APP_MODE (2)", 2, resolvedMode);
+    }
+
+    private int resolveWindowMode(boolean launcherOnTop, int stockResult, boolean isAppCurrentlyOpening) {
+        if (launcherOnTop) {
+            if (stockResult == 0 && isAppCurrentlyOpening) {
+                return 1;
+            }
+            return stockResult;
+        } else {
+            if (stockResult != 2) {
+                return 2;
+            }
+            return stockResult;
+        }
+    }
 }
+

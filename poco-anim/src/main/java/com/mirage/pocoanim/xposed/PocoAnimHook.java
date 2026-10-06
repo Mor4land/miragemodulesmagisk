@@ -678,23 +678,31 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!sEnabled || !sNonStopSwipe) {
                     return;
                 }
-                boolean launcherOnTop = callBooleanMethodSafe(param.thisObject, "isLauncherOnTop", false);
-                if (!launcherOnTop) {
-                    // Inside an app, window mode MUST ALWAYS be APP_MODE (2)!
-                    // Clear stuck launch block flags and force APP_MODE so bottom exit gesture never freezes.
-                    setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
-                    setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
-                    setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
-                    param.setResult(2);
-                } else {
+                boolean launcherOnTop = isLauncherOnTopSafe(param.thisObject, cl);
+                if (launcherOnTop) {
+                    // 1. User is on the desktop / launcher.
+                    // NEVER force APP_MODE (2)! Doing so breaks Recents and desktop gestures.
                     Object res = param.getResult();
                     if (res instanceof Integer && ((Integer) res) == 0) {
+                        // If stock MIUI dropped the gesture (mode 0) while an app open animation was active,
+                        // recover to HOME_MODE (1) so the swipe can break the opening animation.
                         if (isAppCurrentlyOpening(param.thisObject, cl)) {
                             setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
                             setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
                             setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
                             param.setResult(1);
                         }
+                    }
+                } else {
+                    // 2. User is genuinely inside an external app (!launcherOnTop).
+                    // If stuck launch flags caused mode to be != 2 (0 or 1), unstick them and force APP_MODE (2)
+                    // so the bottom exit gesture / pill never freezes.
+                    Object res = param.getResult();
+                    if (res instanceof Integer && ((Integer) res) != 2) {
+                        setBooleanFieldSafe(param.thisObject, "mIsLaunchingNewTask", false);
+                        setBooleanFieldSafe(param.thisObject, "mIsBlockedAfterStartNewTask", false);
+                        setIntFieldSafe(param.thisObject, "mBlockedAfterStartNewTaskNum", 0);
+                        param.setResult(2);
                     }
                 }
             }
@@ -873,6 +881,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!sEnabled || !sNonStopSwipe) {
                     return;
                 }
+                if (!isAppCurrentlyOpening(param.thisObject, cl)) {
+                    return;
+                }
                 Object spring = getBreakableCurrentAnim(cl);
                 if (spring != null) {
                     Object calc = getObjectFieldSafe(param.thisObject, "mCalculator");
@@ -893,6 +904,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (!sEnabled || !sNonStopSwipe) {
+                    return;
+                }
+                if (!isAppCurrentlyOpening(param.thisObject, cl)) {
                     return;
                 }
                 Object currentAnim = getBreakableCurrentAnim(cl);
@@ -998,9 +1012,40 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         return null;
     }
 
+    private static Activity getLauncherActivitySafe(Object navStubView, ClassLoader cl) {
+        if (navStubView instanceof View) {
+            Context ctx = ((View) navStubView).getContext();
+            while (ctx instanceof android.content.ContextWrapper) {
+                if (ctx instanceof Activity) {
+                    return (Activity) ctx;
+                }
+                ctx = ((android.content.ContextWrapper) ctx).getBaseContext();
+            }
+        }
+        try {
+            Class<?> appCls = XposedHelpers.findClassIfExists("com.miui.home.launcher.Application", cl);
+            if (appCls != null) {
+                Object l = XposedHelpers.callStaticMethod(appCls, "getLauncher");
+                if (l instanceof Activity) {
+                    return (Activity) l;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private static boolean isLauncherOnTopSafe(Object navStubView, ClassLoader cl) {
+        Activity launcher = getLauncherActivitySafe(navStubView, cl);
+        if (launcher != null) {
+            return callBooleanMethodSafe(launcher, "isResumed", false) || launcher.hasWindowFocus();
+        }
+        return true;
+    }
+
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
         if (navStubView != null) {
-            boolean launcherOnTop = callBooleanMethodSafe(navStubView, "isLauncherOnTop", true);
+            boolean launcherOnTop = isLauncherOnTopSafe(navStubView, cl);
             if (!launcherOnTop) {
                 // When launcher is NOT on top, the user is inside an app. Never hijack in-app navigation!
                 return false;

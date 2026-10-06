@@ -1,8 +1,8 @@
 package com.mirage.pocoanim.ui;
 
-import android.app.Activity;
-import android.app.AlertDialog;
+import android.content.res.ColorStateList;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -17,36 +17,49 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
-import android.view.animation.OvershootInterpolator;
-import android.content.Intent;
-import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
-import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.mirage.pocoanim.util.AnimPrefs;
 
-public class MainActivity extends Activity {
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.color.DynamicColors;
+import com.google.android.material.color.MaterialColors;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.divider.MaterialDivider;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.slider.Slider;
+
+import com.mirage.pocoanim.util.AnimPrefs;
+import com.mirage.pocoanim.widget.WidgetConfigActivity;
+
+public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences mPrefs;
     private final ImageView[] mPreviewIcons = new ImageView[3];
-    private final LinearLayout[] mPresetPills = new LinearLayout[AnimPrefs.PRESET_COLORS.length];
-    private final TextView[] mPresetPillTexts = new TextView[AnimPrefs.PRESET_COLORS.length];
-    private final Button[] mIntensityButtons = new Button[4];
-    private Button mBtnModeGradient;
-    private Button mBtnModeSolid;
+    private Chip[] mPresetChips;
+    private ChipGroup mSpeedChipGroup;
+    private ChipGroup mMatteStyleChipGroup;
+    private ChipGroup mIconModeChipGroup;
+    private Slider mMatteIntensitySlider;
+    private Slider mIconIntensitySlider;
+
     private LinearLayout mColor1Btn;
     private LinearLayout mColor2Btn;
     private View mColor1Badge;
@@ -81,7 +94,13 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Material 3 Dynamic Colors from Wallpaper (Material You / Monet)
+        DynamicColors.applyIfAvailable(this);
         super.onCreate(savedInstanceState);
+
+        // Edge-to-edge system bars
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         mPrefs = AnimPrefs.getPrefs(this);
         if (!mPrefs.getBoolean("migrated_v104_coloros", false)) {
             mPrefs.edit()
@@ -92,394 +111,13 @@ public class MainActivity extends Activity {
         }
         AnimPrefs.makeWorldReadable(this);
 
-        ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#111318"));
-        scrollView.setFillViewport(true);
-
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(18);
-        root.setPadding(pad, dp(24), pad, pad);
-
-        TextView title = new TextView(this);
-        title.setText("POCO M5 Flagship Animations v1.0.23");
-        title.setTextColor(Color.parseColor("#E2E2E6"));
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        root.addView(title);
-
-        TextView subtitle = new TextView(this);
-        subtitle.setText("Флагманские анимации HyperOS & ColorOS, честные 90 Гц, Material 3 UI и независимые виджеты");
-        subtitle.setTextColor(Color.parseColor("#C4C7D0"));
-        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        subtitle.setPadding(0, dp(6), 0, dp(20));
-        root.addView(subtitle);
-
-        // Master Switch Card
-        LinearLayout masterCard = createCard();
-        masterCard.addView(createSwitchRow(
-                "Флагманские анимации (High-End)",
-                "Разблокирует полный возврат окна в иконку, пружинную физику и плавные переходы",
-                AnimPrefs.KEY_ENABLED,
-                true
-        ));
-        addDivider(masterCard);
-        masterCard.addView(createSwitchRow(
-                "Без задержки открытия после закрытия",
-                "Снимает блокировку нажатий во время сворачивания окна без нагрузки на поток интерфейса",
-                AnimPrefs.KEY_INSTANT_LAUNCH,
-                true
-        ));
-        addDivider(masterCard);
-        masterCard.addView(createSwitchRow(
-                "Фиксация честных 90 Гц (POCO M5)",
-                "Удерживает 90 Гц на рабочем столе без просадок герцовки",
-                AnimPrefs.KEY_TURBO_OPTIMIZE,
-                true
-        ));
-        root.addView(masterCard);
-
-        addSectionHeader(root, "СКОРОСТЬ АНИМАЦИИ ПЕРЕХОДОВ");
-
-        LinearLayout speedCard = createCard();
-        RadioGroup speedGroup = new RadioGroup(this);
-        speedGroup.setOrientation(RadioGroup.VERTICAL);
-
-        final float currentSpeed = mPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 1.0f);
-        final float[] speedValues = new float[]{0.6f, 0.85f, 1.0f, 1.25f};
-        final String[] speedLabels = new String[]{
-                "Молниеносная (0.6x) — мгновенный отклик",
-                "Быстрая / Динамичная (0.85x)",
-                "Эталон ColorOS 15 / Флагман (1.0x) — рекомендуется",
-                "Плавная / Расслабленная (1.25x)"
-        };
-
-        int checkedId = 2;
-        for (int i = 0; i < speedValues.length; i++) {
-            if (Math.abs(currentSpeed - speedValues[i]) < 0.05f) {
-                checkedId = i;
-            }
-            RadioButton rb = new RadioButton(this);
-            rb.setId(100 + i);
-            rb.setText(speedLabels[i]);
-            rb.setTextColor(Color.parseColor("#E2E8F0"));
-            rb.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-            rb.setPadding(dp(8), dp(10), dp(8), dp(10));
-            speedGroup.addView(rb);
-        }
-        speedGroup.check(100 + checkedId);
-
-        speedGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int id) {
-                int idx = id - 100;
-                if (idx >= 0 && idx < speedValues.length) {
-                    mPrefs.edit().putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, speedValues[idx]).commit();
-                    AnimPrefs.broadcastUpdate(MainActivity.this);
-                }
-            }
-        });
-        speedCard.addView(speedGroup);
-        root.addView(speedCard);
-
-        addSectionHeader(root, "ДЕТАЛЬНЫЕ НАСТРОЙКИ ЭФФЕКТОВ");
-
-        LinearLayout effectsCard = createCard();
-        effectsCard.addView(createSwitchRow(
-                "Анимация со сторонними иконками",
-                "Включает плавный возврат окна в иконку даже при использовании кастомных паков иконок",
-                AnimPrefs.KEY_ICON_ANIM,
-                true
-        ));
-        addDivider(effectsCard);
-        effectsCard.addView(createSwitchRow(
-                "Плавное размытие фона (Surface Blur)",
-                "Красивое флагманское размытие обоев и фона при свайпах и открытии недавних приложений",
-                AnimPrefs.KEY_COMPLETE_BLUR,
-                true
-        ));
-        addDivider(effectsCard);
-        effectsCard.addView(createSwitchRow(
-                "Размытие при открытии папок",
-                "Красивое размытие обоев позади открытой папки на рабочем столе",
-                AnimPrefs.KEY_FOLDER_BLUR,
-                false
-        ));
-        addDivider(effectsCard);
-        effectsCard.addView(createSwitchRow(
-                "Затемнение и зум обоев",
-                "Глубокий эффект масштабирования и приглушения обоев при запуске приложений",
-                AnimPrefs.KEY_WALLPAPER_DARKEN,
-                true
-        ));
-        addDivider(effectsCard);
-        effectsCard.addView(createSwitchRow(
-                "Анимации в режиме энергосбережения",
-                "Не урезать плавность лаунчера при включенной экономии заряда батареи",
-                AnimPrefs.KEY_IGNORE_POWER_SAVE,
-                true
-        ));
-        root.addView(effectsCard);
-
-        addSectionHeader(root, "КАСТОМИЗАЦИЯ И СТИЛИЗАЦИЯ ИКОНОК");
-        LinearLayout iconCard = createIconCustomizationCard();
-        root.addView(iconCard);
-
-        addSectionHeader(root, "ОБОИ И РАБОЧИЙ СТОЛ (МАТОВЫЙ ЭФФЕКТ И СИНХРОНИЗАЦИЯ)");
-        LinearLayout desktopCard = createDesktopCard();
-        root.addView(desktopCard);
-
-        addSectionHeader(root, "КАСТОМНЫЕ ВИДЖЕТЫ (ФОТО & GIF)");
-        LinearLayout widgetCard = createWidgetManagementCard();
-        root.addView(widgetCard);
-
-        addSectionHeader(root, "ПОЛНОЦЕННЫЙ РЕСТАРТ И ВОССТАНОВЛЕНИЕ");
-
-        Button restartLauncherBtn = createActionButton(
-                "Применить Турбо-буст + Перезапустить Лаунчер",
-                "#FF6900",
-                dp(8)
-        );
-        restartLauncherBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                restartLauncherOnly();
-            }
-        });
-        root.addView(restartLauncherBtn);
-
-        Button fullUiRestartBtn = createActionButton(
-                "Полноценный рестарт оболочки (Launcher + SystemUI + 90 Гц + WebView)",
-                "#2563EB",
-                dp(12)
-        );
-        fullUiRestartBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                performFullUiAndWebViewRestart();
-            }
-        });
-        root.addView(fullUiRestartBtn);
-
-        Button fullRebootBtn = createActionButton(
-                "Полная перезагрузка смартфона (Система)",
-                "#DC2626",
-                dp(12)
-        );
-        fullRebootBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                confirmAndRebootDevice();
-            }
-        });
-        root.addView(fullRebootBtn);
-
-        TextView footer = new TextView(this);
-        footer.setText("Настройки применяются на лету. При первом включении функций нажмите синюю кнопку «Полноценный рестарт оболочки».");
-        footer.setTextColor(Color.parseColor("#64748B"));
-        footer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        footer.setGravity(Gravity.CENTER_HORIZONTAL);
-        footer.setPadding(0, dp(16), 0, dp(12));
-        root.addView(footer);
-
-        scrollView.addView(root);
-        setContentView(scrollView);
+        buildMaterial3Ui();
 
         AnimPrefs.broadcastUpdate(this);
         repairWebViewAndOptimizeSilent();
     }
 
-    private Button createActionButton(String text, String hexColor, int topMarginPx) {
-        Button btn = new Button(this);
-        btn.setText(text);
-        btn.setAllCaps(false);
-        btn.setTextColor(Color.WHITE);
-        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        btn.setTypeface(Typeface.DEFAULT_BOLD);
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(Color.parseColor(hexColor));
-        btnBg.setCornerRadius(dp(26));
-        btn.setBackground(btnBg);
-
-        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(52)
-        );
-        btnLp.topMargin = topMarginPx;
-        btn.setLayoutParams(btnLp);
-        return btn;
-    }
-
-    private String getOptimizationCmdIfEnabled() {
-        if (mPrefs != null && mPrefs.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, true)) {
-            return "; " + TURBO_M5_CMD;
-        }
-        return "";
-    }
-
-    private void repairWebViewAndOptimizeSilent() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Runtime.getRuntime().exec(new String[]{
-                            "su", "-c",
-                            WEBVIEW_REPAIR_CMD + getOptimizationCmdIfEnabled()
-                    });
-                } catch (Throwable ignored) {
-                }
-            }
-        }).start();
-    }
-
-    private void restartLauncherOnly() {
-        try {
-            Runtime.getRuntime().exec(new String[]{
-                    "su", "-c",
-                    WEBVIEW_REPAIR_CMD
-                            + getOptimizationCmdIfEnabled()
-                            + "; killall com.mi.android.globallauncher com.miui.home 2>/dev/null"
-                            + "; am force-stop com.mi.android.globallauncher 2>/dev/null"
-                            + "; am force-stop com.miui.home 2>/dev/null"
-            });
-            Toast.makeText(this, "Турбо-оптимизация применена, лаунчер перезапускается...", Toast.LENGTH_SHORT).show();
-        } catch (Throwable t) {
-            Toast.makeText(this, "Ошибка Root-доступа: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void performFullUiAndWebViewRestart() {
-        try {
-            Toast.makeText(this, "Применение 90 Гц Турбо, восстановление WebView и перезапуск оболочки...", Toast.LENGTH_SHORT).show();
-            Runtime.getRuntime().exec(new String[]{
-                    "su", "-c",
-                    WEBVIEW_REPAIR_CMD
-                            + getOptimizationCmdIfEnabled()
-                            + "; settings put global transition_animation_duration_ratio 0.85 2>/dev/null"
-                            + "; am force-stop com.mi.android.globallauncher 2>/dev/null"
-                            + "; am force-stop com.miui.home 2>/dev/null"
-                            + "; killall com.mi.android.globallauncher com.miui.home com.android.systemui 2>/dev/null"
-            });
-        } catch (Throwable t) {
-            Toast.makeText(this, "Ошибка Root-доступа: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void confirmAndRebootDevice() {
-        new AlertDialog.Builder(this)
-                .setTitle("Полная перезагрузка смартфона")
-                .setMessage("Перед перезагрузкой будут автоматически проверены службы WebView и сохранены все настройки анимаций. Перезагрузить устройство сейчас?")
-                .setPositiveButton("Перезагрузить", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        AnimPrefs.broadcastUpdate(MainActivity.this);
-                        try {
-                            Runtime.getRuntime().exec(new String[]{
-                                    "su", "-c",
-                                    WEBVIEW_REPAIR_CMD + "; sync; svc power reboot || reboot"
-                            });
-                        } catch (Throwable t) {
-                            Toast.makeText(MainActivity.this, "Не удалось выполнить перезагрузку", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                })
-                .setNegativeButton("Отмена", null)
-                .show();
-    }
-
-    private LinearLayout createCard() {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.parseColor("#1D2024"));
-        bg.setCornerRadius(dp(28));
-        bg.setStroke(dp(1), Color.parseColor("#2A2D35"));
-        card.setBackground(bg);
-        int p = dp(18);
-        card.setPadding(p, dp(16), p, dp(16));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        lp.bottomMargin = dp(16);
-        card.setLayoutParams(lp);
-        return card;
-    }
-
-    private void addSectionHeader(LinearLayout parent, String text) {
-        TextView header = new TextView(this);
-        header.setText(text);
-        header.setTextColor(Color.parseColor("#A8C7FA"));
-        header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        header.setTypeface(Typeface.DEFAULT_BOLD);
-        header.setPadding(dp(4), dp(10), dp(4), dp(6));
-        parent.addView(header);
-    }
-
-    private void addDivider(LinearLayout parent) {
-        View div = new View(this);
-        div.setBackgroundColor(Color.parseColor("#2A2D35"));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(1)
-        );
-        lp.topMargin = dp(10);
-        lp.bottomMargin = dp(10);
-        div.setLayoutParams(lp);
-        parent.addView(div);
-    }
-
-    private View createSwitchRow(String titleText, String descText, final String key, boolean defVal) {
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-
-        LinearLayout textCol = new LinearLayout(this);
-        textCol.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        colLp.rightMargin = dp(12);
-        textCol.setLayoutParams(colLp);
-
-        TextView title = new TextView(this);
-        title.setText(titleText);
-        title.setTextColor(Color.parseColor("#F1F5F9"));
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
-        textCol.addView(title);
-
-        TextView desc = new TextView(this);
-        desc.setText(descText);
-        desc.setTextColor(Color.parseColor("#94A3B8"));
-        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        desc.setPadding(0, dp(3), 0, 0);
-        textCol.addView(desc);
-
-        Switch sw = new Switch(this);
-        sw.setChecked(mPrefs.getBoolean(key, defVal));
-        sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPrefs.edit().putBoolean(key, isChecked).commit();
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-            }
-        });
-
-        row.addView(textCol);
-        row.addView(sw);
-        return row;
-    }
-
     private int dp(int value) {
-        return (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                value,
-                getResources().getDisplayMetrics()
-        );
-    }
-
-    private int dp(float value) {
         return (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 value,
@@ -495,10 +133,321 @@ public class MainActivity extends Activity {
         );
     }
 
-    private LinearLayout createIconCustomizationCard() {
-        LinearLayout card = createCard();
+    private int getM3Color(int attrResId, int fallbackColor) {
+        return MaterialColors.getColor(this, attrResId, fallbackColor);
+    }
 
-        // 1. Switch: Enable Icon Customization Theme
+    private void buildMaterial3Ui() {
+        LinearLayout outerRoot = new LinearLayout(this);
+        outerRoot.setOrientation(LinearLayout.VERTICAL);
+        outerRoot.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurface, Color.parseColor("#141218")));
+
+        // 1. Material 3 Top App Bar
+        MaterialToolbar toolbar = new MaterialToolbar(this);
+        toolbar.setTitle("POCO M5 Animations");
+        toolbar.setSubtitle("Material 3 • HyperOS Edition");
+        toolbar.setTitleCentered(false);
+        toolbar.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurface, Color.parseColor("#141218")));
+        toolbar.setTitleTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        toolbar.setSubtitleTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        outerRoot.addView(toolbar);
+
+        // Window insets handling for edge-to-edge
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar, (v, insets) -> {
+            int statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            v.setPadding(v.getPaddingLeft(), statusBarInset, v.getPaddingRight(), v.getPaddingBottom());
+            return insets;
+        });
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+        scrollView.setClipToPadding(false);
+
+        LinearLayout contentRoot = new LinearLayout(this);
+        contentRoot.setOrientation(LinearLayout.VERTICAL);
+        int padH = dp(16);
+        contentRoot.setPadding(padH, dp(12), padH, dp(48));
+
+        ViewCompat.setOnApplyWindowInsetsListener(scrollView, (v, insets) -> {
+            int navBarInset = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            contentRoot.setPadding(padH, dp(12), padH, dp(48) + navBarInset);
+            return insets;
+        });
+
+        // 2. Hero Status Card
+        contentRoot.addView(createHeroCard());
+
+        // 3. Section: Главный переключатель
+        addSectionHeader(contentRoot, "ГЛАВНЫЕ НАСТРОЙКИ");
+        MaterialCardView masterCard = createM3Card();
+        LinearLayout masterLayout = createCardContentLayout();
+        masterLayout.addView(createSwitchRow(
+                "Флагманские анимации (High-End)",
+                "Пружинная физика, возврат окна в иконку и морфинг без задержек",
+                AnimPrefs.KEY_ENABLED,
+                true
+        ));
+        addM3Divider(masterLayout);
+        masterLayout.addView(createSwitchRow(
+                "Мгновенный запуск без блокировок",
+                "Снимает блокировку ввода при сворачивании окна приложения",
+                AnimPrefs.KEY_INSTANT_LAUNCH,
+                true
+        ));
+        addM3Divider(masterLayout);
+        masterLayout.addView(createSwitchRow(
+                "Фиксация 90 Гц (POCO M5 Turbo)",
+                "Удерживает максимальную частоту обновления 90 Гц на рабочем столе",
+                AnimPrefs.KEY_TURBO_OPTIMIZE,
+                true
+        ));
+        masterCard.addView(masterLayout);
+        contentRoot.addView(masterCard);
+
+        // 4. Section: Скорость переходов (M3 Chips)
+        addSectionHeader(contentRoot, "СКОРОСТЬ ПЕРЕХОДОВ");
+        MaterialCardView speedCard = createM3Card();
+        LinearLayout speedLayout = createCardContentLayout();
+        TextView speedDesc = new TextView(this);
+        speedDesc.setText("Выберите динамику анимационных кривых и пружин ColorOS 15:");
+        speedDesc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY));
+        speedDesc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        speedDesc.setPadding(0, 0, 0, dp(10));
+        speedLayout.addView(speedDesc);
+
+        mSpeedChipGroup = new ChipGroup(this);
+        mSpeedChipGroup.setSingleSelection(true);
+        mSpeedChipGroup.setSelectionRequired(true);
+
+        final float currentSpeed = mPrefs.getFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, 1.0f);
+        final float[] speedValues = new float[]{0.6f, 0.85f, 1.0f, 1.25f};
+        final String[] speedLabels = new String[]{
+                "0.6x Молния",
+                "0.85x Динамичная",
+                "1.0x Флагман (Эталон)",
+                "1.25x Плавная"
+        };
+
+        for (int i = 0; i < speedValues.length; i++) {
+            final int idx = i;
+            Chip chip = new Chip(this);
+            chip.setText(speedLabels[i]);
+            chip.setCheckable(true);
+            if (Math.abs(currentSpeed - speedValues[i]) < 0.05f) {
+                chip.setChecked(true);
+            }
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    mPrefs.edit().putFloat(AnimPrefs.KEY_ANIM_SPEED_RATIO, speedValues[idx]).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                }
+            });
+            mSpeedChipGroup.addView(chip);
+        }
+        speedLayout.addView(mSpeedChipGroup);
+        speedCard.addView(speedLayout);
+        contentRoot.addView(speedCard);
+
+        // 5. Section: Эффекты лаунчера
+        addSectionHeader(contentRoot, "ЭФФЕКТЫ И РАЗМЫТИЕ");
+        MaterialCardView effectsCard = createM3Card();
+        LinearLayout effectsLayout = createCardContentLayout();
+        effectsLayout.addView(createSwitchRow(
+                "Анимация со сторонними иконками",
+                "Морфинг и возврат окна для сторонних Icon Pack",
+                AnimPrefs.KEY_ICON_ANIM,
+                true
+        ));
+        addM3Divider(effectsLayout);
+        effectsLayout.addView(createSwitchRow(
+                "Размытие фона (Surface Blur)",
+                "Флагманское размытие обоев при свайпах и в недавних задачах",
+                AnimPrefs.KEY_COMPLETE_BLUR,
+                true
+        ));
+        addM3Divider(effectsLayout);
+        effectsLayout.addView(createSwitchRow(
+                "Размытие при открытии папок",
+                "Мягкое размытие рабочего стола позади открытой папки",
+                AnimPrefs.KEY_FOLDER_BLUR,
+                false
+        ));
+        addM3Divider(effectsLayout);
+        effectsLayout.addView(createSwitchRow(
+                "Затемнение и зум обоев",
+                "Масштабирование и приглушение обоев при запуске приложений",
+                AnimPrefs.KEY_WALLPAPER_DARKEN,
+                true
+        ));
+        addM3Divider(effectsLayout);
+        effectsLayout.addView(createSwitchRow(
+                "Анимации в режиме энергосбережения",
+                "Сохраняет полную частоту кадров при экономии заряда",
+                AnimPrefs.KEY_IGNORE_POWER_SAVE,
+                true
+        ));
+        effectsCard.addView(effectsLayout);
+        contentRoot.addView(effectsCard);
+
+        // 6. Section: Кастомизация цвета иконок
+        addSectionHeader(contentRoot, "ЦВЕТОКОРРЕКЦИЯ И ТОНИРОВАНИЕ ИКОНОК");
+        contentRoot.addView(createIconCustomizationCard());
+
+        // 7. Section: Обои и синхронизация страниц
+        addSectionHeader(contentRoot, "ОБОИ И РАБОЧИЙ СТОЛ");
+        contentRoot.addView(createDesktopCard());
+
+        // 8. Section: Системные виджеты
+        addSectionHeader(contentRoot, "СИСТЕМНЫЕ ФОТО-ВИДЖЕТЫ");
+        contentRoot.addView(createWidgetManagementCard());
+
+        // 9. Section: Действия и рестарт
+        addSectionHeader(contentRoot, "ОБСЛУЖИВАНИЕ И РЕСТАРТ");
+        contentRoot.addView(createMaintenanceCard());
+
+        scrollView.addView(contentRoot);
+        outerRoot.addView(scrollView);
+        setContentView(outerRoot);
+    }
+
+    private View createHeroCard() {
+        MaterialCardView heroCard = createM3Card();
+        heroCard.setCardBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurfaceContainerHigh, Color.parseColor("#2B2930")));
+        heroCard.setStrokeWidth(0);
+
+        LinearLayout layout = createCardContentLayout();
+
+        TextView title = new TextView(this);
+        title.setText("POCO M5 Flagship Suite");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        layout.addView(title);
+
+        TextView sub = new TextView(this);
+        sub.setText("Material 3 интерфейс, пружинная кинематика ColorOS 15 и полноэкранные жесты без фризов.");
+        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        sub.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        sub.setPadding(0, dp(4), 0, dp(12));
+        layout.addView(sub);
+
+        LinearLayout chipsRow = new LinearLayout(this);
+        chipsRow.setOrientation(LinearLayout.HORIZONTAL);
+
+        Chip statusChip = new Chip(this);
+        statusChip.setText("LSPosed Активен");
+        statusChip.setCheckable(false);
+        statusChip.setClickable(false);
+        statusChip.setChipBackgroundColorResource(android.R.color.transparent);
+        statusChip.setChipStrokeWidth(0);
+        statusChip.setTextColor(getM3Color(com.google.android.material.R.attr.colorPrimary, Color.CYAN));
+        chipsRow.addView(statusChip);
+
+        Chip verChip = new Chip(this);
+        verChip.setText("v1.0.24 M3");
+        verChip.setCheckable(false);
+        verChip.setClickable(false);
+        verChip.setChipBackgroundColorResource(android.R.color.transparent);
+        verChip.setChipStrokeWidth(0);
+        verChip.setTextColor(getM3Color(com.google.android.material.R.attr.colorSecondary, Color.MAGENTA));
+        chipsRow.addView(verChip);
+
+        layout.addView(chipsRow);
+        heroCard.addView(layout);
+        return heroCard;
+    }
+
+    private MaterialCardView createM3Card() {
+        MaterialCardView card = new MaterialCardView(this);
+        card.setRadius(dpf(18));
+        card.setCardElevation(0);
+        card.setStrokeWidth(dp(1));
+        card.setStrokeColor(getM3Color(com.google.android.material.R.attr.colorOutlineVariant, Color.parseColor("#36343B")));
+        card.setCardBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurfaceContainerLow, Color.parseColor("#1D1B20")));
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        lp.bottomMargin = dp(12);
+        card.setLayoutParams(lp);
+        return card;
+    }
+
+    private LinearLayout createCardContentLayout() {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp(16), dp(16), dp(16), dp(16));
+        return layout;
+    }
+
+    private void addSectionHeader(LinearLayout parent, String titleText) {
+        TextView header = new TextView(this);
+        header.setText(titleText);
+        header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        header.setTypeface(Typeface.DEFAULT_BOLD);
+        header.setTextColor(getM3Color(com.google.android.material.R.attr.colorPrimary, Color.parseColor("#D0BCFF")));
+        header.setLetterSpacing(0.06f);
+        header.setPadding(dp(4), dp(14), dp(4), dp(6));
+        parent.addView(header);
+    }
+
+    private void addM3Divider(LinearLayout parent) {
+        MaterialDivider divider = new MaterialDivider(this);
+        divider.setDividerColor(getM3Color(com.google.android.material.R.attr.colorOutlineVariant, Color.parseColor("#36343B")));
+        divider.setDividerThickness(dp(1));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        lp.topMargin = dp(10);
+        lp.bottomMargin = dp(10);
+        divider.setLayoutParams(lp);
+        parent.addView(divider);
+    }
+
+    private View createSwitchRow(String titleText, String descText, final String key, boolean defVal) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout textCol = new LinearLayout(this);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        colLp.rightMargin = dp(12);
+        textCol.setLayoutParams(colLp);
+
+        TextView title = new TextView(this);
+        title.setText(titleText);
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        textCol.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText(descText);
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, 0);
+        textCol.addView(desc);
+
+        MaterialSwitch sw = new MaterialSwitch(this);
+        sw.setChecked(mPrefs.getBoolean(key, defVal));
+        sw.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mPrefs.edit().putBoolean(key, isChecked).commit();
+            AnimPrefs.broadcastUpdate(MainActivity.this);
+        });
+
+        row.addView(textCol);
+        row.addView(sw);
+        return row;
+    }
+
+    private MaterialCardView createIconCustomizationCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        // 1. Switch
         LinearLayout switchRow = new LinearLayout(this);
         switchRow.setOrientation(LinearLayout.HORIZONTAL);
         switchRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -511,648 +460,303 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Кастомизация цвета иконок");
-        title.setTextColor(Color.parseColor("#F1F5F9"));
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         textCol.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText("Стилизация иконок рабочего стола в градиент или сплошной монохром (без градиента)");
-        desc.setTextColor(Color.parseColor("#94A3B8"));
-        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        desc.setPadding(0, dp(3), 0, 0);
+        desc.setText("Тонирование иконок рабочего стола в градиент или сплошной цвет с сохранением читаемости глифов");
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, 0);
         textCol.addView(desc);
 
-        Switch themeSwitch = new Switch(this);
-        themeSwitch.setChecked(mPrefs.getBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, false));
-        themeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPrefs.edit().putBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, isChecked).commit();
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateLivePreview();
-            }
-        });
+        MaterialSwitch iconSwitch = new MaterialSwitch(this);
+        boolean isIconTheme = mPrefs.getBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, false);
+        iconSwitch.setChecked(isIconTheme);
 
         switchRow.addView(textCol);
-        switchRow.addView(themeSwitch);
-        card.addView(switchRow);
+        switchRow.addView(iconSwitch);
+        layout.addView(switchRow);
 
-        addDivider(card);
+        final LinearLayout iconOptionsContainer = new LinearLayout(this);
+        iconOptionsContainer.setOrientation(LinearLayout.VERTICAL);
+        iconOptionsContainer.setVisibility(isIconTheme ? View.VISIBLE : View.GONE);
+        iconOptionsContainer.setPadding(0, dp(8), 0, 0);
 
-        // 2. Live Interactive Preview Container
-        LinearLayout previewContainer = new LinearLayout(this);
-        previewContainer.setOrientation(LinearLayout.VERTICAL);
-        previewContainer.setGravity(Gravity.CENTER);
-        GradientDrawable previewBg = new GradientDrawable();
-        previewBg.setColor(Color.parseColor("#13151A"));
-        previewBg.setCornerRadius(dp(20));
-        previewBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
-        previewContainer.setBackground(previewBg);
-        previewContainer.setPadding(dp(16), dp(14), dp(16), dp(16));
+        iconSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mPrefs.edit().putBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, isChecked).commit();
+            iconOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            AnimPrefs.broadcastUpdate(MainActivity.this);
+            updateLivePreview();
+        });
 
+        addM3Divider(iconOptionsContainer);
+
+        // 2. Live Preview Icons Box
         TextView previewLabel = new TextView(this);
-        previewLabel.setText("Интерактивное превью (нажмите для проверки Bounce):");
-        previewLabel.setTextColor(Color.parseColor("#94A3B8"));
+        previewLabel.setText("Интерактивный предпросмотр иконок:");
+        previewLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
         previewLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        previewLabel.setPadding(0, 0, 0, dp(10));
-        previewContainer.addView(previewLabel);
+        previewLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        previewLabel.setPadding(0, 0, 0, dp(8));
+        iconOptionsContainer.addView(previewLabel);
 
-        LinearLayout previewIconsRow = new LinearLayout(this);
-        previewIconsRow.setOrientation(LinearLayout.HORIZONTAL);
-        previewIconsRow.setGravity(Gravity.CENTER);
-
-        View.OnTouchListener bounceTouchListener = new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (!mPrefs.getBoolean(AnimPrefs.KEY_ICON_BOUNCE_ANIM, true)) {
-                    return false;
-                }
-                int action = event.getActionMasked();
-                if (action == MotionEvent.ACTION_DOWN) {
-                    v.setPivotX(v.getWidth() / 2f);
-                    v.setPivotY(v.getHeight() / 2f);
-                    v.animate().cancel();
-                    v.animate()
-                            .scaleX(0.85f)
-                            .scaleY(0.85f)
-                            .setDuration(110)
-                            .setInterpolator(new DecelerateInterpolator())
-                            .start();
-                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    v.animate().cancel();
-                    v.animate()
-                            .scaleX(1.0f)
-                            .scaleY(1.0f)
-                            .setDuration(260)
-                            .setInterpolator(new OvershootInterpolator(2.4f))
-                            .start();
-                }
-                return true;
-            }
-        };
+        LinearLayout previewRow = new LinearLayout(this);
+        previewRow.setOrientation(LinearLayout.HORIZONTAL);
+        previewRow.setGravity(Gravity.CENTER);
+        previewRow.setPadding(0, dp(4), 0, dp(12));
 
         for (int i = 0; i < 3; i++) {
-            ImageView iv = new ImageView(this);
-            LinearLayout.LayoutParams ivLp = new LinearLayout.LayoutParams(dp(54), dp(54));
-            if (i > 0) {
-                ivLp.leftMargin = dp(24);
-            }
-            iv.setLayoutParams(ivLp);
-            iv.setOnTouchListener(bounceTouchListener);
-            mPreviewIcons[i] = iv;
-            previewIconsRow.addView(iv);
+            mPreviewIcons[i] = new ImageView(this);
+            LinearLayout.LayoutParams pLp = new LinearLayout.LayoutParams(dp(54), dp(54));
+            pLp.setMargins(dp(10), 0, dp(10), 0);
+            mPreviewIcons[i].setLayoutParams(pLp);
+            previewRow.addView(mPreviewIcons[i]);
         }
-        previewContainer.addView(previewIconsRow);
-        card.addView(previewContainer);
+        iconOptionsContainer.addView(previewRow);
 
-        addDivider(card);
+        // 3. Mode Chips (Gradient vs Solid)
+        TextView modeLabel = new TextView(this);
+        modeLabel.setText("Тип заливки:");
+        modeLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        modeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        modeLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        modeLabel.setPadding(0, dp(4), 0, dp(6));
+        iconOptionsContainer.addView(modeLabel);
 
-        // 3. Fill Style Mode: Gradient vs Solid
-        TextView modeHeader = new TextView(this);
-        modeHeader.setText("Стиль заливки:");
-        modeHeader.setTextColor(Color.parseColor("#E2E8F0"));
-        modeHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        modeHeader.setTypeface(Typeface.DEFAULT_BOLD);
-        modeHeader.setPadding(0, 0, 0, dp(8));
-        card.addView(modeHeader);
+        mIconModeChipGroup = new ChipGroup(this);
+        mIconModeChipGroup.setSingleSelection(true);
+        mIconModeChipGroup.setSelectionRequired(true);
 
-        LinearLayout modeRow = new LinearLayout(this);
-        modeRow.setOrientation(LinearLayout.HORIZONTAL);
+        int curMode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
+        Chip chipGrad = new Chip(this);
+        chipGrad.setText("Двухцветный Градиент");
+        chipGrad.setCheckable(true);
+        chipGrad.setChecked(curMode == AnimPrefs.COLOR_MODE_GRADIENT);
 
-        mBtnModeGradient = new Button(this);
-        mBtnModeGradient.setText("Градиент (2 цвета)");
-        mBtnModeGradient.setAllCaps(false);
-        mBtnModeGradient.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        LinearLayout.LayoutParams btnGradLp = new LinearLayout.LayoutParams(0, dp(42), 1f);
-        btnGradLp.rightMargin = dp(6);
-        mBtnModeGradient.setLayoutParams(btnGradLp);
+        Chip chipSolid = new Chip(this);
+        chipSolid.setText("Сплошной Монохром");
+        chipSolid.setCheckable(true);
+        chipSolid.setChecked(curMode == AnimPrefs.COLOR_MODE_SOLID);
 
-        mBtnModeSolid = new Button(this);
-        mBtnModeSolid.setText("Без градиента (Один цвет)");
-        mBtnModeSolid.setAllCaps(false);
-        mBtnModeSolid.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        LinearLayout.LayoutParams btnSolidLp = new LinearLayout.LayoutParams(0, dp(42), 1f);
-        btnSolidLp.leftMargin = dp(6);
-        mBtnModeSolid.setLayoutParams(btnSolidLp);
-
-        mBtnModeGradient.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        chipGrad.setOnCheckedChangeListener((bv, checked) -> {
+            if (checked) {
                 mPrefs.edit().putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT).commit();
                 AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateModeSelection();
-                updateColorButtons();
                 updateLivePreview();
+                updateColorButtons();
             }
         });
-
-        mBtnModeSolid.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        chipSolid.setOnCheckedChangeListener((bv, checked) -> {
+            if (checked) {
                 mPrefs.edit().putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_SOLID).commit();
                 AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateModeSelection();
-                updateColorButtons();
                 updateLivePreview();
+                updateColorButtons();
             }
         });
 
-        modeRow.addView(mBtnModeGradient);
-        modeRow.addView(mBtnModeSolid);
-        card.addView(modeRow);
+        mIconModeChipGroup.addView(chipGrad);
+        mIconModeChipGroup.addView(chipSolid);
+        iconOptionsContainer.addView(mIconModeChipGroup);
 
-        addDivider(card);
-
-        // 4. Custom Color Slots (Palette triggers)
-        TextView colorHeader = new TextView(this);
-        colorHeader.setText("Выбор цвета из палитры (нажмите для выбора):");
-        colorHeader.setTextColor(Color.parseColor("#E2E8F0"));
-        colorHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        colorHeader.setTypeface(Typeface.DEFAULT_BOLD);
-        colorHeader.setPadding(0, 0, 0, dp(8));
-        card.addView(colorHeader);
-
+        // 4. Color pickers buttons
         LinearLayout colorSlotsRow = new LinearLayout(this);
         colorSlotsRow.setOrientation(LinearLayout.HORIZONTAL);
+        colorSlotsRow.setPadding(0, dp(8), 0, dp(8));
 
-        mColor1Btn = new LinearLayout(this);
-        mColor1Btn.setOrientation(LinearLayout.HORIZONTAL);
-        mColor1Btn.setGravity(Gravity.CENTER_VERTICAL);
-        mColor1Btn.setPadding(dp(12), dp(10), dp(12), dp(10));
-        GradientDrawable c1Bg = new GradientDrawable();
-        c1Bg.setColor(Color.parseColor("#171A24"));
-        c1Bg.setCornerRadius(dp(10));
-        c1Bg.setStroke(dp(1), Color.parseColor("#272E3F"));
-        mColor1Btn.setBackground(c1Bg);
-        LinearLayout.LayoutParams c1Lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        c1Lp.rightMargin = dp(6);
-        mColor1Btn.setLayoutParams(c1Lp);
-
-        mColor1Badge = new View(this);
-        LinearLayout.LayoutParams b1Lp = new LinearLayout.LayoutParams(dp(20), dp(20));
-        b1Lp.rightMargin = dp(8);
-        mColor1Badge.setLayoutParams(b1Lp);
-        mColor1Btn.addView(mColor1Badge);
-
-        mColor1Text = new TextView(this);
-        mColor1Text.setTextColor(Color.WHITE);
-        mColor1Text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        mColor1Text.setTypeface(Typeface.DEFAULT_BOLD);
-        mColor1Btn.addView(mColor1Text);
-
-        mColor1Btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showColorPickerDialog(true);
-            }
-        });
+        mColor1Btn = createColorPickerSlot("Цвет 1", true);
+        mColor2Btn = createColorPickerSlot("Цвет 2", false);
         colorSlotsRow.addView(mColor1Btn);
-
-        mColor2Btn = new LinearLayout(this);
-        mColor2Btn.setOrientation(LinearLayout.HORIZONTAL);
-        mColor2Btn.setGravity(Gravity.CENTER_VERTICAL);
-        mColor2Btn.setPadding(dp(12), dp(10), dp(12), dp(10));
-        GradientDrawable c2Bg = new GradientDrawable();
-        c2Bg.setColor(Color.parseColor("#171A24"));
-        c2Bg.setCornerRadius(dp(10));
-        c2Bg.setStroke(dp(1), Color.parseColor("#272E3F"));
-        mColor2Btn.setBackground(c2Bg);
-        LinearLayout.LayoutParams c2Lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        c2Lp.leftMargin = dp(6);
-        mColor2Btn.setLayoutParams(c2Lp);
-
-        mColor2Badge = new View(this);
-        LinearLayout.LayoutParams b2Lp = new LinearLayout.LayoutParams(dp(20), dp(20));
-        b2Lp.rightMargin = dp(8);
-        mColor2Badge.setLayoutParams(b2Lp);
-        mColor2Btn.addView(mColor2Badge);
-
-        mColor2Text = new TextView(this);
-        mColor2Text.setTextColor(Color.WHITE);
-        mColor2Text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        mColor2Text.setTypeface(Typeface.DEFAULT_BOLD);
-        mColor2Btn.addView(mColor2Text);
-
-        mColor2Btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showColorPickerDialog(false);
-            }
-        });
         colorSlotsRow.addView(mColor2Btn);
+        iconOptionsContainer.addView(colorSlotsRow);
 
-        card.addView(colorSlotsRow);
-
-        addDivider(card);
-
-        // 5. Preset Palette Selector
-        TextView presetHeader = new TextView(this);
-        presetHeader.setText("Быстрые пресеты палитры:");
-        presetHeader.setTextColor(Color.parseColor("#E2E8F0"));
-        presetHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        presetHeader.setTypeface(Typeface.DEFAULT_BOLD);
-        presetHeader.setPadding(0, 0, 0, dp(8));
-        card.addView(presetHeader);
+        // 5. Preset Chips
+        TextView presetLabel = new TextView(this);
+        presetLabel.setText("Быстрые пресеты палитры:");
+        presetLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        presetLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        presetLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        presetLabel.setPadding(0, dp(6), 0, dp(6));
+        iconOptionsContainer.addView(presetLabel);
 
         HorizontalScrollView hsv = new HorizontalScrollView(this);
         hsv.setHorizontalScrollBarEnabled(false);
-        LinearLayout presetsRow = new LinearLayout(this);
-        presetsRow.setOrientation(LinearLayout.HORIZONTAL);
+        ChipGroup presetGroup = new ChipGroup(this);
+        presetGroup.setSingleSelection(true);
 
         int currentPreset = mPrefs.getInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, 0);
-
+        mPresetChips = new Chip[AnimPrefs.PRESET_COLORS.length];
         for (int i = 0; i < AnimPrefs.PRESET_COLORS.length; i++) {
-            final int presetIndex = i;
-            LinearLayout pill = new LinearLayout(this);
-            pill.setOrientation(LinearLayout.HORIZONTAL);
-            pill.setGravity(Gravity.CENTER_VERTICAL);
-            pill.setPadding(dp(12), dp(8), dp(12), dp(8));
-
-            LinearLayout.LayoutParams pillLp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-            if (i > 0) {
-                pillLp.leftMargin = dp(8);
+            final int pIdx = i;
+            Chip pChip = new Chip(this);
+            pChip.setText(AnimPrefs.PRESET_NAMES[i]);
+            pChip.setCheckable(true);
+            if (i == currentPreset) {
+                pChip.setChecked(true);
             }
-            pill.setLayoutParams(pillLp);
-
-            View badge = new View(this);
-            GradientDrawable badgeBg = new GradientDrawable(
-                    GradientDrawable.Orientation.LEFT_RIGHT,
-                    AnimPrefs.PRESET_COLORS[i]
-            );
-            badgeBg.setCornerRadius(dp(6));
-            badge.setBackground(badgeBg);
-            LinearLayout.LayoutParams badgeLp = new LinearLayout.LayoutParams(dp(14), dp(14));
-            badgeLp.rightMargin = dp(8);
-            badge.setLayoutParams(badgeLp);
-            pill.addView(badge);
-
-            TextView pillText = new TextView(this);
-            pillText.setText(AnimPrefs.PRESET_NAMES[i]);
-            pillText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-            pillText.setTypeface(Typeface.DEFAULT_BOLD);
-            pill.addView(pillText);
-
-            mPresetPills[i] = pill;
-            mPresetPillTexts[i] = pillText;
-
-            pill.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+            pChip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
                     mPrefs.edit()
-                            .putInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, presetIndex)
-                            .putInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT)
-                            .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.PRESET_COLORS[presetIndex][0])
-                            .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, AnimPrefs.PRESET_COLORS[presetIndex][1])
+                            .putInt(AnimPrefs.KEY_ICON_GRADIENT_PRESET, pIdx)
+                            .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.PRESET_COLORS[pIdx][0])
+                            .putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, AnimPrefs.PRESET_COLORS[pIdx][1])
                             .commit();
                     AnimPrefs.broadcastUpdate(MainActivity.this);
-                    updateModeSelection();
                     updateColorButtons();
-                    updatePresetSelection(presetIndex);
                     updateLivePreview();
                 }
             });
-
-            presetsRow.addView(pill);
+            mPresetChips[i] = pChip;
+            presetGroup.addView(pChip);
         }
-        hsv.addView(presetsRow);
-        card.addView(hsv);
+        hsv.addView(presetGroup);
+        iconOptionsContainer.addView(hsv);
 
-        updatePresetSelection(currentPreset);
+        // 6. Intensity Slider
+        final TextView intensityLabel = new TextView(this);
+        float curInt = mPrefs.getFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, 0.85f);
+        intensityLabel.setText("Интенсивность тонирования: " + Math.round(curInt * 100) + "%");
+        intensityLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        intensityLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        intensityLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        intensityLabel.setPadding(0, dp(8), 0, dp(2));
+        iconOptionsContainer.addView(intensityLabel);
 
-        addDivider(card);
-
-        // 6. Tint Intensity Selector
-        TextView intensityHeader = new TextView(this);
-        intensityHeader.setText("Насыщенность заливки:");
-        intensityHeader.setTextColor(Color.parseColor("#E2E8F0"));
-        intensityHeader.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        intensityHeader.setTypeface(Typeface.DEFAULT_BOLD);
-        intensityHeader.setPadding(0, 0, 0, dp(8));
-        card.addView(intensityHeader);
-
-        LinearLayout intensityRow = new LinearLayout(this);
-        intensityRow.setOrientation(LinearLayout.HORIZONTAL);
-
-        final float currentIntensity = mPrefs.getFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, 0.85f);
-        final float[] intensityValues = new float[]{0.50f, 0.70f, 0.85f, 1.0f};
-        final String[] intensityLabels = new String[]{"50%", "70%", "85% (Реком.)", "100%"};
-
-        int selectedIntensityIdx = 2;
-        for (int i = 0; i < intensityValues.length; i++) {
-            if (Math.abs(currentIntensity - intensityValues[i]) < 0.05f) {
-                selectedIntensityIdx = i;
+        mIconIntensitySlider = new Slider(this);
+        mIconIntensitySlider.setValueFrom(20f);
+        mIconIntensitySlider.setValueTo(100f);
+        mIconIntensitySlider.setStepSize(5f);
+        mIconIntensitySlider.setValue(Math.max(20f, Math.min(100f, curInt * 100f)));
+        mIconIntensitySlider.addOnChangeListener((slider, value, fromUser) -> {
+            float val = value / 100f;
+            intensityLabel.setText("Интенсивность тонирования: " + Math.round(value) + "%");
+            if (fromUser) {
+                mPrefs.edit().putFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, val).commit();
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+                updateLivePreview();
             }
-            final int idx = i;
-            final float val = intensityValues[i];
+        });
+        iconOptionsContainer.addView(mIconIntensitySlider);
 
-            Button btn = new Button(this);
-            btn.setText(intensityLabels[i]);
-            btn.setAllCaps(false);
-            btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        layout.addView(iconOptionsContainer);
+        card.addView(layout);
 
-            LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(0, dp(38), 1f);
-            if (i > 0) {
-                btnLp.leftMargin = dp(6);
-            }
-            btn.setLayoutParams(btnLp);
-
-            mIntensityButtons[i] = btn;
-
-            btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mPrefs.edit().putFloat(AnimPrefs.KEY_ICON_TINT_INTENSITY, val).commit();
-                    AnimPrefs.broadcastUpdate(MainActivity.this);
-                    updateIntensitySelection(idx);
-                    updateLivePreview();
-                }
-            });
-
-            intensityRow.addView(btn);
-        }
-        card.addView(intensityRow);
-        updateIntensitySelection(selectedIntensityIdx);
-
-        addDivider(card);
-
-        // 7. Switch: Bounce Animation
-        card.addView(createSwitchRow(
-                "Кинетический отклик иконки (Bounce)",
-                "Физическое сжатие при нажатии и пружинящий отскок (как в флагманах iOS и ColorOS)",
-                AnimPrefs.KEY_ICON_BOUNCE_ANIM,
-                true
-        ));
-
-        updateModeSelection();
         updateColorButtons();
         updateLivePreview();
-
         return card;
     }
 
-    private void updateModeSelection() {
-        int colorMode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
-        int c1 = mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.DEFAULT_COLOR_1);
+    private LinearLayout createColorPickerSlot(String label, final boolean isColor1) {
+        LinearLayout btn = new LinearLayout(this);
+        btn.setOrientation(LinearLayout.HORIZONTAL);
+        btn.setGravity(Gravity.CENTER_VERTICAL);
+        btn.setPadding(dp(12), dp(8), dp(12), dp(8));
 
-        GradientDrawable gradBg = new GradientDrawable();
-        gradBg.setCornerRadius(dp(21));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(getM3Color(com.google.android.material.R.attr.colorSurfaceContainerHigh, Color.parseColor("#2B2930")));
+        bg.setCornerRadius(dp(12));
+        bg.setStroke(dp(1), getM3Color(com.google.android.material.R.attr.colorOutlineVariant, Color.DKGRAY));
+        btn.setBackground(bg);
 
-        GradientDrawable solidBg = new GradientDrawable();
-        solidBg.setCornerRadius(dp(21));
-
-        if (colorMode == AnimPrefs.COLOR_MODE_SOLID) {
-            solidBg.setColor(Color.parseColor("#A8C7FA"));
-            mBtnModeSolid.setBackground(solidBg);
-            mBtnModeSolid.setTextColor(Color.parseColor("#003355"));
-            mBtnModeSolid.setTypeface(Typeface.DEFAULT_BOLD);
-
-            gradBg.setColor(Color.parseColor("#272A2F"));
-            gradBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
-            mBtnModeGradient.setBackground(gradBg);
-            mBtnModeGradient.setTextColor(Color.parseColor("#E2E2E6"));
-            mBtnModeGradient.setTypeface(Typeface.DEFAULT);
-
-            mColor2Btn.setVisibility(View.GONE);
-            mColor1Text.setText("Цвет: " + String.format("#%06X", (0xFFFFFF & c1)));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        if (isColor1) {
+            lp.rightMargin = dp(6);
         } else {
-            gradBg.setColor(Color.parseColor("#A8C7FA"));
-            mBtnModeGradient.setBackground(gradBg);
-            mBtnModeGradient.setTextColor(Color.parseColor("#003355"));
-            mBtnModeGradient.setTypeface(Typeface.DEFAULT_BOLD);
-
-            solidBg.setColor(Color.parseColor("#272A2F"));
-            solidBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
-            mBtnModeSolid.setBackground(solidBg);
-            mBtnModeSolid.setTextColor(Color.parseColor("#E2E2E6"));
-            mBtnModeSolid.setTypeface(Typeface.DEFAULT);
-
-            mColor2Btn.setVisibility(View.VISIBLE);
-            mColor1Text.setText("Цвет 1: " + String.format("#%06X", (0xFFFFFF & c1)));
+            lp.leftMargin = dp(6);
         }
+        btn.setLayoutParams(lp);
+
+        View badge = new View(this);
+        LinearLayout.LayoutParams bLp = new LinearLayout.LayoutParams(dp(20), dp(20));
+        bLp.rightMargin = dp(8);
+        badge.setLayoutParams(bLp);
+        btn.addView(badge);
+
+        TextView text = new TextView(this);
+        text.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        text.setTypeface(Typeface.DEFAULT_BOLD);
+        btn.addView(text);
+
+        if (isColor1) {
+            mColor1Badge = badge;
+            mColor1Text = text;
+        } else {
+            mColor2Badge = badge;
+            mColor2Text = text;
+        }
+
+        btn.setOnClickListener(v -> showColorPickerDialog(isColor1));
+        return btn;
     }
 
     private void updateColorButtons() {
-        int colorMode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
+        if (mColor1Badge == null || mColor2Badge == null) return;
         int c1 = mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.DEFAULT_COLOR_1);
         int c2 = mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, AnimPrefs.DEFAULT_COLOR_2);
+        int mode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
 
-        if (mColor1Badge != null) {
-            GradientDrawable b1 = new GradientDrawable();
-            b1.setShape(GradientDrawable.OVAL);
-            b1.setColor(c1);
-            b1.setStroke(dp(1), Color.WHITE);
-            mColor1Badge.setBackground(b1);
-        }
+        GradientDrawable b1Bg = new GradientDrawable();
+        b1Bg.setColor(c1);
+        b1Bg.setCornerRadius(dp(6));
+        mColor1Badge.setBackground(b1Bg);
+        mColor1Text.setText(String.format("#%06X", (0xFFFFFF & c1)));
 
-        if (mColor2Badge != null) {
-            GradientDrawable b2 = new GradientDrawable();
-            b2.setShape(GradientDrawable.OVAL);
-            b2.setColor(c2);
-            b2.setStroke(dp(1), Color.WHITE);
-            mColor2Badge.setBackground(b2);
-        }
+        GradientDrawable b2Bg = new GradientDrawable();
+        b2Bg.setColor(c2);
+        b2Bg.setCornerRadius(dp(6));
+        mColor2Badge.setBackground(b2Bg);
+        mColor2Text.setText(String.format("#%06X", (0xFFFFFF & c2)));
 
-        if (mColor1Text != null) {
-            String prefix = (colorMode == AnimPrefs.COLOR_MODE_SOLID) ? "Цвет: " : "Цвет 1: ";
-            mColor1Text.setText(prefix + String.format("#%06X", (0xFFFFFF & c1)));
-        }
-
-        if (mColor2Text != null) {
-            mColor2Text.setText("Цвет 2: " + String.format("#%06X", (0xFFFFFF & c2)));
+        if (mode == AnimPrefs.COLOR_MODE_SOLID) {
+            mColor2Btn.setAlpha(0.35f);
+            mColor2Btn.setEnabled(false);
+        } else {
+            mColor2Btn.setAlpha(1.0f);
+            mColor2Btn.setEnabled(true);
         }
     }
 
     private void showColorPickerDialog(final boolean isColor1) {
-        final int colorMode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
-        final int initialColor = isColor1
+        final int current = isColor1
                 ? mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.DEFAULT_COLOR_1)
                 : mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, AnimPrefs.DEFAULT_COLOR_2);
 
-        final int[] selectedColor = new int[]{initialColor};
+        final EditText input = new EditText(this);
+        input.setText(String.format("%06X", (0xFFFFFF & current)));
+        input.setHint("RRGGBB (HEX)");
+        input.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        input.setPadding(dp(16), dp(16), dp(16), dp(16));
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String title = (colorMode == AnimPrefs.COLOR_MODE_SOLID)
-                ? "Выбор цвета иконки"
-                : (isColor1 ? "Цвет 1 (Начало градиента)" : "Цвет 2 (Конец градиента)");
-        builder.setTitle(title);
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(dp(20), dp(16), dp(20), dp(8));
-
-        // Selected color preview row
-        LinearLayout previewRow = new LinearLayout(this);
-        previewRow.setOrientation(LinearLayout.HORIZONTAL);
-        previewRow.setGravity(Gravity.CENTER_VERTICAL);
-        previewRow.setPadding(0, 0, 0, dp(16));
-
-        final View liveCircle = new View(this);
-        final GradientDrawable liveCircleBg = new GradientDrawable();
-        liveCircleBg.setShape(GradientDrawable.OVAL);
-        liveCircleBg.setColor(initialColor);
-        liveCircleBg.setStroke(dp(2), Color.WHITE);
-        liveCircle.setBackground(liveCircleBg);
-        LinearLayout.LayoutParams circleLp = new LinearLayout.LayoutParams(dp(36), dp(36));
-        circleLp.rightMargin = dp(14);
-        liveCircle.setLayoutParams(circleLp);
-        previewRow.addView(liveCircle);
-
-        final EditText hexInput = new EditText(this);
-        hexInput.setText(String.format("#%06X", (0xFFFFFF & initialColor)));
-        hexInput.setTextColor(Color.WHITE);
-        hexInput.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        hexInput.setTypeface(Typeface.MONOSPACE);
-        GradientDrawable hexBg = new GradientDrawable();
-        hexBg.setColor(Color.parseColor("#1E2230"));
-        hexBg.setCornerRadius(dp(8));
-        hexBg.setStroke(dp(1), Color.parseColor("#343C52"));
-        hexInput.setBackground(hexBg);
-        hexInput.setPadding(dp(12), dp(8), dp(12), dp(8));
-        hexInput.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        previewRow.addView(hexInput);
-
-        layout.addView(previewRow);
-
-        TextView swatchesLabel = new TextView(this);
-        swatchesLabel.setText("Выберите из палитры цветов:");
-        swatchesLabel.setTextColor(Color.parseColor("#94A3B8"));
-        swatchesLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        swatchesLabel.setPadding(0, 0, 0, dp(8));
-        layout.addView(swatchesLabel);
-
-        int cols = 6;
-        int total = AnimPrefs.PALETTE_SWATCHES.length;
-        int rows = (total + cols - 1) / cols;
-
-        for (int r = 0; r < rows; r++) {
-            LinearLayout rowLayout = new LinearLayout(this);
-            rowLayout.setOrientation(LinearLayout.HORIZONTAL);
-            rowLayout.setGravity(Gravity.CENTER);
-            rowLayout.setPadding(0, dp(3), 0, dp(3));
-
-            for (int c = 0; c < cols; c++) {
-                int index = r * cols + c;
-                if (index >= total) break;
-                final int colorVal = AnimPrefs.PALETTE_SWATCHES[index];
-
-                View swatch = new View(this);
-                GradientDrawable sBg = new GradientDrawable();
-                sBg.setShape(GradientDrawable.OVAL);
-                sBg.setColor(colorVal);
-                sBg.setStroke(dp(1.5f), Color.parseColor("#343C52"));
-                swatch.setBackground(sBg);
-
-                LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(dp(36), dp(36));
-                sLp.setMargins(dp(4), dp(2), dp(4), dp(2));
-                swatch.setLayoutParams(sLp);
-
-                swatch.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        selectedColor[0] = colorVal;
-                        liveCircleBg.setColor(colorVal);
-                        hexInput.setText(String.format("#%06X", (0xFFFFFF & colorVal)));
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(isColor1 ? "Настройка Цвета 1" : "Настройка Цвета 2")
+                .setMessage("Введите 6-значный HEX код цвета:")
+                .setView(input)
+                .setPositiveButton("Применить", (dialog, which) -> {
+                    try {
+                        String hex = input.getText().toString().trim().replace("#", "");
+                        int color = 0xFF000000 | (int) Long.parseLong(hex, 16);
+                        if (isColor1) {
+                            mPrefs.edit().putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, color).commit();
+                        } else {
+                            mPrefs.edit().putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, color).commit();
+                        }
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                        updateColorButtons();
+                        updateLivePreview();
+                    } catch (Exception e) {
+                        Toast.makeText(MainActivity.this, "Неверный формат HEX", Toast.LENGTH_SHORT).show();
                     }
-                });
-
-                rowLayout.addView(swatch);
-            }
-            layout.addView(rowLayout);
-        }
-
-        hexInput.addTextChangedListener(new android.text.TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override
-            public void afterTextChanged(android.text.Editable s) {
-                try {
-                    String str = s.toString().trim();
-                    if (!str.startsWith("#")) {
-                        str = "#" + str;
-                    }
-                    if (str.length() == 7 || str.length() == 9) {
-                        int parsed = Color.parseColor(str);
-                        selectedColor[0] = parsed;
-                        liveCircleBg.setColor(parsed);
-                    }
-                } catch (Throwable ignored) {}
-            }
-        });
-
-        builder.setView(layout);
-        builder.setPositiveButton("Применить", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                int finalColor = selectedColor[0];
-                try {
-                    String str = hexInput.getText().toString().trim();
-                    if (!str.startsWith("#")) {
-                        str = "#" + str;
-                    }
-                    finalColor = Color.parseColor(str);
-                } catch (Throwable ignored) {}
-
-                if (isColor1) {
-                    mPrefs.edit().putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, finalColor).commit();
-                } else {
-                    mPrefs.edit().putInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_2, finalColor).commit();
-                }
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-                updateColorButtons();
-                updateLivePreview();
-            }
-        });
-        builder.setNegativeButton("Отмена", null);
-        builder.show();
-    }
-
-    private void updatePresetSelection(int selectedIndex) {
-        for (int i = 0; i < mPresetPills.length; i++) {
-            if (mPresetPills[i] == null) continue;
-            GradientDrawable pillBg = new GradientDrawable();
-            pillBg.setCornerRadius(dp(18));
-            if (i == selectedIndex) {
-                pillBg.setColor(Color.parseColor("#004A77"));
-                pillBg.setStroke(dp(1.5f), Color.parseColor("#A8C7FA"));
-                mPresetPillTexts[i].setTextColor(Color.parseColor("#D3E3FD"));
-            } else {
-                pillBg.setColor(Color.parseColor("#272A2F"));
-                pillBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
-                mPresetPillTexts[i].setTextColor(Color.parseColor("#C4C7D0"));
-            }
-            mPresetPills[i].setBackground(pillBg);
-        }
-    }
-
-    private void updateIntensitySelection(int selectedIndex) {
-        for (int i = 0; i < mIntensityButtons.length; i++) {
-            if (mIntensityButtons[i] == null) continue;
-            GradientDrawable btnBg = new GradientDrawable();
-            btnBg.setCornerRadius(dp(19));
-            if (i == selectedIndex) {
-                btnBg.setColor(Color.parseColor("#A8C7FA"));
-                mIntensityButtons[i].setTextColor(Color.parseColor("#003355"));
-                mIntensityButtons[i].setTypeface(Typeface.DEFAULT_BOLD);
-            } else {
-                btnBg.setColor(Color.parseColor("#272A2F"));
-                btnBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
-                mIntensityButtons[i].setTextColor(Color.parseColor("#C4C7D0"));
-                mIntensityButtons[i].setTypeface(Typeface.DEFAULT);
-            }
-            mIntensityButtons[i].setBackground(btnBg);
-        }
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 
     private void updateLivePreview() {
-        if (mPreviewIcons == null || mPreviewIcons[0] == null) {
-            return;
-        }
+        if (mPreviewIcons[0] == null) return;
         boolean enabled = mPrefs.getBoolean(AnimPrefs.KEY_ICON_THEME_ENABLED, false);
         int colorMode = mPrefs.getInt(AnimPrefs.KEY_ICON_COLOR_MODE, AnimPrefs.COLOR_MODE_GRADIENT);
         int c1 = mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.DEFAULT_COLOR_1);
@@ -1192,18 +796,18 @@ public class MainActivity extends Activity {
                 strokePaint.setAlpha(120);
                 c.drawRoundRect(rect, radiusPx, radiusPx, strokePaint);
             } else {
-                bgPaint.setColor(Color.parseColor("#252A3A"));
+                bgPaint.setColor(getM3Color(com.google.android.material.R.attr.colorSurfaceContainerHighest, Color.parseColor("#36343B")));
                 c.drawRoundRect(rect, radiusPx, radiusPx, bgPaint);
 
                 Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
                 strokePaint.setStyle(Paint.Style.STROKE);
                 strokePaint.setStrokeWidth(dp(1));
-                strokePaint.setColor(Color.parseColor("#3B4254"));
+                strokePaint.setColor(getM3Color(com.google.android.material.R.attr.colorOutlineVariant, Color.DKGRAY));
                 c.drawRoundRect(rect, radiusPx, radiusPx, strokePaint);
             }
 
             Paint glyphPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            glyphPaint.setColor(enabled ? Color.WHITE : Color.parseColor("#94A3B8"));
+            glyphPaint.setColor(enabled ? Color.WHITE : getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
             glyphPaint.setStyle(Paint.Style.STROKE);
             glyphPaint.setStrokeWidth(dpf(2.2f));
             glyphPaint.setStrokeCap(Paint.Cap.ROUND);
@@ -1228,14 +832,14 @@ public class MainActivity extends Activity {
                 glyphPaint.setStyle(Paint.Style.FILL);
                 c.drawPath(phonePath, glyphPaint);
             } else if (i == 1) {
-                // Globe / Browser glyph
+                // Browser glyph
                 glyphPaint.setStyle(Paint.Style.STROKE);
                 c.drawCircle(cx, cy, r, glyphPaint);
                 c.drawLine(cx - r, cy, cx + r, cy, glyphPaint);
                 RectF oval = new RectF(cx - r / 2.2f, cy - r, cx + r / 2.2f, cy + r);
                 c.drawOval(oval, glyphPaint);
             } else {
-                // Gear / Settings glyph
+                // Settings glyph
                 glyphPaint.setStyle(Paint.Style.STROKE);
                 c.drawCircle(cx, cy, r * 0.45f, glyphPaint);
                 for (int k = 0; k < 6; k++) {
@@ -1252,10 +856,11 @@ public class MainActivity extends Activity {
         }
     }
 
-    private LinearLayout createDesktopCard() {
-        LinearLayout card = createCard();
+    private MaterialCardView createDesktopCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
 
-        // 1. Matte Wallpaper Effect
+        // 1. Matte Wallpaper Switch
         LinearLayout matteSwitchRow = new LinearLayout(this);
         matteSwitchRow.setOrientation(LinearLayout.HORIZONTAL);
         matteSwitchRow.setGravity(Gravity.CENTER_VERTICAL);
@@ -1268,232 +873,265 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("Матовый эффект обоев");
-        title.setTextColor(Color.parseColor("#F1F5F9"));
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         textCol.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText("Придает обоям глубокую матовую текстуру (Frosted Matte), усиливая четкость и контраст виджетов и иконок");
-        desc.setTextColor(Color.parseColor("#94A3B8"));
-        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        desc.setPadding(0, dp(3), 0, 0);
+        desc.setText("Элегантная матовая текстура (Frosted Matte), усиливающая контраст и выразительность иконок");
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, 0);
         textCol.addView(desc);
 
         final LinearLayout matteOptionsContainer = new LinearLayout(this);
         matteOptionsContainer.setOrientation(LinearLayout.VERTICAL);
-        matteOptionsContainer.setPadding(0, dp(12), 0, 0);
+        matteOptionsContainer.setPadding(0, dp(8), 0, 0);
 
-        Switch matteSwitch = new Switch(this);
+        MaterialSwitch matteSwitch = new MaterialSwitch(this);
         boolean isMatte = mPrefs.getBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, false);
         matteSwitch.setChecked(isMatte);
         matteOptionsContainer.setVisibility(isMatte ? View.VISIBLE : View.GONE);
 
-        matteSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPrefs.edit().putBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, isChecked).commit();
-                matteOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-            }
+        matteSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mPrefs.edit().putBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, isChecked).commit();
+            matteOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            AnimPrefs.broadcastUpdate(MainActivity.this);
         });
 
         matteSwitchRow.addView(textCol);
         matteSwitchRow.addView(matteSwitch);
-        card.addView(matteSwitchRow);
+        layout.addView(matteSwitchRow);
 
-        // Matte Style Selector
+        // Matte Style Chips
         TextView styleLabel = new TextView(this);
         styleLabel.setText("Стиль матовой текстуры:");
-        styleLabel.setTextColor(Color.parseColor("#A0ABC0"));
-        styleLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        styleLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        styleLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         styleLabel.setTypeface(Typeface.DEFAULT_BOLD);
-        styleLabel.setPadding(0, 0, 0, dp(6));
+        styleLabel.setPadding(0, dp(6), 0, dp(6));
         matteOptionsContainer.addView(styleLabel);
 
-        final LinearLayout styleButtonsRow = new LinearLayout(this);
-        styleButtonsRow.setOrientation(LinearLayout.HORIZONTAL);
+        mMatteStyleChipGroup = new ChipGroup(this);
+        mMatteStyleChipGroup.setSingleSelection(true);
+        mMatteStyleChipGroup.setSelectionRequired(true);
+
         final String[] styleNames = new String[]{"Тёмный бархат", "Матовое стекло", "Глубокий сатин"};
-        final Button[] styleBtns = new Button[3];
-
-        View.OnClickListener styleClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int selected = (Integer) v.getTag();
-                mPrefs.edit().putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, selected).commit();
-                for (int i = 0; i < 3; i++) {
-                    GradientDrawable bg = new GradientDrawable();
-                    if (i == selected) {
-                        bg.setColor(Color.parseColor("#1F2E47"));
-                        bg.setStroke(dp(1), Color.parseColor("#00E5FF"));
-                        styleBtns[i].setTextColor(Color.parseColor("#00E5FF"));
-                    } else {
-                        bg.setColor(Color.parseColor("#141824"));
-                        bg.setStroke(dp(1), Color.parseColor("#262C3C"));
-                        styleBtns[i].setTextColor(Color.parseColor("#8E99B0"));
-                    }
-                    bg.setCornerRadius(dp(10));
-                    styleBtns[i].setBackground(bg);
-                }
-                AnimPrefs.broadcastUpdate(MainActivity.this);
-            }
-        };
-
         int currentStyle = mPrefs.getInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, AnimPrefs.MATTE_STYLE_DARK_VELVET);
+
         for (int i = 0; i < 3; i++) {
-            Button btn = new Button(this);
-            btn.setText(styleNames[i]);
-            btn.setTextSize(11);
-            btn.setAllCaps(false);
-            btn.setTag(i);
-            btn.setOnClickListener(styleClickListener);
-
-            GradientDrawable bg = new GradientDrawable();
+            final int sIdx = i;
+            Chip chip = new Chip(this);
+            chip.setText(styleNames[i]);
+            chip.setCheckable(true);
             if (i == currentStyle) {
-                bg.setColor(Color.parseColor("#1F2E47"));
-                bg.setStroke(dp(1), Color.parseColor("#00E5FF"));
-                btn.setTextColor(Color.parseColor("#00E5FF"));
-            } else {
-                bg.setColor(Color.parseColor("#141824"));
-                bg.setStroke(dp(1), Color.parseColor("#262C3C"));
-                btn.setTextColor(Color.parseColor("#8E99B0"));
+                chip.setChecked(true);
             }
-            bg.setCornerRadius(dp(10));
-            btn.setBackground(bg);
-
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(38), 1.0f);
-            lp.setMargins(dp(2), 0, dp(2), 0);
-            btn.setLayoutParams(lp);
-            styleBtns[i] = btn;
-            styleButtonsRow.addView(btn);
+            chip.setOnCheckedChangeListener((bv, isChecked) -> {
+                if (isChecked) {
+                    mPrefs.edit().putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, sIdx).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                }
+            });
+            mMatteStyleChipGroup.addView(chip);
         }
-        matteOptionsContainer.addView(styleButtonsRow);
+        matteOptionsContainer.addView(mMatteStyleChipGroup);
 
         // Matte Intensity Slider
         final TextView intensityLabel = new TextView(this);
         float curIntensity = mPrefs.getFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, 0.35f);
-        intensityLabel.setText("Интенсивность размытия / матовости: " + Math.round(curIntensity * 100) + "%");
-        intensityLabel.setTextColor(Color.parseColor("#A0ABC0"));
-        intensityLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        intensityLabel.setText("Интенсивность матовости: " + Math.round(curIntensity * 100) + "%");
+        intensityLabel.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        intensityLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         intensityLabel.setTypeface(Typeface.DEFAULT_BOLD);
-        intensityLabel.setPadding(0, dp(12), 0, dp(4));
+        intensityLabel.setPadding(0, dp(8), 0, dp(2));
         matteOptionsContainer.addView(intensityLabel);
 
-        SeekBar intensityBar = new SeekBar(this);
-        intensityBar.setMax(80); // 10% to 90%
-        intensityBar.setProgress(Math.round((curIntensity - 0.10f) * 100));
-        intensityBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                float val = 0.10f + (progress / 100f);
-                intensityLabel.setText("Интенсивность размытия / матовости: " + Math.round(val * 100) + "%");
-                if (fromUser) {
-                    mPrefs.edit().putFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, val).commit();
-                    AnimPrefs.broadcastUpdate(MainActivity.this);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-        matteOptionsContainer.addView(intensityBar);
-        card.addView(matteOptionsContainer);
-
-        addDivider(card);
-
-        // 2. Auto-Return to App Page on Exit
-        LinearLayout snapSwitchRow = new LinearLayout(this);
-        snapSwitchRow.setOrientation(LinearLayout.HORIZONTAL);
-        snapSwitchRow.setGravity(Gravity.CENTER_VERTICAL);
-
-        LinearLayout snapTextCol = new LinearLayout(this);
-        snapTextCol.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams snapColLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        snapColLp.rightMargin = dp(12);
-        snapTextCol.setLayoutParams(snapColLp);
-
-        TextView snapTitle = new TextView(this);
-        snapTitle.setText("Возврат на страницу приложения");
-        snapTitle.setTextColor(Color.parseColor("#F1F5F9"));
-        snapTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        snapTitle.setTypeface(Typeface.DEFAULT_BOLD);
-        snapTextCol.addView(snapTitle);
-
-        TextView snapDesc = new TextView(this);
-        snapDesc.setText("При выходе из приложения автоматически синхронизирует рабочий стол с вкладкой, где расположена его иконка. Предотвращает улёт анимации закрытия в пустоту и приземляет окно точно в иконку");
-        snapDesc.setTextColor(Color.parseColor("#94A3B8"));
-        snapDesc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        snapDesc.setPadding(0, dp(3), 0, 0);
-        snapTextCol.addView(snapDesc);
-
-        Switch snapSwitch = new Switch(this);
-        snapSwitch.setChecked(mPrefs.getBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, true));
-        snapSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPrefs.edit().putBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, isChecked).commit();
+        mMatteIntensitySlider = new Slider(this);
+        mMatteIntensitySlider.setValueFrom(10f);
+        mMatteIntensitySlider.setValueTo(90f);
+        mMatteIntensitySlider.setStepSize(5f);
+        mMatteIntensitySlider.setValue(Math.max(10f, Math.min(90f, curIntensity * 100f)));
+        mMatteIntensitySlider.addOnChangeListener((slider, value, fromUser) -> {
+            float val = value / 100f;
+            intensityLabel.setText("Интенсивность матовости: " + Math.round(value) + "%");
+            if (fromUser) {
+                mPrefs.edit().putFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, val).commit();
                 AnimPrefs.broadcastUpdate(MainActivity.this);
             }
         });
+        matteOptionsContainer.addView(mMatteIntensitySlider);
+        layout.addView(matteOptionsContainer);
 
-        snapSwitchRow.addView(snapTextCol);
-        snapSwitchRow.addView(snapSwitch);
-        card.addView(snapSwitchRow);
+        addM3Divider(layout);
 
+        // 2. Auto-Return to App Page on Exit
+        layout.addView(createSwitchRow(
+                "Возврат на страницу приложения",
+                "Автоматически скроллит рабочий стол на вкладку закрываемого приложения, предотвращая улёт анимации закрытия в пустоту",
+                AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE,
+                true
+        ));
+
+        card.addView(layout);
         return card;
     }
 
-    private LinearLayout createWidgetManagementCard() {
-        LinearLayout card = createCard();
+    private MaterialCardView createWidgetManagementCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
 
         TextView title = new TextView(this);
         title.setText("Системные Фото & GIF Виджеты");
-        title.setTextColor(Color.parseColor("#F1F5F9"));
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         title.setTypeface(Typeface.DEFAULT_BOLD);
-        card.addView(title);
+        layout.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText("Размещайте на рабочем столе независимые фото или GIF-файлы без рамок с оригинальными пропорциями и скруглением углов HyperOS.");
-        desc.setTextColor(Color.parseColor("#C4C7D0"));
-        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        desc.setPadding(0, dp(4), 0, dp(14));
-        card.addView(desc);
+        desc.setText("Размещайте на рабочем столе независимые фото или GIF без рамок со скруглениями HyperOS. Каждому виджету задаётся своё уникальное фото.");
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, dp(12));
+        layout.addView(desc);
 
-        Button addWidgetBtn = new Button(this);
-        addWidgetBtn.setText("➕ Настроить / Добавить Фото-виджет");
-        addWidgetBtn.setTextSize(14);
-        addWidgetBtn.setTextColor(Color.parseColor("#003355"));
-        addWidgetBtn.setTypeface(Typeface.DEFAULT_BOLD);
-        addWidgetBtn.setAllCaps(false);
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(Color.parseColor("#A8C7FA"));
-        btnBg.setCornerRadius(dp(24));
-        addWidgetBtn.setBackground(btnBg);
-        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(48)
-        );
-        addWidgetBtn.setLayoutParams(btnLp);
-        addWidgetBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, com.mirage.pocoanim.widget.WidgetConfigActivity.class);
-                startActivity(intent);
-            }
+        MaterialButton addWidgetBtn = new MaterialButton(this);
+        addWidgetBtn.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSecondaryContainer, Color.parseColor("#4A4458")));
+        addWidgetBtn.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSecondaryContainer, Color.WHITE));
+        addWidgetBtn.setText("Настроить / Добавить Виджет");
+        addWidgetBtn.setIconResource(android.R.drawable.ic_menu_gallery);
+        addWidgetBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, WidgetConfigActivity.class);
+            startActivity(intent);
         });
-        card.addView(addWidgetBtn);
+        layout.addView(addWidgetBtn);
 
         TextView tipText = new TextView(this);
-        tipText.setText("💡 Подсказка: Вы также можете зажать свободное место на рабочем столе -> Виджеты -> 'Mirage Фото / GIF Виджет' и разместить нужное количество виджетов.");
-        tipText.setTextColor(Color.parseColor("#64748B"));
+        tipText.setText("💡 Подсказка: Зажмите свободное место на рабочем столе -> Виджеты -> «Mirage Фото / GIF Виджет», чтобы разместить виджет.");
+        tipText.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY));
         tipText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-        tipText.setPadding(0, dp(10), 0, 0);
-        card.addView(tipText);
+        tipText.setPadding(0, dp(8), 0, 0);
+        layout.addView(tipText);
 
+        card.addView(layout);
         return card;
+    }
+
+    private MaterialCardView createMaintenanceCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        MaterialButton restartLauncherBtn = new MaterialButton(this);
+        restartLauncherBtn.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSecondaryContainer, Color.parseColor("#4A4458")));
+        restartLauncherBtn.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSecondaryContainer, Color.WHITE));
+        restartLauncherBtn.setText("Перезапустить Лаунчер + 90 Гц");
+        restartLauncherBtn.setOnClickListener(v -> {
+            AnimPrefs.broadcastUpdate(MainActivity.this);
+            restartLauncherOnly();
+        });
+        layout.addView(restartLauncherBtn);
+
+        MaterialButton fullUiRestartBtn = new MaterialButton(this);
+        fullUiRestartBtn.setText("Полноценный рестарт оболочки");
+        LinearLayout.LayoutParams pLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        pLp.topMargin = dp(8);
+        fullUiRestartBtn.setLayoutParams(pLp);
+        fullUiRestartBtn.setOnClickListener(v -> {
+            AnimPrefs.broadcastUpdate(MainActivity.this);
+            performFullUiAndWebViewRestart();
+        });
+        layout.addView(fullUiRestartBtn);
+
+        MaterialButton fullRebootBtn = new MaterialButton(this);
+        fullRebootBtn.setBackgroundColor(Color.TRANSPARENT);
+        fullRebootBtn.setStrokeWidth(dp(1));
+        fullRebootBtn.setStrokeColor(ColorStateList.valueOf(getM3Color(com.google.android.material.R.attr.colorError, Color.RED)));
+        fullRebootBtn.setText("Полная перезагрузка устройства");
+        fullRebootBtn.setTextColor(getM3Color(com.google.android.material.R.attr.colorError, Color.RED));
+        LinearLayout.LayoutParams rLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        rLp.topMargin = dp(8);
+        fullRebootBtn.setLayoutParams(rLp);
+        fullRebootBtn.setOnClickListener(v -> confirmAndRebootDevice());
+        layout.addView(fullRebootBtn);
+
+        TextView footer = new TextView(this);
+        footer.setText("Настройки применяются мгновенно на лету без обязательной перезагрузки.");
+        footer.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY));
+        footer.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        footer.setGravity(Gravity.CENTER_HORIZONTAL);
+        footer.setPadding(0, dp(12), 0, 0);
+        layout.addView(footer);
+
+        card.addView(layout);
+        return card;
+    }
+
+    private String getOptimizationCmdIfEnabled() {
+        if (mPrefs != null && mPrefs.getBoolean(AnimPrefs.KEY_TURBO_OPTIMIZE, true)) {
+            return "; " + TURBO_M5_CMD;
+        }
+        return "";
+    }
+
+    private void repairWebViewAndOptimizeSilent() {
+        new Thread(() -> {
+            try {
+                String cmd = WEBVIEW_REPAIR_CMD + getOptimizationCmdIfEnabled();
+                Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd});
+                p.waitFor();
+            } catch (Throwable ignored) {
+            }
+        }).start();
+    }
+
+    private void restartLauncherOnly() {
+        Toast.makeText(this, "Применение буста 90 Гц и перезапуск лаунчера...", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            try {
+                String cmd = "am force-stop com.mi.android.globallauncher; am force-stop com.miui.home" + getOptimizationCmdIfEnabled();
+                Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd});
+                p.waitFor();
+            } catch (Throwable ignored) {
+            }
+        }).start();
+    }
+
+    private void performFullUiAndWebViewRestart() {
+        Toast.makeText(this, "Полноценный перезапуск графической оболочки...", Toast.LENGTH_LONG).show();
+        new Thread(() -> {
+            try {
+                String cmd = "am force-stop com.mi.android.globallauncher; am force-stop com.miui.home; "
+                        + WEBVIEW_REPAIR_CMD + getOptimizationCmdIfEnabled() + "; "
+                        + "pkill -f com.android.systemui 2>/dev/null";
+                Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd});
+                p.waitFor();
+            } catch (Throwable ignored) {
+            }
+        }).start();
+    }
+
+    private void confirmAndRebootDevice() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Перезагрузка")
+                .setMessage("Вы действительно хотите полностью перезагрузить устройство?")
+                .setPositiveButton("Перезагрузить", (dialog, which) -> {
+                    Toast.makeText(MainActivity.this, "Перезагрузка...", Toast.LENGTH_SHORT).show();
+                    new Thread(() -> {
+                        try {
+                            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", "reboot"});
+                            p.waitFor();
+                        } catch (Throwable ignored) {
+                        }
+                    }).start();
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 }
