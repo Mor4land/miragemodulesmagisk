@@ -313,7 +313,11 @@ public class MainActivity extends AppCompatActivity {
         addSectionHeader(contentRoot, "СИСТЕМНЫЕ ФОТО-ВИДЖЕТЫ");
         contentRoot.addView(createWidgetManagementCard());
 
-        // 11. Section: Действия и рестарт
+        // 11. Section: Экран блокировки и уведомления
+        addSectionHeader(contentRoot, "ЭКРАН БЛОКИРОВКИ И УВЕДОМЛЕНИЯ");
+        contentRoot.addView(createLockscreenCard());
+
+        // 12. Section: Действия и рестарт
         addSectionHeader(contentRoot, "ОБСЛУЖИВАНИЕ И РЕСТАРТ");
         contentRoot.addView(createMaintenanceCard());
 
@@ -356,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
         chipsRow.addView(statusChip);
 
         Chip verChip = new Chip(this);
-        verChip.setText("v1.0.29 M3");
+        verChip.setText("v1.0.30 M3");
         verChip.setCheckable(false);
         verChip.setClickable(false);
         verChip.setChipBackgroundColorResource(android.R.color.transparent);
@@ -1370,6 +1374,21 @@ public class MainActivity extends AppCompatActivity {
         tipText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         tipText.setPadding(0, dp(8), 0, 0);
         layout.addView(tipText);
+
+        card.addView(layout);
+        return card;
+    }
+
+    private MaterialCardView createLockscreenCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        layout.addView(createSwitchRow(
+                "Скрыть «Не беспокоить» на экране блокировки",
+                "Блокирует постоянное системное уведомление режима «Не беспокоить» на заблокированном экране. Требуется включить «Интерфейс системы» (System UI) в LSPosed.",
+                AnimPrefs.KEY_HIDE_DND_LOCKSCREEN,
+                true
+        ));
 
         card.addView(layout);
         return card;

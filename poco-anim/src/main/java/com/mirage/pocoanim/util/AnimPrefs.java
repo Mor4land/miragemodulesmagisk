@@ -48,6 +48,7 @@ public final class AnimPrefs {
     public static final String KEY_GRID_COLUMNS = "grid_columns";
     public static final String KEY_GRID_ROWS = "grid_rows";
     public static final String KEY_HOTSEAT_MAX_COUNT = "hotseat_max_count";
+    public static final String KEY_HIDE_DND_LOCKSCREEN = "hide_dnd_lockscreen";
 
     public static final int DOCK_STYLE_FROSTED_GLASS = 0;
     public static final int DOCK_STYLE_DARK_VELVET = 1;
@@ -173,6 +174,7 @@ public final class AnimPrefs {
         intent.putExtra(KEY_GRID_COLUMNS, prefs.getInt(KEY_GRID_COLUMNS, 5));
         intent.putExtra(KEY_GRID_ROWS, prefs.getInt(KEY_GRID_ROWS, 7));
         intent.putExtra(KEY_HOTSEAT_MAX_COUNT, prefs.getInt(KEY_HOTSEAT_MAX_COUNT, 5));
+        intent.putExtra(KEY_HIDE_DND_LOCKSCREEN, prefs.getBoolean(KEY_HIDE_DND_LOCKSCREEN, true));
         context.sendBroadcast(intent);
         try {
             Intent pIntent = new Intent(intent);
@@ -184,6 +186,12 @@ public final class AnimPrefs {
             Intent mIntent = new Intent(intent);
             mIntent.setPackage("com.miui.home");
             context.sendBroadcast(mIntent);
+        } catch (Throwable ignored) {
+        }
+        try {
+            Intent sIntent = new Intent(intent);
+            sIntent.setPackage("com.android.systemui");
+            context.sendBroadcast(sIntent);
         } catch (Throwable ignored) {
         }
     }

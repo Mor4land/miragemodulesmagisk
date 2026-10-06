@@ -10,8 +10,8 @@ android {
         applicationId = "com.mirage.pocoanim"
         minSdk = 26
         targetSdk = 34
-        versionCode = 30
-        versionName = "1.0.29"
+        versionCode = 31
+        versionName = "1.0.30"
     }
 
     buildTypes {
@@ -32,6 +32,7 @@ android {
 
 dependencies {
     compileOnly(project(":xposed-stub"))
+    testImplementation(project(":xposed-stub"))
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     testImplementation("junit:junit:4.13.2")

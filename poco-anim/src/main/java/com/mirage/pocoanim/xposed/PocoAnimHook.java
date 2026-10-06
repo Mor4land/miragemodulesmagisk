@@ -5,9 +5,11 @@ import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
+import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.service.notification.StatusBarNotification;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -64,8 +66,10 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static final String TAG = "MiragePocoAnim";
     private static final String PKG_POCO = "com.mi.android.globallauncher";
     private static final String PKG_MIUI = "com.miui.home";
+    private static final String PKG_SYSTEMUI = "com.android.systemui";
     private static final String LAUNCHER_CACHE_PREFS = "mirage_poco_anim_cache";
 
+    public static volatile boolean sHideDndLockscreen = true;
     private static volatile boolean sEnabled = true;
     private static volatile boolean sIconAnim = true;
     private static volatile boolean sCompleteBlur = true;
@@ -128,6 +132,14 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+        if (PKG_SYSTEMUI.equals(lpparam.packageName)) {
+            if (lpparam.processName != null && !lpparam.processName.startsWith(lpparam.packageName)) {
+                return;
+            }
+            handleSystemUILoadPackage(lpparam);
+            return;
+        }
+
         if (!PKG_POCO.equals(lpparam.packageName) && !PKG_MIUI.equals(lpparam.packageName)) {
             return;
         }
@@ -193,6 +205,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sGridColumns = xPrefs.getInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns);
                 sGridRows = xPrefs.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
                 sHotseatMaxCount = xPrefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
+                sHideDndLockscreen = xPrefs.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
             }
         } catch (Throwable ignored) {
         }
@@ -231,6 +244,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         sGridColumns = b.getInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns);
         sGridRows = b.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
         sHotseatMaxCount = b.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
+        sHideDndLockscreen = b.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
     }
 
     private static void queryProviderPrefs(Context context) {
@@ -295,6 +309,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sGridColumns = cache.getInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns);
                 sGridRows = cache.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
                 sHotseatMaxCount = cache.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
+                sHideDndLockscreen = cache.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
             }
         } catch (Throwable ignored) {
         }
@@ -340,6 +355,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     .putInt(AnimPrefs.KEY_GRID_COLUMNS, sGridColumns)
                     .putInt(AnimPrefs.KEY_GRID_ROWS, sGridRows)
                     .putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount)
+                    .putBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen)
                     .apply();
         } catch (Throwable ignored) {
         }
@@ -3099,5 +3115,323 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         } catch (Throwable t) {
             XposedBridge.log(TAG + ": syncWorkspacePageForClosingApp error: " + t.getMessage());
         }
+    }
+
+    // =========================================================================
+    // SystemUI DND Lockscreen Notification Suppression
+    // =========================================================================
+
+    private static volatile boolean sSystemUIReceiverRegistered = false;
+
+    private static void handleSystemUILoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
+        loadXSharedPrefs();
+        XposedBridge.log(TAG + ": Initializing SystemUI hooks (hideDndLockscreen=" + sHideDndLockscreen + ")");
+
+        hookSystemUILifecycle(lpparam.classLoader);
+        hookSystemUINotificationLockscreen(lpparam.classLoader);
+    }
+
+    private static void hookSystemUILifecycle(final ClassLoader cl) {
+        try {
+            XposedHelpers.findAndHookMethod(Application.class, "onCreate", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    try {
+                        if (param.thisObject instanceof Application) {
+                            Application app = (Application) param.thisObject;
+                            loadLocalCachePrefs(app);
+                            registerSystemUIConfigReceiver(app);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Class<?> sysAppCls = XposedHelpers.findClassIfExists("com.android.systemui.SystemUIApplication", cl);
+            if (sysAppCls != null) {
+                XposedHelpers.findAndHookMethod(sysAppCls, "onCreate", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        try {
+                            if (param.thisObject instanceof Context) {
+                                Context ctx = (Context) param.thisObject;
+                                loadLocalCachePrefs(ctx);
+                                registerSystemUIConfigReceiver(ctx);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void registerSystemUIConfigReceiver(Context context) {
+        if (sSystemUIReceiverRegistered || context == null) {
+            return;
+        }
+        try {
+            Context appCtx = context.getApplicationContext();
+            if (appCtx == null) {
+                appCtx = context;
+            }
+            BroadcastReceiver receiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context ctx, Intent intent) {
+                    try {
+                        if (intent == null || !AnimPrefs.ACTION_UPDATE_CONFIG.equals(intent.getAction())) {
+                            return;
+                        }
+                        updateFromBundle(intent.getExtras());
+                        saveLocalCachePrefs(ctx);
+                        XposedBridge.log(TAG + ": SystemUI live config updated (hideDnd=" + sHideDndLockscreen + ")");
+                    } catch (Throwable ignored) {
+                    }
+                }
+            };
+            IntentFilter filter = new IntentFilter(AnimPrefs.ACTION_UPDATE_CONFIG);
+            if (Build.VERSION.SDK_INT >= 33) {
+                appCtx.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+            } else {
+                appCtx.registerReceiver(receiver, filter);
+            }
+            sSystemUIReceiverRegistered = true;
+        } catch (Throwable t) {
+            XposedBridge.log(TAG + ": Failed to register SystemUI receiver: " + t.getMessage());
+        }
+    }
+
+    private static void hookSystemUINotificationLockscreen(final ClassLoader cl) {
+        XC_MethodHook entryHook = new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                try {
+                    if (sHideDndLockscreen && isDndNotification(param.thisObject)) {
+                        applyDndSecretVisibility(param.thisObject);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        };
+
+        String[] entryClasses = {
+            "com.android.systemui.statusbar.notification.collection.NotificationEntry",
+            "com.android.systemui.statusbar.notification.NotificationEntry"
+        };
+        for (String entryClsName : entryClasses) {
+            Class<?> entryCls = XposedHelpers.findClassIfExists(entryClsName, cl);
+            if (entryCls != null) {
+                try {
+                    XposedBridge.hookAllConstructors(entryCls, entryHook);
+                } catch (Throwable ignored) {
+                }
+                hookAllMethodsIfExists(cl, entryClsName, "setSbn", entryHook);
+            }
+        }
+
+        XC_MethodHook lockscreenShowHook = new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                try {
+                    if (sHideDndLockscreen && param.args != null && param.args.length > 0 && isDndNotification(param.args[0])) {
+                        param.setResult(Boolean.FALSE);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        };
+
+        String[] userMgrClasses = {
+            "com.android.systemui.statusbar.NotificationLockscreenUserManagerImpl",
+            "com.android.systemui.statusbar.NotificationLockscreenUserManager",
+            "com.android.systemui.statusbar.phone.MiuiNotificationLockscreenUserManagerImpl",
+            "com.android.systemui.statusbar.notification.MiuiNotificationLockscreenUserManager",
+            "com.android.systemui.statusbar.notification.MiuiNotificationLockScreenFilter",
+            "com.android.systemui.statusbar.notification.MiuiKeyguardNotificationController"
+        };
+        for (String mgrCls : userMgrClasses) {
+            hookAllMethodsIfExists(cl, mgrCls, "shouldShowOnKeyguard", lockscreenShowHook);
+        }
+
+        XC_MethodHook hideHook = new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) {
+                try {
+                    if (sHideDndLockscreen && param.args != null && param.args.length > 0 && isDndNotification(param.args[0])) {
+                        param.setResult(Boolean.TRUE);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        };
+
+        String[] visibilityClasses = {
+            "com.android.systemui.statusbar.notification.interruption.KeyguardNotificationVisibilityProviderImpl",
+            "com.android.systemui.statusbar.notification.interruption.KeyguardNotificationVisibilityProvider",
+            "com.android.systemui.statusbar.notification.policy.MiuiNotificationPolicy"
+        };
+        for (String visCls : visibilityClasses) {
+            hookAllMethodsIfExists(cl, visCls, "shouldHideNotification", hideHook);
+        }
+
+        Class<?> coordCls = XposedHelpers.findClassIfExists("com.android.systemui.statusbar.notification.collection.coordinator.KeyguardCoordinator", cl);
+        if (coordCls != null) {
+            hookAllMethodsIfExists(cl, coordCls.getName(), "shouldFilterOut", hideHook);
+            try {
+                Class<?>[] declared = coordCls.getDeclaredClasses();
+                for (Class<?> inner : declared) {
+                    hookAllMethodsIfExists(cl, inner.getName(), "shouldFilterOut", hideHook);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private static void applyDndSecretVisibility(Object entry) {
+        try {
+            StatusBarNotification sbn = extractSbn(entry);
+            if (sbn != null && sbn.getNotification() != null) {
+                sbn.getNotification().visibility = Notification.VISIBILITY_SECRET;
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void hookAllMethodsIfExists(ClassLoader cl, String className, String methodName, XC_MethodHook hook) {
+        try {
+            Class<?> clazz = XposedHelpers.findClassIfExists(className, cl);
+            if (clazz == null) {
+                return;
+            }
+            Class<?> curr = clazz;
+            while (curr != null && curr != Object.class) {
+                for (Method m : curr.getDeclaredMethods()) {
+                    if (m.getName().equals(methodName)) {
+                        try {
+                            XposedBridge.hookMethod(m, hook);
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }
+                curr = curr.getSuperclass();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public static StatusBarNotification extractSbn(Object obj) {
+        if (obj == null) return null;
+        if (obj instanceof StatusBarNotification) {
+            return (StatusBarNotification) obj;
+        }
+        try {
+            Method getSbnMethod = obj.getClass().getMethod("getSbn");
+            Object res = getSbnMethod.invoke(obj);
+            if (res instanceof StatusBarNotification) {
+                return (StatusBarNotification) res;
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            Field f = XposedHelpers.findFieldIfExists(obj.getClass(), "mSbn");
+            if (f != null) {
+                f.setAccessible(true);
+                Object res = f.get(obj);
+                if (res instanceof StatusBarNotification) {
+                    return (StatusBarNotification) res;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    public static Notification extractNotification(Object obj) {
+        if (obj == null) return null;
+        if (obj instanceof Notification) {
+            return (Notification) obj;
+        }
+        StatusBarNotification sbn = extractSbn(obj);
+        if (sbn != null && sbn.getNotification() != null) {
+            return sbn.getNotification();
+        }
+        try {
+            Field f = XposedHelpers.findFieldIfExists(obj.getClass(), "notification");
+            if (f != null) {
+                f.setAccessible(true);
+                Object res = f.get(obj);
+                if (res instanceof Notification) {
+                    return (Notification) res;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    public static boolean isDndNotification(Object obj) {
+        if (obj == null) return false;
+        try {
+            StatusBarNotification sbn = extractSbn(obj);
+            Notification notif = extractNotification(obj);
+
+            if (sbn != null) {
+                String pkg = sbn.getPackageName();
+                if (pkg != null && !"android".equals(pkg) && !"com.android.systemui".equals(pkg)) {
+                    return false;
+                }
+
+                String tag = sbn.getTag();
+                if (tag != null) {
+                    String tagLower = tag.toLowerCase();
+                    if (tagLower.contains("zen") || tagLower.contains("dnd") || tagLower.contains("donotdisturb")) {
+                        return true;
+                    }
+                }
+            }
+
+            if (notif != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    try {
+                        String channelId = notif.getChannelId();
+                        if (channelId != null) {
+                            String chLower = channelId.toLowerCase();
+                            if (chLower.contains("zen") || chLower.contains("dnd") || chLower.contains("do_not_disturb")) {
+                                return true;
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+
+                if (notif.extras != null) {
+                    CharSequence title = notif.extras.getCharSequence(Notification.EXTRA_TITLE);
+                    CharSequence text = notif.extras.getCharSequence(Notification.EXTRA_TEXT);
+                    CharSequence subText = notif.extras.getCharSequence(Notification.EXTRA_SUB_TEXT);
+                    if (isDndTextMatch(title) || isDndTextMatch(text) || isDndTextMatch(subText)) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    private static boolean isDndTextMatch(CharSequence cs) {
+        if (cs == null) return false;
+        String str = cs.toString().toLowerCase();
+        return str.contains("не беспокоить")
+                || str.contains("do not disturb")
+                || str.contains("не турбувати")
+                || str.contains("bitte nicht stören")
+                || str.contains("ne pas déranger")
+                || str.contains("no molestar")
+                || str.contains("non disturbare")
+                || str.contains("请勿打扰");
     }
 }

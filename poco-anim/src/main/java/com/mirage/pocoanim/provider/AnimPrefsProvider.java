@@ -73,6 +73,7 @@ public class AnimPrefsProvider extends ContentProvider {
             bundle.putInt(AnimPrefs.KEY_GRID_COLUMNS, prefs.getInt(AnimPrefs.KEY_GRID_COLUMNS, 5));
             bundle.putInt(AnimPrefs.KEY_GRID_ROWS, prefs.getInt(AnimPrefs.KEY_GRID_ROWS, 7));
             bundle.putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, prefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, 5));
+            bundle.putBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, prefs.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, true));
 
             return bundle;
         }

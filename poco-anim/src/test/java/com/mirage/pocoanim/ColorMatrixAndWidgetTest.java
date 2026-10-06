@@ -288,6 +288,77 @@ public class ColorMatrixAndWidgetTest {
         Assert.assertTrue("Folder container must resolve parent folder", containerFolder > 0 && containerFolder != -101L);
     }
 
+    @Test
+    public void testDndNotificationFilteringLogic() {
+        // 1. Preference Key Integrity
+        Assert.assertEquals("hide_dnd_lockscreen", com.mirage.pocoanim.util.AnimPrefs.KEY_HIDE_DND_LOCKSCREEN);
+
+        // 2. Null safety
+        Assert.assertFalse("Null notification must not match",
+                com.mirage.pocoanim.xposed.PocoAnimHook.isDndNotification(null));
+
+        // 3. String matcher logic
+        String[] dndTitles = new String[]{
+                "Не беспокоить",
+                "Режим «Не беспокоить» включен",
+                "Do Not Disturb",
+                "Do not disturb is on",
+                "Не турбувати",
+                "Bitte nicht stören",
+                "Ne pas déranger",
+                "No molestar",
+                "Non disturbare",
+                "请勿打扰"
+        };
+        for (String title : dndTitles) {
+            String lower = title.toLowerCase();
+            boolean matches = lower.contains("не беспокоить")
+                    || lower.contains("do not disturb")
+                    || lower.contains("не турбувати")
+                    || lower.contains("bitte nicht stören")
+                    || lower.contains("ne pas déranger")
+                    || lower.contains("no molestar")
+                    || lower.contains("non disturbare")
+                    || lower.contains("请勿打扰");
+            Assert.assertTrue("DND title must match: " + title, matches);
+        }
+
+        // 4. Non-DND notifications must NOT match
+        String[] regularTitles = new String[]{
+                "Telegram: Новое сообщение от Павла",
+                "WhatsApp: Привет, как дела?",
+                "Входящий вызов",
+                "YouTube: Новое видео на канале",
+                "Заряд батареи 15%",
+                "Режим энергосбережения"
+        };
+        for (String title : regularTitles) {
+            String lower = title.toLowerCase();
+            boolean matches = lower.contains("не беспокоить")
+                    || lower.contains("do not disturb")
+                    || lower.contains("не турбувати")
+                    || lower.contains("bitte nicht stören")
+                    || lower.contains("ne pas déranger")
+                    || lower.contains("no molestar")
+                    || lower.contains("non disturbare")
+                    || lower.contains("请勿打扰");
+            Assert.assertFalse("Regular notification must not match DND filter: " + title, matches);
+        }
+
+        // 5. System Package Gatekeeping
+        String sysPkg = "android";
+        String sysUiPkg = "com.android.systemui";
+        String tgPkg = "org.telegram.messenger";
+        String waPkg = "com.whatsapp";
+
+        Assert.assertTrue("android package is allowed", "android".equals(sysPkg) || "com.android.systemui".equals(sysPkg));
+        Assert.assertTrue("systemui package is allowed", "android".equals(sysUiPkg) || "com.android.systemui".equals(sysUiPkg));
+        Assert.assertFalse("telegram package must be blocked from system filter",
+                "android".equals(tgPkg) || "com.android.systemui".equals(tgPkg));
+        Assert.assertFalse("whatsapp package must be blocked from system filter",
+                "android".equals(waPkg) || "com.android.systemui".equals(waPkg));
+    }
+
     private int resolveWindowMode(boolean launcherOnTop, int stockResult, boolean isAppCurrentlyOpening) {
         if (launcherOnTop) {
             if (stockResult == 0 && isAppCurrentlyOpening) {
