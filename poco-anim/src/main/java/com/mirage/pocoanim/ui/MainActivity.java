@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
+import android.content.Intent;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -31,6 +32,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -222,6 +224,14 @@ public class MainActivity extends Activity {
         addSectionHeader(root, "КАСТОМИЗАЦИЯ И СТИЛИЗАЦИЯ ИКОНОК");
         LinearLayout iconCard = createIconCustomizationCard();
         root.addView(iconCard);
+
+        addSectionHeader(root, "ОБОИ И РАБОЧИЙ СТОЛ (МАТОВЫЙ ЭФФЕКТ И СИНХРОНИЗАЦИЯ)");
+        LinearLayout desktopCard = createDesktopCard();
+        root.addView(desktopCard);
+
+        addSectionHeader(root, "КАСТОМНЫЕ ВИДЖЕТЫ (ФОТО & GIF)");
+        LinearLayout widgetCard = createWidgetManagementCard();
+        root.addView(widgetCard);
 
         addSectionHeader(root, "ПОЛНОЦЕННЫЙ РЕСТАРТ И ВОССТАНОВЛЕНИЕ");
 
@@ -1239,5 +1249,250 @@ public class MainActivity extends Activity {
 
             mPreviewIcons[i].setImageBitmap(bmp);
         }
+    }
+
+    private LinearLayout createDesktopCard() {
+        LinearLayout card = createCard();
+
+        // 1. Matte Wallpaper Effect
+        LinearLayout matteSwitchRow = new LinearLayout(this);
+        matteSwitchRow.setOrientation(LinearLayout.HORIZONTAL);
+        matteSwitchRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout textCol = new LinearLayout(this);
+        textCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams colLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        colLp.rightMargin = dp(12);
+        textCol.setLayoutParams(colLp);
+
+        TextView title = new TextView(this);
+        title.setText("Матовый эффект обоев");
+        title.setTextColor(Color.parseColor("#F1F5F9"));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        textCol.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText("Придает обоям глубокую матовую текстуру (Frosted Matte), усиливая четкость и контраст виджетов и иконок");
+        desc.setTextColor(Color.parseColor("#94A3B8"));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        desc.setPadding(0, dp(3), 0, 0);
+        textCol.addView(desc);
+
+        final LinearLayout matteOptionsContainer = new LinearLayout(this);
+        matteOptionsContainer.setOrientation(LinearLayout.VERTICAL);
+        matteOptionsContainer.setPadding(0, dp(12), 0, 0);
+
+        Switch matteSwitch = new Switch(this);
+        boolean isMatte = mPrefs.getBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, false);
+        matteSwitch.setChecked(isMatte);
+        matteOptionsContainer.setVisibility(isMatte ? View.VISIBLE : View.GONE);
+
+        matteSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mPrefs.edit().putBoolean(AnimPrefs.KEY_WALLPAPER_MATTE, isChecked).commit();
+                matteOptionsContainer.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+            }
+        });
+
+        matteSwitchRow.addView(textCol);
+        matteSwitchRow.addView(matteSwitch);
+        card.addView(matteSwitchRow);
+
+        // Matte Style Selector
+        TextView styleLabel = new TextView(this);
+        styleLabel.setText("Стиль матовой текстуры:");
+        styleLabel.setTextColor(Color.parseColor("#A0ABC0"));
+        styleLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        styleLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        styleLabel.setPadding(0, 0, 0, dp(6));
+        matteOptionsContainer.addView(styleLabel);
+
+        final LinearLayout styleButtonsRow = new LinearLayout(this);
+        styleButtonsRow.setOrientation(LinearLayout.HORIZONTAL);
+        final String[] styleNames = new String[]{"Тёмный бархат", "Матовое стекло", "Глубокий сатин"};
+        final Button[] styleBtns = new Button[3];
+
+        View.OnClickListener styleClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int selected = (Integer) v.getTag();
+                mPrefs.edit().putInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, selected).commit();
+                for (int i = 0; i < 3; i++) {
+                    GradientDrawable bg = new GradientDrawable();
+                    if (i == selected) {
+                        bg.setColor(Color.parseColor("#1F2E47"));
+                        bg.setStroke(dp(1), Color.parseColor("#00E5FF"));
+                        styleBtns[i].setTextColor(Color.parseColor("#00E5FF"));
+                    } else {
+                        bg.setColor(Color.parseColor("#141824"));
+                        bg.setStroke(dp(1), Color.parseColor("#262C3C"));
+                        styleBtns[i].setTextColor(Color.parseColor("#8E99B0"));
+                    }
+                    bg.setCornerRadius(dp(10));
+                    styleBtns[i].setBackground(bg);
+                }
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+            }
+        };
+
+        int currentStyle = mPrefs.getInt(AnimPrefs.KEY_WALLPAPER_MATTE_STYLE, AnimPrefs.MATTE_STYLE_DARK_VELVET);
+        for (int i = 0; i < 3; i++) {
+            Button btn = new Button(this);
+            btn.setText(styleNames[i]);
+            btn.setTextSize(11);
+            btn.setAllCaps(false);
+            btn.setTag(i);
+            btn.setOnClickListener(styleClickListener);
+
+            GradientDrawable bg = new GradientDrawable();
+            if (i == currentStyle) {
+                bg.setColor(Color.parseColor("#1F2E47"));
+                bg.setStroke(dp(1), Color.parseColor("#00E5FF"));
+                btn.setTextColor(Color.parseColor("#00E5FF"));
+            } else {
+                bg.setColor(Color.parseColor("#141824"));
+                bg.setStroke(dp(1), Color.parseColor("#262C3C"));
+                btn.setTextColor(Color.parseColor("#8E99B0"));
+            }
+            bg.setCornerRadius(dp(10));
+            btn.setBackground(bg);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(38), 1.0f);
+            lp.setMargins(dp(2), 0, dp(2), 0);
+            btn.setLayoutParams(lp);
+            styleBtns[i] = btn;
+            styleButtonsRow.addView(btn);
+        }
+        matteOptionsContainer.addView(styleButtonsRow);
+
+        // Matte Intensity Slider
+        final TextView intensityLabel = new TextView(this);
+        float curIntensity = mPrefs.getFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, 0.35f);
+        intensityLabel.setText("Интенсивность размытия / матовости: " + Math.round(curIntensity * 100) + "%");
+        intensityLabel.setTextColor(Color.parseColor("#A0ABC0"));
+        intensityLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        intensityLabel.setTypeface(Typeface.DEFAULT_BOLD);
+        intensityLabel.setPadding(0, dp(12), 0, dp(4));
+        matteOptionsContainer.addView(intensityLabel);
+
+        SeekBar intensityBar = new SeekBar(this);
+        intensityBar.setMax(80); // 10% to 90%
+        intensityBar.setProgress(Math.round((curIntensity - 0.10f) * 100));
+        intensityBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float val = 0.10f + (progress / 100f);
+                intensityLabel.setText("Интенсивность размытия / матовости: " + Math.round(val * 100) + "%");
+                if (fromUser) {
+                    mPrefs.edit().putFloat(AnimPrefs.KEY_WALLPAPER_MATTE_INTENSITY, val).commit();
+                    AnimPrefs.broadcastUpdate(MainActivity.this);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+        matteOptionsContainer.addView(intensityBar);
+        card.addView(matteOptionsContainer);
+
+        addDivider(card);
+
+        // 2. Auto-Return to App Page on Exit
+        LinearLayout snapSwitchRow = new LinearLayout(this);
+        snapSwitchRow.setOrientation(LinearLayout.HORIZONTAL);
+        snapSwitchRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout snapTextCol = new LinearLayout(this);
+        snapTextCol.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams snapColLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        snapColLp.rightMargin = dp(12);
+        snapTextCol.setLayoutParams(snapColLp);
+
+        TextView snapTitle = new TextView(this);
+        snapTitle.setText("Возврат на страницу приложения");
+        snapTitle.setTextColor(Color.parseColor("#F1F5F9"));
+        snapTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        snapTitle.setTypeface(Typeface.DEFAULT_BOLD);
+        snapTextCol.addView(snapTitle);
+
+        TextView snapDesc = new TextView(this);
+        snapDesc.setText("При выходе из приложения автоматически синхронизирует рабочий стол с вкладкой, где расположена его иконка. Предотвращает улёт анимации закрытия в пустоту и приземляет окно точно в иконку");
+        snapDesc.setTextColor(Color.parseColor("#94A3B8"));
+        snapDesc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        snapDesc.setPadding(0, dp(3), 0, 0);
+        snapTextCol.addView(snapDesc);
+
+        Switch snapSwitch = new Switch(this);
+        snapSwitch.setChecked(mPrefs.getBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, true));
+        snapSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mPrefs.edit().putBoolean(AnimPrefs.KEY_AUTO_SNAP_TO_APP_PAGE, isChecked).commit();
+                AnimPrefs.broadcastUpdate(MainActivity.this);
+            }
+        });
+
+        snapSwitchRow.addView(snapTextCol);
+        snapSwitchRow.addView(snapSwitch);
+        card.addView(snapSwitchRow);
+
+        return card;
+    }
+
+    private LinearLayout createWidgetManagementCard() {
+        LinearLayout card = createCard();
+
+        TextView title = new TextView(this);
+        title.setText("Системные Фото & GIF Виджеты");
+        title.setTextColor(Color.parseColor("#F1F5F9"));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        card.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText("Размещайте на рабочем столе фото, аниме-арты или анимированные GIF-файлы любого масштаба (2x2, 2x4, 4x4) с настраиваемыми скруглениями углов и неоновыми киберпанк рамками.");
+        desc.setTextColor(Color.parseColor("#94A3B8"));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        desc.setPadding(0, dp(4), 0, dp(14));
+        card.addView(desc);
+
+        Button addWidgetBtn = new Button(this);
+        addWidgetBtn.setText("➕ Добавить Фото / GIF виджет на рабочий стол");
+        addWidgetBtn.setTextSize(14);
+        addWidgetBtn.setTextColor(Color.parseColor("#051622"));
+        addWidgetBtn.setTypeface(Typeface.DEFAULT_BOLD);
+        addWidgetBtn.setAllCaps(false);
+        GradientDrawable btnBg = new GradientDrawable();
+        btnBg.setColor(Color.parseColor("#00E5FF"));
+        btnBg.setCornerRadius(dp(12));
+        addWidgetBtn.setBackground(btnBg);
+        LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(48)
+        );
+        addWidgetBtn.setLayoutParams(btnLp);
+        addWidgetBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, com.mirage.pocoanim.widget.WidgetConfigActivity.class);
+                startActivity(intent);
+            }
+        });
+        card.addView(addWidgetBtn);
+
+        TextView tipText = new TextView(this);
+        tipText.setText("💡 Подсказка: Вы также можете зажать свободное место на рабочем столе -> Виджеты -> 'Mirage Фото / GIF Виджет' и разместить нужное количество виджетов.");
+        tipText.setTextColor(Color.parseColor("#64748B"));
+        tipText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        tipText.setPadding(0, dp(10), 0, 0);
+        card.addView(tipText);
+
+        return card;
     }
 }

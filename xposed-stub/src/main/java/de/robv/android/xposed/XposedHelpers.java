@@ -20,6 +20,8 @@ public final class XposedHelpers {
     public static void setBooleanField(Object obj, String fieldName, boolean value) {}
     public static int getIntField(Object obj, String fieldName) { return 0; }
     public static void setIntField(Object obj, String fieldName, int value) {}
+    public static long getLongField(Object obj, String fieldName) { return 0L; }
+    public static void setLongField(Object obj, String fieldName, long value) {}
     public static float getFloatField(Object obj, String fieldName) { return 0f; }
     public static void setFloatField(Object obj, String fieldName, float value) {}
     public static Object getStaticObjectField(Class<?> clazz, String fieldName) { return null; }

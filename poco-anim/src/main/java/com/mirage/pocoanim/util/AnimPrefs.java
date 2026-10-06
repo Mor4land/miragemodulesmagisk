@@ -31,6 +31,16 @@ public final class AnimPrefs {
     public static final String KEY_ICON_TINT_INTENSITY = "icon_tint_intensity";
     public static final String KEY_ICON_BOUNCE_ANIM = "icon_bounce_anim";
 
+    // Wallpaper Matte & Desktop Page Sync
+    public static final String KEY_WALLPAPER_MATTE = "wallpaper_matte";
+    public static final String KEY_WALLPAPER_MATTE_INTENSITY = "wallpaper_matte_intensity";
+    public static final String KEY_WALLPAPER_MATTE_STYLE = "wallpaper_matte_style"; // 0 = Dark Velvet, 1 = Frosted Glass, 2 = Deep Satin
+    public static final String KEY_AUTO_SNAP_TO_APP_PAGE = "auto_snap_to_app_page";
+
+    public static final int MATTE_STYLE_DARK_VELVET = 0;
+    public static final int MATTE_STYLE_FROSTED_GLASS = 1;
+    public static final int MATTE_STYLE_DEEP_SATIN = 2;
+
     public static final int COLOR_MODE_GRADIENT = 0;
     public static final int COLOR_MODE_SOLID = 1;
 
@@ -132,6 +142,10 @@ public final class AnimPrefs {
         intent.putExtra(KEY_ICON_CUSTOM_COLOR_2, prefs.getInt(KEY_ICON_CUSTOM_COLOR_2, DEFAULT_COLOR_2));
         intent.putExtra(KEY_ICON_GRADIENT_PRESET, prefs.getInt(KEY_ICON_GRADIENT_PRESET, 0));
         intent.putExtra(KEY_ICON_TINT_INTENSITY, prefs.getFloat(KEY_ICON_TINT_INTENSITY, 0.85f));
+        intent.putExtra(KEY_WALLPAPER_MATTE, prefs.getBoolean(KEY_WALLPAPER_MATTE, false));
+        intent.putExtra(KEY_WALLPAPER_MATTE_INTENSITY, prefs.getFloat(KEY_WALLPAPER_MATTE_INTENSITY, 0.35f));
+        intent.putExtra(KEY_WALLPAPER_MATTE_STYLE, prefs.getInt(KEY_WALLPAPER_MATTE_STYLE, MATTE_STYLE_DARK_VELVET));
+        intent.putExtra(KEY_AUTO_SNAP_TO_APP_PAGE, prefs.getBoolean(KEY_AUTO_SNAP_TO_APP_PAGE, true));
         context.sendBroadcast(intent);
         try {
             Intent pIntent = new Intent(intent);
