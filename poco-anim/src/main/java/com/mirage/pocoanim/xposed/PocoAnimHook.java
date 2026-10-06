@@ -7,6 +7,7 @@ import android.app.ActivityManager;
 import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -2327,18 +2328,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     protected void beforeHookedMethod(MethodHookParam param) {
                         extractAndSyncClosingApp(param, cl);
                     }
-
-                    @Override
-                    protected void afterHookedMethod(MethodHookParam param) {
-                        if (param.getResult() == null && sEnabled && sAutoSnapToAppPage && sLastClosingPackage != null) {
-                            View icon = findShortcutIconForApp(param.thisObject, sLastClosingPackage, cl);
-                            if (icon != null) {
-                                param.setResult(icon);
-                            }
-                        }
-                    }
                 };
                 hookMethodsByName(cls, "getShowingShortcutIcon", snapHook);
+                hookMethodsByName(cls, "getShortcutIcon", snapHook);
                 hookMethodsByName(cls, "findClosingShortcutIcon", snapHook);
             }
         }
@@ -2366,18 +2358,27 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         }
 
-        // 3. Hook NavStubView gesture closing methods
-        Class<?> navStubViewCls = XposedHelpers.findClassIfExists("com.miui.home.recents.NavStubView", cl);
-        if (navStubViewCls != null) {
-            XC_MethodHook navCloseHook = new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    extractAndSyncClosingApp(param, cl);
-                }
-            };
-            hookMethodsByName(navStubViewCls, "findClosingShortcutIcon", navCloseHook);
-            hookMethodsByName(navStubViewCls, "startAppToHomeAnim", navCloseHook);
-            hookMethodsByName(navStubViewCls, "performAppToHome", navCloseHook);
+        // 3. Hook NavStubView & GestureStubView gesture closing methods
+        String[] gestureViews = new String[]{
+                "com.miui.home.recents.NavStubView",
+                "com.miui.home.recents.GestureStubView"
+        };
+        for (String gvName : gestureViews) {
+            Class<?> gestureViewCls = XposedHelpers.findClassIfExists(gvName, cl);
+            if (gestureViewCls != null) {
+                XC_MethodHook navCloseHook = new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) {
+                        extractAndSyncClosingApp(param, cl);
+                    }
+                };
+                hookMethodsByName(gestureViewCls, "findClosingShortcutIcon", navCloseHook);
+                hookMethodsByName(gestureViewCls, "startAppToHomeAnim", navCloseHook);
+                hookMethodsByName(gestureViewCls, "performAppToHome", navCloseHook);
+                hookMethodsByName(gestureViewCls, "onFsGestureStart", navCloseHook);
+                hookMethodsByName(gestureViewCls, "onFsGestureReady", navCloseHook);
+                hookMethodsByName(gestureViewCls, "startFsGesture", navCloseHook);
+            }
         }
     }
 
@@ -2388,7 +2389,20 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             if (launcher == null && param.thisObject instanceof Activity) {
                 launcher = param.thisObject;
             }
-            if (launcher == null) {
+            if (launcher == null && param.thisObject instanceof View) {
+                Context ctx = ((View) param.thisObject).getContext();
+                while (ctx instanceof ContextWrapper) {
+                    if (ctx instanceof Activity) {
+                        launcher = ctx;
+                        break;
+                    }
+                    ctx = ((ContextWrapper) ctx).getBaseContext();
+                }
+                if (launcher == null && ctx instanceof Activity) {
+                    launcher = ctx;
+                }
+            }
+            if (launcher == null && param.thisObject != null) {
                 try {
                     launcher = XposedHelpers.getObjectField(param.thisObject, "mLauncher");
                 } catch (Throwable ignored) {
@@ -2404,63 +2418,59 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             }
             if (launcher == null) return;
+            if (launcher instanceof Activity) {
+                sLauncherActivityRef = new WeakReference<>((Activity) launcher);
+            }
 
             String targetPkg = null;
             if (param.args != null) {
                 for (Object arg : param.args) {
                     targetPkg = extractTargetPackageFromObject(arg);
-                    if (targetPkg != null) break;
+                    if (targetPkg != null && !targetPkg.isEmpty()) break;
                 }
             }
-            if (targetPkg == null && param.thisObject != null) {
-                try {
-                    Object closingTarget = XposedHelpers.getObjectField(param.thisObject, "mClosingAppPackage");
-                    targetPkg = extractTargetPackageFromObject(closingTarget);
-                } catch (Throwable ignored) {
-                }
-            }
-            if (targetPkg == null && param.thisObject != null) {
-                try {
-                    Object closingInfo = XposedHelpers.getObjectField(param.thisObject, "mClosingAppInfo");
-                    targetPkg = extractTargetPackageFromObject(closingInfo);
-                } catch (Throwable ignored) {
+            if ((targetPkg == null || targetPkg.isEmpty()) && param.thisObject != null) {
+                String[] candidateFields = new String[]{
+                        "mClosingAppPackage", "mClosingAppInfo",
+                        "mDownClosingAppPackage", "mDownClosingAppInfo",
+                        "mCurrentTask", "mDownTask", "mTask", "mRunningTaskInfo",
+                        "mClosingPackageName", "mTargetPackage", "mPackageName"
+                };
+                for (String fieldName : candidateFields) {
+                    try {
+                        Object candidateObj = XposedHelpers.getObjectField(param.thisObject, fieldName);
+                        targetPkg = extractTargetPackageFromObject(candidateObj);
+                        if (targetPkg != null && !targetPkg.isEmpty()) break;
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
 
-            // Fallback: Query top running task from ActivityManager
+            // Fallback: Query top running task from ActivityManager ONLY if top task is not the launcher itself
             if ((targetPkg == null || targetPkg.isEmpty()) && launcher instanceof Context) {
                 try {
                     ActivityManager am = (ActivityManager) ((Context) launcher).getSystemService(Context.ACTIVITY_SERVICE);
                     if (am != null) {
-                        List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(5);
-                        if (tasks != null) {
+                        List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
+                        if (tasks != null && !tasks.isEmpty()) {
+                            ActivityManager.RunningTaskInfo topTask = tasks.get(0);
                             String launcherPkg = ((Context) launcher).getPackageName();
-                            for (ActivityManager.RunningTaskInfo t : tasks) {
-                                if (t.topActivity != null) {
-                                    String pkg = t.topActivity.getPackageName();
-                                    if (pkg != null && !pkg.equals(launcherPkg) && !pkg.startsWith("com.android.systemui")) {
-                                        targetPkg = pkg;
-                                        break;
-                                    }
-                                }
-                                if (t.baseActivity != null) {
-                                    String pkg = t.baseActivity.getPackageName();
-                                    if (pkg != null && !pkg.equals(launcherPkg) && !pkg.startsWith("com.android.systemui")) {
-                                        targetPkg = pkg;
-                                        break;
-                                    }
-                                }
+                            String pkg = null;
+                            if (topTask.topActivity != null) {
+                                pkg = topTask.topActivity.getPackageName();
+                            } else if (topTask.baseActivity != null) {
+                                pkg = topTask.baseActivity.getPackageName();
+                            } else {
                                 try {
-                                    Object realAct = XposedHelpers.getObjectField(t, "realActivity");
+                                    Object realAct = XposedHelpers.getObjectField(topTask, "realActivity");
                                     if (realAct instanceof ComponentName) {
-                                        String pkg = ((ComponentName) realAct).getPackageName();
-                                        if (pkg != null && !pkg.equals(launcherPkg) && !pkg.startsWith("com.android.systemui")) {
-                                            targetPkg = pkg;
-                                            break;
-                                        }
+                                        pkg = ((ComponentName) realAct).getPackageName();
                                     }
                                 } catch (Throwable ignored) {
                                 }
+                            }
+                            if (pkg != null && !pkg.equals(launcherPkg) && !pkg.startsWith("com.android.systemui")) {
+                                targetPkg = pkg;
                             }
                         }
                     }
@@ -2800,60 +2810,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         return false;
     }
 
-    private static View findShortcutIconForApp(Object launcher, String targetPkg, ClassLoader cl) {
-        if (launcher == null || targetPkg == null || targetPkg.isEmpty()) return null;
-        try {
-            Object workspace = XposedHelpers.getObjectField(launcher, "mWorkspace");
-            if (workspace == null) return null;
-            int screenCount = 0;
-            try {
-                screenCount = (Integer) XposedHelpers.callMethod(workspace, "getScreenCount");
-            } catch (Throwable t) {
-                if (workspace instanceof ViewGroup) {
-                    screenCount = ((ViewGroup) workspace).getChildCount();
-                }
-            }
-            for (int i = 0; i < screenCount; i++) {
-                View cell = null;
-                try {
-                    cell = (View) XposedHelpers.callMethod(workspace, "getCellLayoutAt", i);
-                } catch (Throwable t) {
-                    if (workspace instanceof ViewGroup && i < ((ViewGroup) workspace).getChildCount()) {
-                        cell = ((ViewGroup) workspace).getChildAt(i);
-                    }
-                }
-                if (cell instanceof ViewGroup) {
-                    View icon = findShortcutViewInViewGroup((ViewGroup) cell, targetPkg);
-                    if (icon != null) {
-                        return icon;
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return null;
-    }
-
-    private static View findShortcutViewInViewGroup(ViewGroup vg, String targetPkg) {
-        if (vg == null || targetPkg == null) return null;
-        int count = vg.getChildCount();
-        for (int i = 0; i < count; i++) {
-            View child = vg.getChildAt(i);
-            if (child == null) continue;
-            Object tag = child.getTag();
-            if (tag != null && matchTargetPackage(tag, targetPkg)) {
-                return child;
-            }
-            if (child instanceof ViewGroup) {
-                View found = findShortcutViewInViewGroup((ViewGroup) child, targetPkg);
-                if (found != null) {
-                    return found;
-                }
-            }
-        }
-        return null;
-    }
-
     private static void postSnapToScreen(final Object workspace, final Object launcher, final int pageIndex) {
         if (workspace == null || pageIndex < 0) return;
         Runnable snapRunnable = new Runnable() {
@@ -2870,6 +2826,14 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         }
                     }
                     if (cur != pageIndex) {
+                        try {
+                            XposedHelpers.callMethod(workspace, "setCurrentScreen", pageIndex);
+                        } catch (Throwable ignored) {
+                        }
+                        try {
+                            XposedHelpers.callMethod(workspace, "setCurrentPage", pageIndex);
+                        } catch (Throwable ignored) {
+                        }
                         boolean snapped = false;
                         try {
                             XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex);
@@ -2883,35 +2847,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             } catch (Throwable ignored) {
                             }
                         }
-                        if (!snapped) {
-                            try {
-                                XposedHelpers.callMethod(workspace, "snapToScreen", pageIndex, 250);
-                                snapped = true;
-                            } catch (Throwable ignored) {
-                            }
-                        }
-                        if (!snapped) {
-                            try {
-                                XposedHelpers.callMethod(workspace, "snapToPage", pageIndex, 250);
-                                snapped = true;
-                            } catch (Throwable ignored) {
-                            }
-                        }
-                        try {
-                            XposedHelpers.callMethod(workspace, "setCurrentScreen", pageIndex);
-                        } catch (Throwable ignored) {
-                        }
-                        try {
-                            XposedHelpers.callMethod(workspace, "setCurrentPage", pageIndex);
-                        } catch (Throwable ignored) {
-                        }
                         if (workspace instanceof View) {
-                            View wv = (View) workspace;
-                            int w = wv.getWidth();
-                            if (w > 0 && !snapped) {
-                                wv.scrollTo(pageIndex * w, 0);
-                            }
-                            wv.invalidate();
+                            ((View) workspace).invalidate();
                         }
                         XposedBridge.log(TAG + ": Snapped workspace to screen index " + pageIndex);
                     }
@@ -3026,63 +2963,137 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             }
 
-            if (targetScreenId >= 0) {
-                int screenIdx = -1;
+            // Fallback: Scan CellLayouts directly in Workspace if targetScreenId not yet found
+            if (targetScreenId < 0) {
+                int screenCount = 0;
                 try {
-                    screenIdx = (Integer) XposedHelpers.callMethod(workspace, "getScreenIndexById", targetScreenId);
-                } catch (Throwable ignored) {
-                }
-                if (screenIdx < 0) {
-                    try {
-                        List<?> order = (List<?>) XposedHelpers.getObjectField(workspace, "mScreenOrder");
-                        if (order != null) {
-                            for (int idx = 0; idx < order.size(); idx++) {
-                                Object item = order.get(idx);
-                                if (item instanceof Number && ((Number) item).longValue() == targetScreenId) {
-                                    screenIdx = idx;
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (Throwable ignored) {
+                    screenCount = (Integer) XposedHelpers.callMethod(workspace, "getScreenCount");
+                } catch (Throwable t) {
+                    if (workspace instanceof ViewGroup) {
+                        screenCount = ((ViewGroup) workspace).getChildCount();
                     }
                 }
-                if (screenIdx >= 0) {
-                    postSnapToScreen(workspace, launcher, screenIdx);
-                    return;
-                } else {
+                for (int i = 0; i < screenCount; i++) {
+                    View cell = null;
                     try {
-                        XposedHelpers.callMethod(workspace, "setCurrentScreenById", targetScreenId);
-                        XposedHelpers.callMethod(workspace, "snapToScreenId", targetScreenId);
-                        return;
-                    } catch (Throwable ignored) {
+                        cell = (View) XposedHelpers.callMethod(workspace, "getCellLayoutAt", i);
+                    } catch (Throwable t) {
+                        if (workspace instanceof ViewGroup && i < ((ViewGroup) workspace).getChildCount()) {
+                            cell = ((ViewGroup) workspace).getChildAt(i);
+                        }
+                    }
+                    if (cell instanceof ViewGroup) {
+                        if (findPackageInViewGroup((ViewGroup) cell, targetPkg)) {
+                            long sid = -1;
+                            try {
+                                sid = (Long) XposedHelpers.callMethod(workspace, "getIdForScreen", cell);
+                            } catch (Throwable ignored) {
+                            }
+                            if (sid == -1) {
+                                try {
+                                    sid = (Long) XposedHelpers.callMethod(workspace, "getScreenIdByIndex", i);
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                            if (sid == -1) {
+                                try {
+                                    List<?> order = (List<?>) XposedHelpers.getObjectField(workspace, "mScreenOrder");
+                                    if (order != null && i < order.size()) {
+                                        Object item = order.get(i);
+                                        if (item instanceof Number) {
+                                            sid = ((Number) item).longValue();
+                                        }
+                                    }
+                                } catch (Throwable ignored) {
+                                }
+                            }
+                            if (sid >= 0) {
+                                targetScreenId = sid;
+                                break;
+                            } else {
+                                postSnapToScreen(workspace, launcher, i);
+                                return;
+                            }
+                        }
                     }
                 }
             }
 
-            // Fallback: Scan CellLayouts directly in Workspace
-            int screenCount = 0;
-            try {
-                screenCount = (Integer) XposedHelpers.callMethod(workspace, "getScreenCount");
-            } catch (Throwable t) {
-                if (workspace instanceof ViewGroup) {
-                    screenCount = ((ViewGroup) workspace).getChildCount();
-                }
-            }
-            for (int i = 0; i < screenCount; i++) {
-                View cell = null;
-                try {
-                    cell = (View) XposedHelpers.callMethod(workspace, "getCellLayoutAt", i);
-                } catch (Throwable t) {
-                    if (workspace instanceof ViewGroup && i < ((ViewGroup) workspace).getChildCount()) {
-                        cell = ((ViewGroup) workspace).getChildAt(i);
+            if (targetScreenId >= 0) {
+                final long finalTargetScreenId = targetScreenId;
+                Runnable snapRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            boolean isCurrent = false;
+                            try {
+                                isCurrent = (Boolean) XposedHelpers.callMethod(workspace, "isIdInCurrentScreen", finalTargetScreenId);
+                            } catch (Throwable ignored) {
+                            }
+                            if (!isCurrent) {
+                                try {
+                                    XposedHelpers.callMethod(workspace, "setCurrentScreenById", finalTargetScreenId);
+                                } catch (Throwable ignored) {
+                                }
+                                boolean snapped = false;
+                                try {
+                                    XposedHelpers.callMethod(workspace, "snapToScreenId", finalTargetScreenId);
+                                    snapped = true;
+                                } catch (Throwable ignored) {
+                                }
+                                int screenIdx = -1;
+                                try {
+                                    screenIdx = (Integer) XposedHelpers.callMethod(workspace, "getScreenIndexById", finalTargetScreenId);
+                                } catch (Throwable ignored) {
+                                }
+                                if (screenIdx < 0) {
+                                    try {
+                                        List<?> order = (List<?>) XposedHelpers.getObjectField(workspace, "mScreenOrder");
+                                        if (order != null) {
+                                            for (int idx = 0; idx < order.size(); idx++) {
+                                                Object item = order.get(idx);
+                                                if (item instanceof Number && ((Number) item).longValue() == finalTargetScreenId) {
+                                                    screenIdx = idx;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } catch (Throwable ignored) {
+                                    }
+                                }
+                                if (!snapped && screenIdx >= 0) {
+                                    try {
+                                        XposedHelpers.callMethod(workspace, "snapToScreen", screenIdx);
+                                        snapped = true;
+                                    } catch (Throwable ignored) {
+                                    }
+                                    if (!snapped) {
+                                        try {
+                                            XposedHelpers.callMethod(workspace, "snapToPage", screenIdx);
+                                            snapped = true;
+                                        } catch (Throwable ignored) {
+                                        }
+                                    }
+                                }
+                                if (workspace instanceof View) {
+                                    ((View) workspace).invalidate();
+                                }
+                                XposedBridge.log(TAG + ": Snapped workspace to screenId " + finalTargetScreenId + " for " + targetPkg);
+                            }
+                        } catch (Throwable t) {
+                            XposedBridge.log(TAG + ": snap by id error: " + t.getMessage());
+                        }
                     }
-                }
-                if (cell instanceof ViewGroup) {
-                    if (findPackageInViewGroup((ViewGroup) cell, targetPkg)) {
-                        postSnapToScreen(workspace, launcher, i);
-                        return;
-                    }
+                };
+
+                if (Looper.myLooper() == Looper.getMainLooper()) {
+                    snapRunnable.run();
+                } else if (launcher instanceof Activity) {
+                    ((Activity) launcher).runOnUiThread(snapRunnable);
+                } else if (workspace instanceof View) {
+                    ((View) workspace).post(snapRunnable);
+                } else {
+                    snapRunnable.run();
                 }
             }
         } catch (Throwable t) {

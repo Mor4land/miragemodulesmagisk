@@ -356,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
         chipsRow.addView(statusChip);
 
         Chip verChip = new Chip(this);
-        verChip.setText("v1.0.24 M3");
+        verChip.setText("v1.0.29 M3");
         verChip.setCheckable(false);
         verChip.setClickable(false);
         verChip.setChipBackgroundColorResource(android.R.color.transparent);

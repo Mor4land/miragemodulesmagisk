@@ -1,7 +1,7 @@
 SKIPUNZIP=0
 
 ui_print "*********************************************"
-ui_print "  POCO M5 Flagship Animations (v1.0.28)      "
+ui_print "  POCO M5 Flagship Animations (v1.0.29)      "
 ui_print "  Clean Animations (No Resets / Zero Lag)    "
 ui_print "*********************************************"
 
