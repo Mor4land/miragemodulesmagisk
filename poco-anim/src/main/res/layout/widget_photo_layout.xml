@@ -17,16 +17,16 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="12dp"
-        android:background="#1B2030"
+        android:padding="16dp"
+        android:background="@drawable/widget_placeholder_bg"
         android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🖼️ Фото-виджет"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:textColor="#E2E2E6"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
@@ -34,8 +34,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Нажмите для выбора фото или GIF"
-            android:textColor="#00E5FF"
-            android:textSize="11sp"
+            android:textColor="#A8C7FA"
+            android:textSize="12sp"
             android:gravity="center" />
     </LinearLayout>
 

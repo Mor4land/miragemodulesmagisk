@@ -53,9 +53,9 @@ public class MiragePhotoWidgetProvider extends AppWidgetProvider {
             File imgFile = new File(widgetDir, "widget_" + appWidgetId + ".png");
 
             if (!imgFile.exists()) {
-                File latestFile = new File(widgetDir, "latest_widget.png");
-                if (latestFile.exists()) {
-                    imgFile = latestFile;
+                File pendingFile = new File(widgetDir, "pending_new_widget.png");
+                if (pendingFile.exists()) {
+                    moveOrCopyFile(pendingFile, imgFile);
                 }
             }
 
@@ -90,6 +90,22 @@ public class MiragePhotoWidgetProvider extends AppWidgetProvider {
             appWidgetManager.updateAppWidget(appWidgetId, views);
         } catch (Throwable t) {
             t.printStackTrace();
+        }
+    }
+
+    private static void moveOrCopyFile(File src, File dst) {
+        if (src == null || !src.exists() || dst == null) return;
+        if (src.renameTo(dst)) return;
+        try (java.io.FileInputStream fis = new java.io.FileInputStream(src);
+             java.io.FileOutputStream fos = new java.io.FileOutputStream(dst)) {
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = fis.read(buf)) > 0) {
+                fos.write(buf, 0, len);
+            }
+            fos.flush();
+            src.delete();
+        } catch (Throwable ignored) {
         }
     }
 }

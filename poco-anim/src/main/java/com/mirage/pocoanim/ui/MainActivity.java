@@ -93,25 +93,25 @@ public class MainActivity extends Activity {
         AnimPrefs.makeWorldReadable(this);
 
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#0F1117"));
+        scrollView.setBackgroundColor(Color.parseColor("#111318"));
         scrollView.setFillViewport(true);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        int pad = dp(20);
-        root.setPadding(pad, dp(28), pad, pad);
+        int pad = dp(18);
+        root.setPadding(pad, dp(24), pad, pad);
 
         TextView title = new TextView(this);
-        title.setText("POCO M5 Animations v1.0.7");
-        title.setTextColor(Color.parseColor("#F8FAFC"));
+        title.setText("POCO M5 Flagship Animations v1.0.22");
+        title.setTextColor(Color.parseColor("#E2E2E6"));
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Чистые флагманские анимации без лагов при открытии, мгновенный запуск после закрытия и честные 90 Гц");
-        subtitle.setTextColor(Color.parseColor("#94A3B8"));
-        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        subtitle.setText("Флагманские анимации HyperOS & ColorOS, честные 90 Гц, Material 3 UI и независимые виджеты");
+        subtitle.setTextColor(Color.parseColor("#C4C7D0"));
+        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         subtitle.setPadding(0, dp(6), 0, dp(20));
         root.addView(subtitle);
 
@@ -297,9 +297,10 @@ public class MainActivity extends Activity {
         btn.setAllCaps(false);
         btn.setTextColor(Color.WHITE);
         btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        btn.setTypeface(Typeface.DEFAULT_BOLD);
         GradientDrawable btnBg = new GradientDrawable();
         btnBg.setColor(Color.parseColor(hexColor));
-        btnBg.setCornerRadius(dp(14));
+        btnBg.setCornerRadius(dp(26));
         btn.setBackground(btnBg);
 
         LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
@@ -392,17 +393,17 @@ public class MainActivity extends Activity {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.parseColor("#1E2230"));
-        bg.setCornerRadius(dp(16));
-        bg.setStroke(dp(1), Color.parseColor("#2E3446"));
+        bg.setColor(Color.parseColor("#1D2024"));
+        bg.setCornerRadius(dp(28));
+        bg.setStroke(dp(1), Color.parseColor("#2A2D35"));
         card.setBackground(bg);
-        int p = dp(16);
-        card.setPadding(p, dp(12), p, dp(12));
+        int p = dp(18);
+        card.setPadding(p, dp(16), p, dp(16));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        lp.bottomMargin = dp(14);
+        lp.bottomMargin = dp(16);
         card.setLayoutParams(lp);
         return card;
     }
@@ -410,16 +411,16 @@ public class MainActivity extends Activity {
     private void addSectionHeader(LinearLayout parent, String text) {
         TextView header = new TextView(this);
         header.setText(text);
-        header.setTextColor(Color.parseColor("#FF6900"));
+        header.setTextColor(Color.parseColor("#A8C7FA"));
         header.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         header.setTypeface(Typeface.DEFAULT_BOLD);
-        header.setPadding(dp(4), dp(8), dp(4), dp(8));
+        header.setPadding(dp(4), dp(10), dp(4), dp(6));
         parent.addView(header);
     }
 
     private void addDivider(LinearLayout parent) {
         View div = new View(this);
-        div.setBackgroundColor(Color.parseColor("#2A3042"));
+        div.setBackgroundColor(Color.parseColor("#2A2D35"));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 dp(1)
@@ -544,11 +545,11 @@ public class MainActivity extends Activity {
         previewContainer.setOrientation(LinearLayout.VERTICAL);
         previewContainer.setGravity(Gravity.CENTER);
         GradientDrawable previewBg = new GradientDrawable();
-        previewBg.setColor(Color.parseColor("#141824"));
-        previewBg.setCornerRadius(dp(14));
-        previewBg.setStroke(dp(1), Color.parseColor("#262C3C"));
+        previewBg.setColor(Color.parseColor("#13151A"));
+        previewBg.setCornerRadius(dp(20));
+        previewBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
         previewContainer.setBackground(previewBg);
-        previewContainer.setPadding(dp(12), dp(10), dp(12), dp(12));
+        previewContainer.setPadding(dp(16), dp(14), dp(16), dp(16));
 
         TextView previewLabel = new TextView(this);
         previewLabel.setText("Интерактивное превью (нажмите для проверки Bounce):");
@@ -898,35 +899,35 @@ public class MainActivity extends Activity {
         int c1 = mPrefs.getInt(AnimPrefs.KEY_ICON_CUSTOM_COLOR_1, AnimPrefs.DEFAULT_COLOR_1);
 
         GradientDrawable gradBg = new GradientDrawable();
-        gradBg.setCornerRadius(dp(10));
+        gradBg.setCornerRadius(dp(21));
 
         GradientDrawable solidBg = new GradientDrawable();
-        solidBg.setCornerRadius(dp(10));
+        solidBg.setCornerRadius(dp(21));
 
         if (colorMode == AnimPrefs.COLOR_MODE_SOLID) {
-            solidBg.setColor(Color.parseColor("#FF6900"));
+            solidBg.setColor(Color.parseColor("#A8C7FA"));
             mBtnModeSolid.setBackground(solidBg);
-            mBtnModeSolid.setTextColor(Color.WHITE);
+            mBtnModeSolid.setTextColor(Color.parseColor("#003355"));
             mBtnModeSolid.setTypeface(Typeface.DEFAULT_BOLD);
 
-            gradBg.setColor(Color.parseColor("#171A24"));
-            gradBg.setStroke(dp(1), Color.parseColor("#272E3F"));
+            gradBg.setColor(Color.parseColor("#272A2F"));
+            gradBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
             mBtnModeGradient.setBackground(gradBg);
-            mBtnModeGradient.setTextColor(Color.parseColor("#94A3B8"));
+            mBtnModeGradient.setTextColor(Color.parseColor("#E2E2E6"));
             mBtnModeGradient.setTypeface(Typeface.DEFAULT);
 
             mColor2Btn.setVisibility(View.GONE);
             mColor1Text.setText("Цвет: " + String.format("#%06X", (0xFFFFFF & c1)));
         } else {
-            gradBg.setColor(Color.parseColor("#FF6900"));
+            gradBg.setColor(Color.parseColor("#A8C7FA"));
             mBtnModeGradient.setBackground(gradBg);
-            mBtnModeGradient.setTextColor(Color.WHITE);
+            mBtnModeGradient.setTextColor(Color.parseColor("#003355"));
             mBtnModeGradient.setTypeface(Typeface.DEFAULT_BOLD);
 
-            solidBg.setColor(Color.parseColor("#171A24"));
-            solidBg.setStroke(dp(1), Color.parseColor("#272E3F"));
+            solidBg.setColor(Color.parseColor("#272A2F"));
+            solidBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
             mBtnModeSolid.setBackground(solidBg);
-            mBtnModeSolid.setTextColor(Color.parseColor("#94A3B8"));
+            mBtnModeSolid.setTextColor(Color.parseColor("#E2E2E6"));
             mBtnModeSolid.setTypeface(Typeface.DEFAULT);
 
             mColor2Btn.setVisibility(View.VISIBLE);
@@ -1115,15 +1116,15 @@ public class MainActivity extends Activity {
         for (int i = 0; i < mPresetPills.length; i++) {
             if (mPresetPills[i] == null) continue;
             GradientDrawable pillBg = new GradientDrawable();
-            pillBg.setCornerRadius(dp(12));
+            pillBg.setCornerRadius(dp(18));
             if (i == selectedIndex) {
-                pillBg.setColor(Color.parseColor("#2B3349"));
-                pillBg.setStroke(dp(1.5f), Color.parseColor("#FF6900"));
-                mPresetPillTexts[i].setTextColor(Color.parseColor("#FF9100"));
+                pillBg.setColor(Color.parseColor("#004A77"));
+                pillBg.setStroke(dp(1.5f), Color.parseColor("#A8C7FA"));
+                mPresetPillTexts[i].setTextColor(Color.parseColor("#D3E3FD"));
             } else {
-                pillBg.setColor(Color.parseColor("#171A24"));
-                pillBg.setStroke(dp(1), Color.parseColor("#272E3F"));
-                mPresetPillTexts[i].setTextColor(Color.parseColor("#94A3B8"));
+                pillBg.setColor(Color.parseColor("#272A2F"));
+                pillBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
+                mPresetPillTexts[i].setTextColor(Color.parseColor("#C4C7D0"));
             }
             mPresetPills[i].setBackground(pillBg);
         }
@@ -1133,15 +1134,15 @@ public class MainActivity extends Activity {
         for (int i = 0; i < mIntensityButtons.length; i++) {
             if (mIntensityButtons[i] == null) continue;
             GradientDrawable btnBg = new GradientDrawable();
-            btnBg.setCornerRadius(dp(10));
+            btnBg.setCornerRadius(dp(19));
             if (i == selectedIndex) {
-                btnBg.setColor(Color.parseColor("#FF6900"));
-                mIntensityButtons[i].setTextColor(Color.WHITE);
+                btnBg.setColor(Color.parseColor("#A8C7FA"));
+                mIntensityButtons[i].setTextColor(Color.parseColor("#003355"));
                 mIntensityButtons[i].setTypeface(Typeface.DEFAULT_BOLD);
             } else {
-                btnBg.setColor(Color.parseColor("#171A24"));
-                btnBg.setStroke(dp(1), Color.parseColor("#272E3F"));
-                mIntensityButtons[i].setTextColor(Color.parseColor("#94A3B8"));
+                btnBg.setColor(Color.parseColor("#272A2F"));
+                btnBg.setStroke(dp(1), Color.parseColor("#2A2D35"));
+                mIntensityButtons[i].setTextColor(Color.parseColor("#C4C7D0"));
                 mIntensityButtons[i].setTypeface(Typeface.DEFAULT);
             }
             mIntensityButtons[i].setBackground(btnBg);
@@ -1456,21 +1457,21 @@ public class MainActivity extends Activity {
         card.addView(title);
 
         TextView desc = new TextView(this);
-        desc.setText("Размещайте на рабочем столе фото, аниме-арты или анимированные GIF-файлы любого масштаба (2x2, 2x4, 4x4) с настраиваемыми скруглениями углов и неоновыми киберпанк рамками.");
-        desc.setTextColor(Color.parseColor("#94A3B8"));
+        desc.setText("Размещайте на рабочем столе независимые фото или GIF-файлы без рамок с оригинальными пропорциями и скруглением углов HyperOS.");
+        desc.setTextColor(Color.parseColor("#C4C7D0"));
         desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         desc.setPadding(0, dp(4), 0, dp(14));
         card.addView(desc);
 
         Button addWidgetBtn = new Button(this);
-        addWidgetBtn.setText("➕ Добавить Фото / GIF виджет на рабочий стол");
+        addWidgetBtn.setText("➕ Настроить / Добавить Фото-виджет");
         addWidgetBtn.setTextSize(14);
-        addWidgetBtn.setTextColor(Color.parseColor("#051622"));
+        addWidgetBtn.setTextColor(Color.parseColor("#003355"));
         addWidgetBtn.setTypeface(Typeface.DEFAULT_BOLD);
         addWidgetBtn.setAllCaps(false);
         GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(Color.parseColor("#00E5FF"));
-        btnBg.setCornerRadius(dp(12));
+        btnBg.setColor(Color.parseColor("#A8C7FA"));
+        btnBg.setCornerRadius(dp(24));
         addWidgetBtn.setBackground(btnBg);
         LinearLayout.LayoutParams btnLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
