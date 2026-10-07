@@ -1,7 +1,7 @@
 SKIPUNZIP=0
 
 ui_print "*********************************************"
-ui_print "  POCO M5 Flagship Animations (v1.0.30)      "
+ui_print "  POCO M5 Flagship Animations (v1.0.31)      "
 ui_print "  Clean Animations (No Resets / Zero Lag)    "
 ui_print "*********************************************"
 
@@ -30,9 +30,9 @@ pm unsuspend com.android.webview >/dev/null 2>&1
 pm enable com.mi.webkit.core >/dev/null 2>&1
 cmd webviewupdate enable-multiprocess >/dev/null 2>&1
 
-ui_print "- Установка APK модуля v1.0.30..."
+ui_print "- Установка APK модуля v1.0.31..."
 if [ -f "$MODPATH/MiragePocoAnimations.apk" ]; then
-    pm install -r "$MODPATH/MiragePocoAnimations.apk" >/dev/null 2>&1 && ui_print "- APK v1.0.30 успешно установлен!" || ui_print "- APK будет автоматически обновлен после загрузки"
+    pm install -r "$MODPATH/MiragePocoAnimations.apk" >/dev/null 2>&1 && ui_print "- APK v1.0.31 успешно установлен!" || ui_print "- APK будет автоматически обновлен после загрузки"
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644

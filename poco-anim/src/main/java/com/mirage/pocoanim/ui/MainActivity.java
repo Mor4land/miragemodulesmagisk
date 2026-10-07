@@ -360,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
         chipsRow.addView(statusChip);
 
         Chip verChip = new Chip(this);
-        verChip.setText("v1.0.30 M3");
+        verChip.setText("v1.0.31 M3");
         verChip.setCheckable(false);
         verChip.setClickable(false);
         verChip.setChipBackgroundColorResource(android.R.color.transparent);
@@ -996,12 +996,17 @@ public class MainActivity extends AppCompatActivity {
         mMatteIntensitySlider.setValueFrom(10f);
         mMatteIntensitySlider.setValueTo(90f);
         mMatteIntensitySlider.setStepSize(5f);
-        float safeMatteInt = Math.round((Math.max(0.10f, Math.min(0.90f, curIntensity)) * 100f - 10f) / 5f) * 5f + 10f;
-        safeMatteInt = Math.max(10f, Math.min(90f, safeMatteInt));
+        int stepCount = Math.round((Math.max(0.10f, Math.min(0.90f, curIntensity)) * 100f - 10f) / 5f);
+        float safeMatteInt = 10f + (stepCount * 5f);
+        if (safeMatteInt < 10f) safeMatteInt = 10f;
+        if (safeMatteInt > 90f) safeMatteInt = 90f;
         try {
             mMatteIntensitySlider.setValue(safeMatteInt);
         } catch (Throwable t) {
-            mMatteIntensitySlider.setValue(35f);
+            try {
+                mMatteIntensitySlider.setValue(35f);
+            } catch (Throwable ignored) {
+            }
         }
         mMatteIntensitySlider.addOnChangeListener((slider, value, fromUser) -> {
             float val = value / 100f;

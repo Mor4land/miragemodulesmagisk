@@ -507,7 +507,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         XC_MethodHook darkenHook = new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && sWallpaperDarken) {
+                if (sEnabled && sWallpaperDarken && !sWallpaperMatte) {
                     param.setResult(true);
                 }
             }
@@ -2161,8 +2161,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         });
     }
 
-    private static int sLastMatteCanvasHash = 0;
-    private static long sLastMatteDrawNano = 0L;
+    private static final ThreadLocal<Boolean> sDrawingMatteOverlay = new ThreadLocal<>();
 
     private static void hookWallpaperMatte(ClassLoader cl) {
         String[] dragLayerClasses = new String[]{
@@ -2179,59 +2178,74 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!sEnabled || !sWallpaperMatte) return;
                 if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof Canvas)) return;
                 if (!(param.thisObject instanceof View)) return;
-
-                Canvas canvas = (Canvas) param.args[0];
-                int cHash = canvas.hashCode();
-                long now = System.nanoTime();
-                // Frame deduplication guard: never draw more than once per frame on the same canvas
-                if (cHash == sLastMatteCanvasHash && (now - sLastMatteDrawNano) < 1_500_000L) {
-                    return;
-                }
-                sLastMatteCanvasHash = cHash;
-                sLastMatteDrawNano = now;
+                if (Boolean.TRUE.equals(sDrawingMatteOverlay.get())) return;
 
                 View v = (View) param.thisObject;
                 int w = v.getWidth();
                 int h = v.getHeight();
                 if (w > 0 && h > 0) {
-                    drawMatteWallpaperOverlay(canvas, w, h);
+                    try {
+                        sDrawingMatteOverlay.set(Boolean.TRUE);
+                        Canvas canvas = (Canvas) param.args[0];
+                        drawMatteWallpaperOverlay(canvas, w, h);
+                    } catch (Throwable ignored) {
+                    } finally {
+                        sDrawingMatteOverlay.set(Boolean.FALSE);
+                    }
                 }
             }
         };
 
+        // Hook only the most derived DragLayer class to avoid duplicate drawing in inheritance chain
+        Class<?> targetDragLayerCls = null;
         for (String clsName : dragLayerClasses) {
             Class<?> cls = XposedHelpers.findClassIfExists(clsName, cl);
             if (cls != null) {
-                try {
-                    XposedHelpers.findAndHookMethod(cls, "dispatchDraw", Canvas.class, matteDrawHook);
-                } catch (Throwable ignored) {
-                }
+                targetDragLayerCls = cls;
+                break;
+            }
+        }
+        if (targetDragLayerCls != null) {
+            try {
+                XposedHelpers.findAndHookMethod(targetDragLayerCls, "dispatchDraw", Canvas.class, matteDrawHook);
+            } catch (Throwable ignored) {
             }
         }
     }
 
     private static void drawMatteWallpaperOverlay(Canvas canvas, int w, int h) {
         float intensity = Math.max(0.10f, Math.min(0.90f, sWallpaperMatteIntensity));
-        int baseAlpha = Math.round(intensity * 95f); // 10 to 86 out of 255 (4% to 34% max opacity)
-        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
+        int baseAlpha = Math.round(intensity * 60f); // 6 to 54 out of 255 (2% to 21% max opacity)
+        if (baseAlpha <= 0) return;
+
+        Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
 
         if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_DARK_VELVET) {
-            p.setColor(Color.argb(baseAlpha, 10, 14, 22));
-            canvas.drawRect(0, 0, w, h, p);
-        } else if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_FROSTED_GLASS) {
+            // Elegant top-to-bottom dark velvet vignette: gentle in center/top, rich at the base
             LinearGradient grad = new LinearGradient(
                     0, 0, 0, h,
-                    Color.argb(Math.min(115, (int) (baseAlpha * 1.15f) + 12), 195, 215, 240),
-                    Color.argb(Math.min(95, baseAlpha), 15, 22, 35),
+                    Color.argb(Math.max(4, (int) (baseAlpha * 0.65f)), 14, 18, 26),
+                    Color.argb(baseAlpha, 8, 12, 18),
+                    Shader.TileMode.CLAMP
+            );
+            p.setShader(grad);
+            canvas.drawRect(0, 0, w, h, p);
+        } else if (sWallpaperMatteStyle == AnimPrefs.MATTE_STYLE_FROSTED_GLASS) {
+            // Soft frosted glass veil: subtle top frost highlight, soft ambient base
+            LinearGradient grad = new LinearGradient(
+                    0, 0, 0, h,
+                    Color.argb(Math.max(6, (int) (baseAlpha * 0.70f)), 230, 240, 252),
+                    Color.argb(Math.max(5, (int) (baseAlpha * 0.65f)), 14, 18, 28),
                     Shader.TileMode.CLAMP
             );
             p.setShader(grad);
             canvas.drawRect(0, 0, w, h, p);
         } else { // DEEP_SATIN
+            // Luxury deep satin: soft plum/graphite roll-off
             LinearGradient grad = new LinearGradient(
                     0, 0, w, h,
-                    Color.argb(Math.min(105, (int) (baseAlpha * 1.10f)), 32, 24, 44),
-                    Color.argb(baseAlpha, 12, 16, 26),
+                    Color.argb(Math.max(5, (int) (baseAlpha * 0.75f)), 26, 20, 34),
+                    Color.argb(Math.max(5, (int) (baseAlpha * 0.80f)), 10, 14, 22),
                     Shader.TileMode.CLAMP
             );
             p.setShader(grad);
