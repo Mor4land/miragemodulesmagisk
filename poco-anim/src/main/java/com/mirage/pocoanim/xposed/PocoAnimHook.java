@@ -593,17 +593,34 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             return;
         }
 
-        XC_MethodHook disableLowBlurHook = new XC_MethodHook() {
+        // Zero-Lag Transition Blur Guard:
+        // During active window animations or interrupted gestures, NEVER run CPU RenderScript Gaussian blur (rs_blur).
+        // On Helio G99, rs_blur reads/writes >40MB per frame, stealing 4.5 GB/s of LPDDR4X bandwidth and causing 56ms RenderThread stalls.
+        hookMethodsByReturnType(cls, "isUseNoRecentsBlurAnimation", boolean.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
-                if (sEnabled && sCompleteBlur) {
+                if (!sEnabled) {
+                    return;
+                }
+                if (sIsOpenAnimRunning || sBreakOpenAnimTriggered || (SystemClock.uptimeMillis() - sLastOpenAnimStartMs < 800L)) {
+                    param.setResult(true);
+                    return;
+                }
+                if (sCompleteBlur) {
                     param.setResult(false);
                 }
             }
-        };
+        });
 
-        hookMethodsByReturnType(cls, "isUseNoRecentsBlurAnimation", boolean.class, disableLowBlurHook);
-        hookMethodsByReturnType(cls, "isUseBasicBlur", boolean.class, disableLowBlurHook);
+        // Always prefer hardware-accelerated basic blur over heavy CPU RenderScript fallback on mid-tier SoCs
+        hookMethodsByReturnType(cls, "isUseBasicBlur", boolean.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                if (sEnabled && sTurboOptimize) {
+                    param.setResult(true);
+                }
+            }
+        });
 
         hookMethodsByReturnType(cls, "isUserBlurWhenOpenFolder", boolean.class, new XC_MethodHook() {
             @Override
@@ -2673,6 +2690,32 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 hookMethodsByName(gestureViewCls, "onFsGestureReady", navCloseHook);
                 hookMethodsByName(gestureViewCls, "startFsGesture", navCloseHook);
             }
+        }
+
+        final Class<?> gestureStubCls = XposedHelpers.findClassIfExists("com.miui.home.recents.GestureStubView", cl);
+        if (gestureStubCls != null) {
+            // Suppress redundant EGL window render on GestureStubBottom which causes 56ms BLASTBufferQueue freeze
+            hookMethodsByName(gestureStubCls, "onSwipeStart", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sTurboOptimize && param.args != null && param.args.length > 0) {
+                        if (param.args[0] instanceof Boolean) {
+                            param.args[0] = false;
+                        }
+                    }
+                }
+            });
+            hookMethodsByName(gestureStubCls, "renderView", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sTurboOptimize) {
+                        String str = String.valueOf(param.thisObject);
+                        if (str.contains("Bottom") || str.contains("bottom")) {
+                            param.setResult(null);
+                        }
+                    }
+                }
+            });
         }
     }
 
