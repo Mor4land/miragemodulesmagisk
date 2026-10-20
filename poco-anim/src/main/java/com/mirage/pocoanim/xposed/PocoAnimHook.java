@@ -131,6 +131,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile long sLastOpenAnimStartMs = 0L;
     private static volatile boolean sIsOpenAnimRunning = false;
     private static volatile boolean sLauncherStopped = false;
+    private static volatile boolean sBreakOpenAnimTriggered = false;
     private static volatile String sLastClosingPackage = null;
     private static volatile Class<?> sConnectAnimMgrCls = null;
     private static volatile boolean sConnectAnimMgrClsLookedUp = false;
@@ -754,8 +755,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             // Instead, guarantee mMoveToTargetRectWhenAnimEnd is false and immediately redirect the spring back to the icon!
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    sBreakOpenAnimTriggered = true;
+                    // Immediately suppress mAnimationResult on transition manager so WMS never snaps the window to fullscreen
+                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
+                }
+                @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     sIsOpenAnimRunning = false;
+                    sBreakOpenAnimTriggered = true;
+                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
                     MiragePerfTracker.stopTracking("APP_OPEN");
                     if (sEnabled && sNonStopSwipe) {
                         Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
@@ -781,8 +790,16 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
             hookMethodsByName(quickstepCls, "doAnimationFinish", new XC_MethodHook() {
                 @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (sEnabled && sNonStopSwipe && sBreakOpenAnimTriggered) {
+                        // Suppress mAnimationResult.finish() so WMS never snaps the broken opening window to fullscreen
+                        setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
+                    }
+                }
+                @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     sIsOpenAnimRunning = false;
+                    sBreakOpenAnimTriggered = false;
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", false);
                     MiragePerfTracker.stopTracking("APP_OPEN");
                 }
@@ -1096,31 +1113,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 final Object tm = sTransitionManagerRef.get();
                 if (tm != null) {
                     setBooleanFieldHierarchySafe(tm, "mIsOpenAnimRunning", false);
-                    Object spring = getObjectFieldSafe(tm, "mRectFSpringAnim");
-                    if (spring != null && callBooleanMethodSafe(spring, "isRunning", false)) {
+                    // Crucial: Nullify mAnimationResult so WMS is NEVER instructed to restore
+                    // the opening app window to 100% fullscreen on completion of the home gesture!
+                    setObjectFieldSafe(tm, "mAnimationResult", null);
+                    Object dragLayer = getObjectFieldSafe(tm, "mDragLayer");
+                    Object widgetView = getObjectFieldSafe(tm, "mFloatingWidgetView");
+                    if (dragLayer != null && widgetView != null) {
                         try {
-                            XposedHelpers.callMethod(spring, "addAnimatorListener", new AnimatorListenerAdapter() {
-                                private boolean mFired = false;
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    if (!mFired) {
-                                        mFired = true;
-                                        callMethodSafe(tm, "doAnimationFinish");
-                                    }
-                                }
-                                @Override
-                                public void onAnimationCancel(Animator animation) {
-                                    if (!mFired) {
-                                        mFired = true;
-                                        callMethodSafe(tm, "doAnimationFinish");
-                                    }
-                                }
-                            });
-                            return;
+                            callMethodSafe(dragLayer, "removeView", widgetView);
+                            setObjectFieldSafe(tm, "mFloatingWidgetView", null);
                         } catch (Throwable ignored) {
                         }
                     }
-                    callMethodSafe(tm, "doAnimationFinish");
                 }
             }
         });
@@ -1415,6 +1419,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             try {
                                 sLauncherStopped = false;
                                 sIsOpenAnimRunning = false;
+                                sBreakOpenAnimTriggered = false;
                                 MiragePerfTracker.stopTracking("APP_CLOSE");
                                 if (param.thisObject instanceof Activity) {
                                     Activity activity = (Activity) param.thisObject;
