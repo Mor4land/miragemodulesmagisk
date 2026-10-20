@@ -777,21 +777,22 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             });
 
-            // In breakOpenAnim(), NEVER invoke doAnimationFinish() or let native mOpenAnim.end() run!
-            // In stock MIUI, breakOpenAnim() invokes mOpenAnim.end(), forcing the opening window to jump
-            // to 100% fullscreen for 1 frame before the close gesture catches it.
-            // By setting param.setResult(null), we completely suppress native MIUI breakOpenAnim()
-            // and instead smoothly reverse the spring directly from its current in-flight rect back to the icon!
+            // In breakOpenAnim(), safely cancel mOpenAnim so it stops in-flight without triggering end()
+            // (which snaps to 100% fullscreen). Do NOT nullify mAnimationResult, as WMS requires
+            // doAnimationFinish() to cleanly close the transition without abrupt surface destruction.
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
+                protected void beforeHookedMethod(final MethodHookParam param) {
                     sBreakOpenAnimTriggered = true;
+                    // Safely cancel mOpenAnim so it stops in-flight without triggering end()
+                    Object openAnim = getObjectFieldSafe(param.thisObject, "mOpenAnim");
+                    if (openAnim != null && callBooleanMethodSafe(openAnim, "isRunning", false)) {
+                        callMethodSafe(openAnim, "cancel");
+                    }
                     // Suppress native MIUI breakOpenAnim() from calling mOpenAnim.end()!
                     param.setResult(null);
 
-                    sIsOpenAnimRunning = false;
                     MiragePerfTracker.stopTracking("APP_OPEN");
-                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
 
                     if (sEnabled && sNonStopSwipe) {
                         Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
@@ -810,6 +811,34 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                                 } catch (Throwable ignored) {
                                 }
                             }
+                            // Attach listener to perform clean finish when spring actually lands on icon!
+                            if (callBooleanMethodSafe(spring, "isRunning", false)) {
+                                final Object tm = param.thisObject;
+                                try {
+                                    XposedHelpers.callMethod(spring, "addAnimatorListener", new AnimatorListenerAdapter() {
+                                        private boolean mFired = false;
+                                        @Override
+                                        public void onAnimationEnd(Animator animation) {
+                                            if (!mFired) {
+                                                mFired = true;
+                                                sIsOpenAnimRunning = false;
+                                                sBreakOpenAnimTriggered = false;
+                                                callMethodSafe(tm, "doAnimationFinish");
+                                            }
+                                        }
+                                        @Override
+                                        public void onAnimationCancel(Animator animation) {
+                                            if (!mFired) {
+                                                mFired = true;
+                                                sIsOpenAnimRunning = false;
+                                                sBreakOpenAnimTriggered = false;
+                                                callMethodSafe(tm, "doAnimationFinish");
+                                            }
+                                        }
+                                    });
+                                } catch (Throwable ignored) {
+                                }
+                            }
                         }
                     }
                 }
@@ -817,18 +846,10 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 protected void afterHookedMethod(MethodHookParam param) {
                     sIsOpenAnimRunning = false;
                     sBreakOpenAnimTriggered = true;
-                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
                 }
             });
 
             hookMethodsByName(quickstepCls, "doAnimationFinish", new XC_MethodHook() {
-                @Override
-                protected void beforeHookedMethod(MethodHookParam param) {
-                    if (sEnabled && sNonStopSwipe && sBreakOpenAnimTriggered) {
-                        // Suppress mAnimationResult.finish() so WMS never snaps the broken opening window to fullscreen
-                        setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
-                    }
-                }
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     sIsOpenAnimRunning = false;
@@ -1168,9 +1189,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 final Object tm = sTransitionManagerRef.get();
                 if (tm != null) {
                     setBooleanFieldHierarchySafe(tm, "mIsOpenAnimRunning", false);
-                    // Crucial: Nullify mAnimationResult so WMS is NEVER instructed to restore
-                    // the opening app window to 100% fullscreen on completion of the home gesture!
-                    setObjectFieldSafe(tm, "mAnimationResult", null);
                     Object dragLayer = getObjectFieldSafe(tm, "mDragLayer");
                     Object widgetView = getObjectFieldSafe(tm, "mFloatingWidgetView");
                     if (dragLayer != null && widgetView != null) {
@@ -1180,6 +1198,34 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         } catch (Throwable ignored) {
                         }
                     }
+                    Object spring = getObjectFieldSafe(tm, "mRectFSpringAnim");
+                    if (spring == null) {
+                        spring = getBreakableCurrentAnim(cl);
+                    }
+                    if (spring != null && callBooleanMethodSafe(spring, "isRunning", false)) {
+                        try {
+                            XposedHelpers.callMethod(spring, "addAnimatorListener", new AnimatorListenerAdapter() {
+                                private boolean mFired = false;
+                                @Override
+                                public void onAnimationEnd(Animator animation) {
+                                    if (!mFired) {
+                                        mFired = true;
+                                        callMethodSafe(tm, "doAnimationFinish");
+                                    }
+                                }
+                                @Override
+                                public void onAnimationCancel(Animator animation) {
+                                    if (!mFired) {
+                                        mFired = true;
+                                        callMethodSafe(tm, "doAnimationFinish");
+                                    }
+                                }
+                            });
+                            return;
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                    callMethodSafe(tm, "doAnimationFinish");
                 }
             }
         });
@@ -1255,7 +1301,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             return false;
         }
         long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
-        if (elapsed < 0L || elapsed > 550L) {
+        if (elapsed < 0L || elapsed > 1500L) {
             return false;
         }
         if (sIsOpenAnimRunning) {
@@ -1277,7 +1323,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static boolean isOpenAnimActive(Object transitionManager) {
         if (transitionManager != null) {
             long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
-            if (elapsed >= 0L && elapsed < 550L) {
+            if (elapsed >= 0L && elapsed < 1500L) {
                 if (sIsOpenAnimRunning || getBooleanFieldHierarchySafe(transitionManager, "mIsOpenAnimRunning", false)) {
                     return true;
                 }
