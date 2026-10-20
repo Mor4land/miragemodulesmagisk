@@ -726,12 +726,24 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     sTransitionManagerRef = new WeakReference<>(param.thisObject);
                     sLastOpenAnimStartMs = SystemClock.uptimeMillis();
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", true);
-                    MiragePerfTracker.startTracking("APP_OPEN", sTargetLaunchPkg);
                 }
             };
             hookMethodsByName(quickstepCls, "getActivityLaunchOptions", markOpenStartHook);
             hookMethodsByName(quickstepCls, "startIconLaunchAnimator", markOpenStartHook);
-            hookMethodsByName(quickstepCls, "startOpeningWindowAnimators", markOpenStartHook);
+
+            // Sole authoritative trigger for APP_OPEN frame tracking when the window animators actually deploy
+            hookMethodsByName(quickstepCls, "startOpeningWindowAnimators", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled) {
+                        return;
+                    }
+                    sTransitionManagerRef = new WeakReference<>(param.thisObject);
+                    sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", true);
+                    MiragePerfTracker.startTracking("APP_OPEN", sTargetLaunchPkg);
+                }
+            });
 
             // In breakOpenAnim(), NEVER invoke doAnimationFinish()! Calling doAnimationFinish() mid-launch
             // fires animationResult.finish(), which forces WindowManagerService to immediately drop the
@@ -740,6 +752,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
+                    MiragePerfTracker.stopTracking("APP_OPEN");
                     if (sEnabled && sNonStopSwipe) {
                         Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
                         if (spring != null) {
@@ -1399,6 +1412,26 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                                 }
                             } catch (Throwable ignored) {
                             }
+                        }
+                    });
+                } catch (Throwable ignored) {
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod(cls, "onPause", new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            MiragePerfTracker.stopTracking("APP_OPEN");
+                        }
+                    });
+                } catch (Throwable ignored) {
+                }
+
+                try {
+                    XposedHelpers.findAndHookMethod(cls, "onStop", new XC_MethodHook() {
+                        @Override
+                        protected void afterHookedMethod(MethodHookParam param) {
+                            MiragePerfTracker.stopTracking("APP_OPEN");
                         }
                     });
                 } catch (Throwable ignored) {

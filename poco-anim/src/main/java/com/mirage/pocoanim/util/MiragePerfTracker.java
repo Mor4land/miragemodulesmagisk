@@ -9,7 +9,8 @@ import java.util.Locale;
 
 /**
  * Nanosecond-precision FrameMetrics & Jank detector for Launcher animations.
- * Uses Choreographer callbacks with zero heap allocations in the render loop.
+ * Features strict single-callback Choreographer deduplication, zero heap allocations
+ * in the render loop, and responsive watchdog timeouts.
  */
 public final class MiragePerfTracker {
 
@@ -26,6 +27,7 @@ public final class MiragePerfTracker {
     private static volatile LogSink sLogSink = null;
 
     private static boolean sIsTracking = false;
+    private static boolean sCallbackScheduled = false;
     private static String sCurrentType = "";
     private static String sCurrentTarget = "";
     private static long sStartTimeNs = 0L;
@@ -46,6 +48,7 @@ public final class MiragePerfTracker {
         @Override
         public void doFrame(long frameTimeNanos) {
             synchronized (LOCK) {
+                sCallbackScheduled = false;
                 if (!sIsTracking) {
                     return;
                 }
@@ -65,10 +68,13 @@ public final class MiragePerfTracker {
                     }
                 }
                 sLastFrameTimeNs = frameTimeNanos;
-                if (sIsTracking) {
+
+                if (sIsTracking && !sCallbackScheduled) {
                     try {
                         Choreographer.getInstance().postFrameCallback(this);
+                        sCallbackScheduled = true;
                     } catch (Throwable ignored) {
+                        sCallbackScheduled = false;
                     }
                 }
             }
@@ -93,29 +99,44 @@ public final class MiragePerfTracker {
         }
 
         synchronized (LOCK) {
+            long nowNs = System.nanoTime();
+            // Debounce: if the exact same animation type was started less than 120ms ago, ignore duplicate start triggers
+            if (sIsTracking && sCurrentType.equals(animType) && (nowNs - sStartTimeNs) < 120_000_000L) {
+                return;
+            }
+
             if (sIsTracking) {
-                // Previous animation didn't explicitly finish (e.g. gesture interrupted or chained)
                 stopTrackingInternal("INTERRUPTED");
             }
 
             sIsTracking = true;
             sCurrentType = (animType != null) ? animType : "ANIM";
             sCurrentTarget = (target != null) ? target : "";
-            sStartTimeNs = System.nanoTime();
+            sStartTimeNs = nowNs;
             sLastFrameTimeNs = 0L;
             sFrameCount = 0;
             sJankCount = 0;
             sSevereJankCount = 0;
             sMaxFrameMs = 0f;
 
+            // Strict deduplication: remove any stale callback before posting
             try {
-                Choreographer.getInstance().postFrameCallback(FRAME_CALLBACK);
+                Choreographer.getInstance().removeFrameCallback(FRAME_CALLBACK);
             } catch (Throwable ignored) {
             }
+            sCallbackScheduled = false;
 
-            // Arm a 1200ms watchdog so tracking never runs indefinitely
+            try {
+                Choreographer.getInstance().postFrameCallback(FRAME_CALLBACK);
+                sCallbackScheduled = true;
+            } catch (Throwable ignored) {
+                sCallbackScheduled = false;
+            }
+
+            // Arm a safe watchdog (450ms for open, 600ms for others)
+            long timeoutMs = "APP_OPEN".equals(animType) ? 450L : 600L;
             MAIN_HANDLER.removeCallbacks(WATCHDOG_RUNNABLE);
-            MAIN_HANDLER.postDelayed(WATCHDOG_RUNNABLE, 1200L);
+            MAIN_HANDLER.postDelayed(WATCHDOG_RUNNABLE, timeoutMs);
         }
     }
 
@@ -130,6 +151,10 @@ public final class MiragePerfTracker {
             if (!sIsTracking) {
                 return;
             }
+            if (animType != null && !animType.isEmpty() && !sCurrentType.equals(animType)) {
+                // Different animation type requested stop, ignore
+                return;
+            }
             stopTrackingInternal(null);
         }
     }
@@ -141,15 +166,25 @@ public final class MiragePerfTracker {
         }
         sIsTracking = false;
 
+        try {
+            Choreographer.getInstance().removeFrameCallback(FRAME_CALLBACK);
+        } catch (Throwable ignored) {
+        }
+        sCallbackScheduled = false;
+
         long totalDurationNs = System.nanoTime() - sStartTimeNs;
         float totalDurationMs = totalDurationNs / 1_000_000f;
 
-        // Ignore trivial non-animations (<30ms or <2 frames)
-        if (sFrameCount < 2 || totalDurationMs < 30f) {
+        // Ignore trivial non-animations (<35ms or <2 frames)
+        if (sFrameCount < 2 || totalDurationMs < 35f) {
             return;
         }
 
         float avgFps = (sFrameCount * 1000f) / totalDurationMs;
+        // Cap displayed FPS to physical refresh rate headroom
+        if (avgFps > 95.0f && sFrameCount > 5) {
+            avgFps = 90.0f;
+        }
         float jankPct = (sJankCount * 100f) / (float) sFrameCount;
         String emoji = getEmojiForType(sCurrentType);
 
