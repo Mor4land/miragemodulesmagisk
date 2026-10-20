@@ -111,18 +111,37 @@ public final class AnimPrefs {
 
     private AnimPrefs() {}
 
+    public static Context getSafeContext(Context context) {
+        if (context == null) return null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            if (!context.isDeviceProtectedStorage()) {
+                Context deviceContext = context.createDeviceProtectedStorageContext();
+                try {
+                    deviceContext.moveSharedPreferencesFrom(context, PREFS_NAME);
+                } catch (Throwable ignored) {
+                }
+                return deviceContext;
+            }
+        }
+        return context;
+    }
+
     @SuppressWarnings("deprecation")
     public static SharedPreferences getPrefs(Context context) {
+        Context ctx = getSafeContext(context);
+        if (ctx == null) return null;
         try {
-            return context.getSharedPreferences(PREFS_NAME, Context.MODE_WORLD_READABLE);
+            return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_WORLD_READABLE);
         } catch (SecurityException ignored) {
-            return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         }
     }
 
     public static void makeWorldReadable(Context context) {
         try {
-            File dataDir = new File(context.getApplicationInfo().dataDir);
+            Context ctx = getSafeContext(context);
+            if (ctx == null) return;
+            File dataDir = new File(ctx.getApplicationInfo().dataDir);
             dataDir.setReadable(true, false);
             dataDir.setExecutable(true, false);
             File prefsDir = new File(dataDir, "shared_prefs");

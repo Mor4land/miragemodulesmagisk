@@ -247,8 +247,19 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         sHideDndLockscreen = b.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
     }
 
+    private static volatile long sLastProviderQueryTime = 0L;
+    private static final long PROVIDER_QUERY_THROTTLE_MS = 15_000L;
+
     private static void queryProviderPrefs(Context context) {
+        queryProviderPrefs(context, false);
+    }
+
+    private static void queryProviderPrefs(Context context, boolean force) {
         if (context == null) return;
+        long now = SystemClock.elapsedRealtime();
+        if (!force && (now - sLastProviderQueryTime) < PROVIDER_QUERY_THROTTLE_MS) {
+            return;
+        }
         try {
             Bundle res = null;
             try {
@@ -263,6 +274,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             }
             if (res != null) {
+                sLastProviderQueryTime = now;
                 updateFromBundle(res);
                 saveLocalCachePrefs(context);
                 XposedBridge.log(TAG + ": Loaded prefs via ContentProvider (theme=" + sIconThemeEnabled + ", mode=" + sIconColorMode + ", matte=" + sWallpaperMatte + ")");
@@ -2172,30 +2184,6 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 "com.android.launcher3.DragLayer"
         };
 
-        XC_MethodHook matteDrawHook = new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                if (!sEnabled || !sWallpaperMatte) return;
-                if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof Canvas)) return;
-                if (!(param.thisObject instanceof View)) return;
-                if (Boolean.TRUE.equals(sDrawingMatteOverlay.get())) return;
-
-                View v = (View) param.thisObject;
-                int w = v.getWidth();
-                int h = v.getHeight();
-                if (w > 0 && h > 0) {
-                    try {
-                        sDrawingMatteOverlay.set(Boolean.TRUE);
-                        Canvas canvas = (Canvas) param.args[0];
-                        drawMatteWallpaperOverlay(canvas, w, h);
-                    } catch (Throwable ignored) {
-                    } finally {
-                        sDrawingMatteOverlay.set(Boolean.FALSE);
-                    }
-                }
-            }
-        };
-
         // Hook only the most derived DragLayer class to avoid duplicate drawing in inheritance chain
         Class<?> targetDragLayerCls = null;
         for (String clsName : dragLayerClasses) {
@@ -2206,6 +2194,31 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             }
         }
         if (targetDragLayerCls != null) {
+            final Class<?> finalTargetCls = targetDragLayerCls;
+            XC_MethodHook matteDrawHook = new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    if (!sEnabled || !sWallpaperMatte) return;
+                    if (param.args == null || param.args.length == 0 || !(param.args[0] instanceof Canvas)) return;
+                    if (!(param.thisObject instanceof View)) return;
+                    if (finalTargetCls != null && !finalTargetCls.isInstance(param.thisObject)) return;
+                    if (Boolean.TRUE.equals(sDrawingMatteOverlay.get())) return;
+
+                    View v = (View) param.thisObject;
+                    int w = v.getWidth();
+                    int h = v.getHeight();
+                    if (w > 0 && h > 0) {
+                        try {
+                            sDrawingMatteOverlay.set(Boolean.TRUE);
+                            Canvas canvas = (Canvas) param.args[0];
+                            drawMatteWallpaperOverlay(canvas, w, h);
+                        } catch (Throwable ignored) {
+                        } finally {
+                            sDrawingMatteOverlay.set(Boolean.FALSE);
+                        }
+                    }
+                }
+            };
             try {
                 XposedHelpers.findAndHookMethod(targetDragLayerCls, "dispatchDraw", Canvas.class, matteDrawHook);
             } catch (Throwable ignored) {
@@ -2215,7 +2228,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
 
     private static void drawMatteWallpaperOverlay(Canvas canvas, int w, int h) {
         float intensity = Math.max(0.10f, Math.min(0.90f, sWallpaperMatteIntensity));
-        int baseAlpha = Math.round(intensity * 60f); // 6 to 54 out of 255 (2% to 21% max opacity)
+        int baseAlpha = Math.round(25f + intensity * 65f); // 32 to 84 out of 255 (12% to 33% max opacity)
         if (baseAlpha <= 0) return;
 
         Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
@@ -2234,7 +2247,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             // Soft frosted glass veil: subtle top frost highlight, soft ambient base
             LinearGradient grad = new LinearGradient(
                     0, 0, 0, h,
-                    Color.argb(Math.max(6, (int) (baseAlpha * 0.70f)), 230, 240, 252),
+                    Color.argb(Math.max(6, (int) (baseAlpha * 0.75f)), 230, 240, 252),
                     Color.argb(Math.max(5, (int) (baseAlpha * 0.65f)), 14, 18, 28),
                     Shader.TileMode.CLAMP
             );

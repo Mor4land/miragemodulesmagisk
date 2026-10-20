@@ -33,6 +33,8 @@ settings put system user_refresh_rate 90 >/dev/null 2>&1
 settings put secure miui_refresh_rate 90 >/dev/null 2>&1
 settings put global transition_animation_duration_ratio 1.0 >/dev/null 2>&1
 
-if [ -f "$MODDIR/MiragePocoAnimations.apk" ]; then
-    pm install -r "$MODDIR/MiragePocoAnimations.apk" >/dev/null 2>&1
+if ! pm path com.mirage.pocoanim >/dev/null 2>&1; then
+    if [ -f "$MODDIR/MiragePocoAnimations.apk" ]; then
+        pm install -r "$MODDIR/MiragePocoAnimations.apk" >/dev/null 2>&1
+    fi
 fi

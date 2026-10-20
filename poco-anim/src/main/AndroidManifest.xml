@@ -68,6 +68,7 @@
         <provider
             android:name=".provider.AnimPrefsProvider"
             android:authorities="com.mirage.pocoanim.provider"
+            android:directBootAware="true"
             android:exported="true" />
 
     </application>

@@ -196,13 +196,14 @@ public class ColorMatrixAndWidgetTest {
         float[] intensities = new float[]{0.10f, 0.35f, 0.50f, 0.75f, 0.90f};
 
         for (float intensity : intensities) {
-            int baseAlpha = Math.round(intensity * 60f);
+            int baseAlpha = Math.round(25f + intensity * 65f);
             float opacity = baseAlpha / 255.0f;
 
-            // Opacity must be between 2% and 22% so wallpaper is NEVER blacked out
-            Assert.assertTrue("Matte alpha must be >= 6 for intensity=" + intensity, baseAlpha >= 6);
-            Assert.assertTrue("Matte alpha must be <= 54 for intensity=" + intensity, baseAlpha <= 54);
-            Assert.assertTrue("Opacity must stay below 22% to keep wallpaper visible", opacity <= 0.22f);
+            // Opacity must be between 12% and 35% so wallpaper is visibly velvety, never invisible and never blacked out
+            Assert.assertTrue("Matte alpha must be >= 31 for intensity=" + intensity, baseAlpha >= 31);
+            Assert.assertTrue("Matte alpha must be <= 85 for intensity=" + intensity, baseAlpha <= 85);
+            Assert.assertTrue("Opacity must stay below 35% to keep wallpaper visible", opacity <= 0.35f);
+            Assert.assertTrue("Opacity must stay above 12% for visible texture", opacity >= 0.12f);
         }
     }
 
