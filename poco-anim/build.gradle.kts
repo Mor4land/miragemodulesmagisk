@@ -10,8 +10,8 @@ android {
         applicationId = "com.mirage.pocoanim"
         minSdk = 26
         targetSdk = 34
-        versionCode = 35
-        versionName = "1.0.34"
+        versionCode = 36
+        versionName = "1.0.35"
     }
 
     buildTypes {

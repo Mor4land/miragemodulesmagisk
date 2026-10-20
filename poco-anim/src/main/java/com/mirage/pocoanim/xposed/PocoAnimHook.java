@@ -129,6 +129,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile WeakReference<Object> sNavStubViewRef = new WeakReference<>(null);
     private static volatile WeakReference<Object> sTransitionManagerRef = new WeakReference<>(null);
     private static volatile long sLastOpenAnimStartMs = 0L;
+    private static volatile boolean sIsOpenAnimRunning = false;
+    private static volatile boolean sLauncherStopped = false;
     private static volatile String sLastClosingPackage = null;
     private static volatile Class<?> sConnectAnimMgrCls = null;
     private static volatile boolean sConnectAnimMgrClsLookedUp = false;
@@ -740,6 +742,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     }
                     sTransitionManagerRef = new WeakReference<>(param.thisObject);
                     sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    sIsOpenAnimRunning = true;
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", true);
                     MiragePerfTracker.startTracking("APP_OPEN", sTargetLaunchPkg);
                 }
@@ -752,9 +755,13 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
+                    sIsOpenAnimRunning = false;
                     MiragePerfTracker.stopTracking("APP_OPEN");
                     if (sEnabled && sNonStopSwipe) {
                         Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
+                        if (spring == null) {
+                            spring = getBreakableCurrentAnim(cl);
+                        }
                         if (spring != null) {
                             setBooleanFieldSafe(spring, "mMoveToTargetRectWhenAnimEnd", false);
                             Object startRect = callObjectMethodSafe(spring, "getStartRect");
@@ -775,6 +782,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             hookMethodsByName(quickstepCls, "doAnimationFinish", new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
+                    sIsOpenAnimRunning = false;
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", false);
                     MiragePerfTracker.stopTracking("APP_OPEN");
                 }
@@ -840,6 +848,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (param.args != null && param.args.length == 1 && Boolean.TRUE.equals(param.args[0])) {
                     sLastOpenAnimStartMs = SystemClock.uptimeMillis();
+                    sIsOpenAnimRunning = true;
+                    setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", true);
                 }
             }
         });
@@ -1072,6 +1082,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 if (!sEnabled) {
                     return;
                 }
+                sIsOpenAnimRunning = false;
+                MiragePerfTracker.stopTracking("APP_CLOSE");
                 setBooleanFieldSafe(param.thisObject, "mNeedBreakOpenAnim", false);
                 setBooleanFieldSafe(param.thisObject, "mIsAnimatingToLauncher", false);
                 setBooleanFieldSafe(param.thisObject, "mIsAnimatingToRecents", false);
@@ -1180,16 +1192,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     }
 
     private static boolean isAppCurrentlyOpening(Object navStubView, ClassLoader cl) {
-        if (navStubView != null) {
-            boolean launcherOnTop = isLauncherOnTopSafe(navStubView, cl);
-            if (!launcherOnTop) {
-                // When launcher is NOT on top, the user is inside an app. Never hijack in-app navigation!
-                return false;
-            }
+        if (sLauncherStopped) {
+            return false;
         }
         long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
-        if (elapsed < 0L || elapsed > 450L) {
+        if (elapsed < 0L || elapsed > 550L) {
             return false;
+        }
+        if (sIsOpenAnimRunning) {
+            return true;
+        }
+        if (navStubView != null && getBooleanFieldSafe(navStubView, "mNeedBreakOpenAnim", false)) {
+            return true;
         }
         if (getOpeningRectFSpringAnimSafe(cl) != null) {
             return true;
@@ -1204,8 +1218,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static boolean isOpenAnimActive(Object transitionManager) {
         if (transitionManager != null) {
             long elapsed = SystemClock.uptimeMillis() - sLastOpenAnimStartMs;
-            if (elapsed >= 0L && elapsed < 450L) {
-                if (getBooleanFieldHierarchySafe(transitionManager, "mIsOpenAnimRunning", false)) {
+            if (elapsed >= 0L && elapsed < 550L) {
+                if (sIsOpenAnimRunning || getBooleanFieldHierarchySafe(transitionManager, "mIsOpenAnimRunning", false)) {
                     return true;
                 }
             }
@@ -1399,6 +1413,9 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
                             try {
+                                sLauncherStopped = false;
+                                sIsOpenAnimRunning = false;
+                                MiragePerfTracker.stopTracking("APP_CLOSE");
                                 if (param.thisObject instanceof Activity) {
                                     Activity activity = (Activity) param.thisObject;
                                     sLauncherActivityRef = new WeakReference<>(activity);
@@ -1431,6 +1448,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     XposedHelpers.findAndHookMethod(cls, "onStop", new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
+                            sLauncherStopped = true;
+                            sIsOpenAnimRunning = false;
                             MiragePerfTracker.stopTracking("APP_OPEN");
                         }
                     });
@@ -2512,10 +2531,18 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     }
                 };
                 hookMethodsByName(cls, "findClosingShortcutIcon", quickstepCloseHook);
-                hookMethodsByName(cls, "startClosingWindowAnimators", quickstepCloseHook);
                 hookMethodsByName(cls, "composeClosingWindowAnimators", quickstepCloseHook);
-                hookMethodsByName(cls, "startClosingAppAnim", quickstepCloseHook);
                 hookMethodsByName(cls, "startNewClosingAnim", quickstepCloseHook);
+
+                XC_MethodHook closeTrackHook = new XC_MethodHook() {
+                    @Override
+                    protected void beforeHookedMethod(MethodHookParam param) {
+                        extractAndSyncClosingApp(param, cl);
+                        MiragePerfTracker.startTracking("APP_CLOSE", sLastClosingPackage);
+                    }
+                };
+                hookMethodsByName(cls, "startClosingWindowAnimators", closeTrackHook);
+                hookMethodsByName(cls, "startClosingAppAnim", closeTrackHook);
             }
         }
 

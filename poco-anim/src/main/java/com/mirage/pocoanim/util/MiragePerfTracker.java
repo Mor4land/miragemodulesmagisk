@@ -133,8 +133,8 @@ public final class MiragePerfTracker {
                 sCallbackScheduled = false;
             }
 
-            // Arm a safe watchdog (450ms for open, 600ms for others)
-            long timeoutMs = "APP_OPEN".equals(animType) ? 450L : 600L;
+            // Arm a safe watchdog (800ms for open, 750ms for others) to allow natural cold-start completion
+            long timeoutMs = "APP_OPEN".equals(animType) ? 800L : 750L;
             MAIN_HANDLER.removeCallbacks(WATCHDOG_RUNNABLE);
             MAIN_HANDLER.postDelayed(WATCHDOG_RUNNABLE, timeoutMs);
         }
