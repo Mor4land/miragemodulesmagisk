@@ -74,8 +74,28 @@ public class AnimPrefsProvider extends ContentProvider {
             bundle.putInt(AnimPrefs.KEY_GRID_ROWS, prefs.getInt(AnimPrefs.KEY_GRID_ROWS, 7));
             bundle.putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, prefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, 5));
             bundle.putBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, prefs.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, true));
+            bundle.putBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, prefs.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, true));
 
             return bundle;
+        } else if ("log_perf".equals(method)) {
+            Context context = getContext();
+            if (context != null && arg != null && !arg.isEmpty()) {
+                com.mirage.pocoanim.util.MiragePerfStorage.appendLog(context, arg);
+            }
+            return new Bundle();
+        } else if ("get_perf_logs".equals(method)) {
+            Context context = getContext();
+            Bundle res = new Bundle();
+            if (context != null) {
+                res.putString("logs", com.mirage.pocoanim.util.MiragePerfStorage.readLogs(context));
+            }
+            return res;
+        } else if ("clear_perf_logs".equals(method)) {
+            Context context = getContext();
+            if (context != null) {
+                com.mirage.pocoanim.util.MiragePerfStorage.clearLogs(context);
+            }
+            return new Bundle();
         }
         return null;
     }

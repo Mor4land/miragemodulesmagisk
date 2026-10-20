@@ -50,6 +50,7 @@ import android.widget.TextView;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import com.mirage.pocoanim.util.AnimPrefs;
+import com.mirage.pocoanim.util.MiragePerfTracker;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XSharedPreferences;
@@ -102,6 +103,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile int sGridColumns = 5;
     private static volatile int sGridRows = 7;
     private static volatile int sHotseatMaxCount = 5;
+    private static volatile boolean sPerfMonitorEnabled = true;
+    private static volatile String sTargetLaunchPkg = "";
     private static final ThreadLocal<Boolean> sDrawingThemedIcon = new ThreadLocal<>();
     private static final ThreadLocal<Integer> sThemeSaveCount = new ThreadLocal<>();
     private static volatile WeakReference<Activity> sLauncherActivityRef = new WeakReference<>(null);
@@ -206,6 +209,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sGridRows = xPrefs.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
                 sHotseatMaxCount = xPrefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
                 sHideDndLockscreen = xPrefs.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
+                sPerfMonitorEnabled = xPrefs.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled);
+                MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
             }
         } catch (Throwable ignored) {
         }
@@ -245,6 +250,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         sGridRows = b.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
         sHotseatMaxCount = b.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
         sHideDndLockscreen = b.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
+        sPerfMonitorEnabled = b.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled);
+        MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
     }
 
     private static volatile long sLastProviderQueryTime = 0L;
@@ -322,6 +329,8 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sGridRows = cache.getInt(AnimPrefs.KEY_GRID_ROWS, sGridRows);
                 sHotseatMaxCount = cache.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
                 sHideDndLockscreen = cache.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
+                sPerfMonitorEnabled = cache.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled);
+                MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
             }
         } catch (Throwable ignored) {
         }
@@ -368,6 +377,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     .putInt(AnimPrefs.KEY_GRID_ROWS, sGridRows)
                     .putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount)
                     .putBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen)
+                    .putBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled)
                     .apply();
         } catch (Throwable ignored) {
         }
@@ -716,6 +726,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     sTransitionManagerRef = new WeakReference<>(param.thisObject);
                     sLastOpenAnimStartMs = SystemClock.uptimeMillis();
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", true);
+                    MiragePerfTracker.startTracking("APP_OPEN", sTargetLaunchPkg);
                 }
             };
             hookMethodsByName(quickstepCls, "getActivityLaunchOptions", markOpenStartHook);
@@ -752,6 +763,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     setBooleanFieldHierarchySafe(param.thisObject, "mIsOpenAnimRunning", false);
+                    MiragePerfTracker.stopTracking("APP_OPEN");
                 }
             });
 
@@ -787,6 +799,19 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                         param.args[1] = Math.min(0.90f, Math.max(0.84f, damping));
                         param.args[2] = Math.max(0.22f, response * 0.88f * Math.min(1.0f, sAnimSpeedRatio));
                     }
+                }
+            });
+
+            hookMethodsByName(rectFSpringCls, "start", new XC_MethodHook() {
+                @Override
+                protected void beforeHookedMethod(MethodHookParam param) {
+                    MiragePerfTracker.startTracking("APP_CLOSE", "SpringMorph");
+                }
+            });
+            hookMethodsByName(rectFSpringCls, "onAnimationEnd", new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    MiragePerfTracker.stopTracking("APP_CLOSE");
                 }
             });
         }
@@ -1289,6 +1314,23 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             loadLocalCachePrefs(context);
             updateRuntimeFieldsPostInit(cl);
             registerConfigReceiver(context, cl);
+
+            MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
+            final Context appCtx = context.getApplicationContext() != null ? context.getApplicationContext() : context;
+            MiragePerfTracker.setLogSink(new MiragePerfTracker.LogSink() {
+                @Override
+                public void onAnimLogged(final String summary) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                appCtx.getContentResolver().call("com.mirage.pocoanim.provider", "log_perf", summary, null);
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    }).start();
+                }
+            });
         } catch (Throwable ignored) {
         }
     }
@@ -1320,6 +1362,26 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
 
                 try {
+                    XposedHelpers.findAndHookMethod(cls, "startActivitySafely", View.class, Intent.class, Object.class, new XC_MethodHook() {
+                        @Override
+                        protected void beforeHookedMethod(MethodHookParam param) {
+                            try {
+                                if (param.args != null && param.args.length > 1 && param.args[1] instanceof Intent) {
+                                    Intent it = (Intent) param.args[1];
+                                    if (it.getComponent() != null) {
+                                        sTargetLaunchPkg = it.getComponent().getPackageName();
+                                    } else if (it.getPackage() != null) {
+                                        sTargetLaunchPkg = it.getPackage();
+                                    }
+                                }
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    });
+                } catch (Throwable ignored) {
+                }
+
+                try {
                     XposedHelpers.findAndHookMethod(cls, "onResume", new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) {
@@ -1341,6 +1403,29 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     });
                 } catch (Throwable ignored) {
                 }
+            }
+        }
+
+        String[] workspaceClasses = new String[]{
+                "com.miui.home.launcher.Workspace",
+                "com.mi.android.globallauncher.Workspace"
+        };
+        for (String wClsName : workspaceClasses) {
+            Class<?> wCls = XposedHelpers.findClassIfExists(wClsName, cl);
+            if (wCls != null) {
+                hookMethodsByName(wCls, "onPageBeginMoving", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        MiragePerfTracker.startTracking("DESKTOP_SWIPE", "Workspace");
+                    }
+                });
+                hookMethodsByName(wCls, "onPageEndMoving", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) {
+                        MiragePerfTracker.stopTracking("DESKTOP_SWIPE");
+                    }
+                });
+                break;
             }
         }
     }

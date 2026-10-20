@@ -46,7 +46,12 @@ import com.google.android.material.divider.MaterialDivider;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import java.util.Locale;
 import com.mirage.pocoanim.util.AnimPrefs;
+import com.mirage.pocoanim.util.MiragePerfStorage;
 import com.mirage.pocoanim.widget.WidgetConfigActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -317,7 +322,11 @@ public class MainActivity extends AppCompatActivity {
         addSectionHeader(contentRoot, "ЭКРАН БЛОКИРОВКИ И УВЕДОМЛЕНИЯ");
         contentRoot.addView(createLockscreenCard());
 
-        // 12. Section: Действия и рестарт
+        // 12. Section: Диагностика и телеметрия лагов
+        addSectionHeader(contentRoot, "ДИАГНОСТИКА & ТЕЛЕМЕТРИЯ ЛАГОВ");
+        contentRoot.addView(createPerfTelemetryCard());
+
+        // 13. Section: Действия и рестарт
         addSectionHeader(contentRoot, "ОБСЛУЖИВАНИЕ И РЕСТАРТ");
         contentRoot.addView(createMaintenanceCard());
 
@@ -1394,6 +1403,138 @@ public class MainActivity extends AppCompatActivity {
                 AnimPrefs.KEY_HIDE_DND_LOCKSCREEN,
                 true
         ));
+
+        card.addView(layout);
+        return card;
+    }
+
+    private MaterialCardView createPerfTelemetryCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        TextView title = new TextView(this);
+        title.setText("Телеметрия кадров и лагов (90 FPS Profiler)");
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        layout.addView(title);
+
+        TextView desc = new TextView(this);
+        desc.setText("Сверхточный замер длительности, просадок и джанков (Janks) на каждом кадре анимаций открытия/закрытия приложений и жестов.");
+        desc.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setPadding(0, dp(2), 0, dp(8));
+        layout.addView(desc);
+
+        layout.addView(createSwitchRow(
+                "Мониторинг кадров в фоне",
+                "Фиксирует длительность и лаги анимаций в защищенный кольцевой лог (до 200 событий).",
+                AnimPrefs.KEY_PERF_MONITOR_ENABLED,
+                true
+        ));
+
+        // Stats Box
+        final TextView statsView = new TextView(this);
+        statsView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        statsView.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.WHITE));
+        statsView.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorSurfaceVariant, Color.parseColor("#2B2930")));
+        statsView.setPadding(dp(12), dp(10), dp(12), dp(10));
+        LinearLayout.LayoutParams sLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        sLp.topMargin = dp(8);
+        statsView.setLayoutParams(sLp);
+
+        // Recent Logs Box
+        final TextView logBox = new TextView(this);
+        logBox.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        logBox.setTypeface(Typeface.MONOSPACE);
+        logBox.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.LTGRAY));
+        logBox.setBackgroundColor(Color.parseColor("#1C1B1F"));
+        logBox.setPadding(dp(10), dp(8), dp(10), dp(8));
+        LinearLayout.LayoutParams logLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(120)
+        );
+        logLp.topMargin = dp(8);
+        logBox.setLayoutParams(logLp);
+
+        Runnable refreshStats = () -> {
+            try {
+                MiragePerfStorage.PerfStats stats = MiragePerfStorage.getStats(MainActivity.this);
+                String logText = MiragePerfStorage.readLogs(MainActivity.this);
+                statsView.setText(String.format(Locale.US,
+                        "📊 Зафиксировано анимаций: %d | Средний FPS: %.1f\n⚠️ Лагов (Janks): %d | Худший спайк: %.1f мс",
+                        stats.totalEvents, stats.avgFps, stats.totalJanks, stats.worstSpikeMs
+                ));
+                if (logText.length() > 600) {
+                    logBox.setText("...\n" + logText.substring(logText.length() - 600));
+                } else {
+                    logBox.setText(logText);
+                }
+            } catch (Throwable ignored) {
+            }
+        };
+        refreshStats.run();
+
+        layout.addView(statsView);
+        layout.addView(logBox);
+
+        // Action Buttons Row
+        LinearLayout btnRow = new LinearLayout(this);
+        btnRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams btnRowLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        btnRowLp.topMargin = dp(10);
+        btnRow.setLayoutParams(btnRowLp);
+
+        MaterialButton copyBtn = new MaterialButton(this);
+        copyBtn.setText("Скопировать отчёт о лагах");
+        copyBtn.setBackgroundColor(getM3Color(com.google.android.material.R.attr.colorPrimary, Color.parseColor("#D0BCFF")));
+        copyBtn.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnPrimary, Color.BLACK));
+        LinearLayout.LayoutParams copyLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        copyLp.rightMargin = dp(8);
+        copyBtn.setLayoutParams(copyLp);
+        copyBtn.setOnClickListener(v -> {
+            try {
+                String logs = MiragePerfStorage.readLogs(MainActivity.this);
+                MiragePerfStorage.PerfStats stats = MiragePerfStorage.getStats(MainActivity.this);
+                StringBuilder report = new StringBuilder();
+                report.append("=== POCO M5 FLAGSHIP ANIMATIONS TELEMETRY REPORT ===\n");
+                report.append("Module Version: v1.0.33 (build 34)\n");
+                report.append("Device: POCO M5 (rock/stone), Android 14 HyperOS\n");
+                report.append("Target Refresh Rate: 90 Hz (11.1ms frame budget)\n");
+                report.append(String.format(Locale.US, "Summary: %d animations tracked, Avg FPS: %.1f, Total Janks: %d, Worst Spike: %.1fms\n",
+                        stats.totalEvents, stats.avgFps, stats.totalJanks, stats.worstSpikeMs));
+                report.append("--------------------------------------------------\n");
+                report.append(logs).append("\n");
+                report.append("==================================================");
+
+                ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                if (cm != null) {
+                    cm.setPrimaryClip(ClipData.newPlainText("MiragePerfReport", report.toString()));
+                    Toast.makeText(MainActivity.this, "📋 Отчёт скопирован в буфер обмена! Отправьте его разработчику.", Toast.LENGTH_LONG).show();
+                }
+            } catch (Throwable t) {
+                Toast.makeText(MainActivity.this, "Ошибка: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        btnRow.addView(copyBtn);
+
+        MaterialButton clearBtn = new MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+        clearBtn.setText("Очистить");
+        clearBtn.setTextColor(getM3Color(com.google.android.material.R.attr.colorError, Color.RED));
+        clearBtn.setOnClickListener(v -> {
+            MiragePerfStorage.clearLogs(MainActivity.this);
+            refreshStats.run();
+            Toast.makeText(MainActivity.this, "Лог очищен", Toast.LENGTH_SHORT).show();
+        });
+        btnRow.addView(clearBtn);
+
+        layout.addView(btnRow);
 
         card.addView(layout);
         return card;
