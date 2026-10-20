@@ -50,6 +50,13 @@ public final class AnimPrefs {
     public static final String KEY_HOTSEAT_MAX_COUNT = "hotseat_max_count";
     public static final String KEY_HIDE_DND_LOCKSCREEN = "hide_dnd_lockscreen";
     public static final String KEY_PERF_MONITOR_ENABLED = "perf_monitor_enabled";
+    public static final String KEY_ANIMATION_ENGINE_PRESET = "animation_engine_preset";
+
+    public static final int ENGINE_ORIGIN_OS = 0; // vivo OriginOS 5 Atomic Motion
+    public static final int ENGINE_IOS_FLUID = 1; // Apple iOS 18 Fluid Spring
+    public static final int ENGINE_COLOR_OS = 2;  // Oppo ColorOS 14 Aquamorphic
+    public static final int ENGINE_ONE_UI = 3;   // Samsung One UI 6.1 Dynamic
+    public static final int ENGINE_HYPEROS = 4;  // Xiaomi HyperOS Stock
 
     public static final int DOCK_STYLE_FROSTED_GLASS = 0;
     public static final int DOCK_STYLE_DARK_VELVET = 1;

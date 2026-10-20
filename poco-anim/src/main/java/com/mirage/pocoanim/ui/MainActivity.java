@@ -209,7 +209,11 @@ public class MainActivity extends AppCompatActivity {
         masterCard.addView(masterLayout);
         contentRoot.addView(masterCard);
 
-        // 4. Section: Скорость переходов (M3 Chips)
+        // 4. Section: Физический движок анимаций (Physics Engine)
+        addSectionHeader(contentRoot, "ФИЗИЧЕСКИЙ ДВИЖОК АНИМАЦИЙ");
+        contentRoot.addView(createAnimationEngineCard());
+
+        // 5. Section: Скорость переходов (M3 Chips)
         addSectionHeader(contentRoot, "СКОРОСТЬ ПЕРЕХОДОВ");
         MaterialCardView speedCard = createM3Card();
         LinearLayout speedLayout = createCardContentLayout();
@@ -466,6 +470,85 @@ public class MainActivity extends AppCompatActivity {
         row.addView(textCol);
         row.addView(sw);
         return row;
+    }
+
+    private MaterialCardView createAnimationEngineCard() {
+        MaterialCardView card = createM3Card();
+        LinearLayout layout = createCardContentLayout();
+
+        TextView title = new TextView(this);
+        title.setText("Профиль кинетики и физики пружин:");
+        title.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurfaceVariant, Color.GRAY));
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        title.setPadding(0, 0, 0, dp(10));
+        layout.addView(title);
+
+        ChipGroup engineChipGroup = new ChipGroup(this);
+        engineChipGroup.setSingleSelection(true);
+        engineChipGroup.setSelectionRequired(true);
+
+        final int currentEngine = mPrefs.getInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, AnimPrefs.ENGINE_ORIGIN_OS);
+        final int[] engineIds = new int[]{
+                AnimPrefs.ENGINE_ORIGIN_OS,
+                AnimPrefs.ENGINE_IOS_FLUID,
+                AnimPrefs.ENGINE_COLOR_OS,
+                AnimPrefs.ENGINE_ONE_UI,
+                AnimPrefs.ENGINE_HYPEROS
+        };
+        final String[] engineLabels = new String[]{
+                "⚡ OriginOS 5",
+                "🍏 iOS 18",
+                "🌊 ColorOS 14",
+                "📱 One UI 6.1",
+                "⚡ HyperOS"
+        };
+        final String[] engineDescriptions = new String[]{
+                "OriginOS 5 (Atomic Motion): Ультра-быстрый кинетический взлёт (0.78x, Damping: 0.80, Response: 0.24s). Моментальный отклик и упругая остановка без задержек.",
+                "iOS 18 (Fluid Spring): Органическая физика Apple с критическим демпфированием (0.85x, Damping: 0.86, Response: 0.28s). Идеальный баланс плавности без раскачки.",
+                "ColorOS 14 (Aquamorphic): Динамика натяжения воды OPPO (0.92x, Damping: 0.90, Response: 0.33s). Мягкое скольжение с бархатным выкатом.",
+                "One UI 6.1 (Dynamic): Тактильный профиль Samsung Good Lock (0.88x, Damping: 0.88, Response: 0.30s). Плотное упругое следование за пальцем.",
+                "HyperOS Stock: Заводская стоковая кривая Xiaomi (1.0x, Damping: 0.85, Response: 0.35s)."
+        };
+
+        final TextView descView = new TextView(this);
+        descView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        descView.setTextColor(getM3Color(com.google.android.material.R.attr.colorOnSurface, Color.LTGRAY));
+        descView.setPadding(0, dp(10), 0, dp(4));
+        int initialIdx = 0;
+        for (int i = 0; i < engineIds.length; i++) {
+            if (engineIds[i] == currentEngine) {
+                initialIdx = i;
+                break;
+            }
+        }
+        descView.setText(engineDescriptions[initialIdx]);
+
+        for (int i = 0; i < engineIds.length; i++) {
+            final int idx = i;
+            Chip chip = new Chip(this);
+            chip.setId(View.generateViewId());
+            chip.setText(engineLabels[i]);
+            chip.setCheckable(true);
+            if (engineIds[i] == currentEngine) {
+                chip.setChecked(true);
+            }
+            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    try {
+                        mPrefs.edit().putInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, engineIds[idx]).commit();
+                        descView.setText(engineDescriptions[idx]);
+                        AnimPrefs.broadcastUpdate(MainActivity.this);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            engineChipGroup.addView(chip);
+        }
+
+        layout.addView(engineChipGroup);
+        layout.addView(descView);
+        card.addView(layout);
+        return card;
     }
 
     private MaterialCardView createIconCustomizationCard() {

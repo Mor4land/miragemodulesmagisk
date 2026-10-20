@@ -81,6 +81,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
     private static volatile boolean sNonStopSwipe = true;
     private static volatile boolean sTurboOptimize = true;
     private static volatile float sAnimSpeedRatio = 1.0f;
+    private static volatile int sAnimationEnginePreset = AnimPrefs.ENGINE_ORIGIN_OS;
 
     private static volatile boolean sIconThemeEnabled = false;
     private static volatile int sIconColorMode = AnimPrefs.COLOR_MODE_GRADIENT;
@@ -213,6 +214,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sHotseatMaxCount = xPrefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
                 sHideDndLockscreen = xPrefs.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
                 sPerfMonitorEnabled = xPrefs.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled);
+                sAnimationEnginePreset = xPrefs.getInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, sAnimationEnginePreset);
                 MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
             }
         } catch (Throwable ignored) {
@@ -254,6 +256,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
         sHotseatMaxCount = b.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
         sHideDndLockscreen = b.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
         sPerfMonitorEnabled = b.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled);
+        sAnimationEnginePreset = b.getInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, sAnimationEnginePreset);
         MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
     }
 
@@ -333,6 +336,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 sHotseatMaxCount = cache.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount);
                 sHideDndLockscreen = cache.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen);
                 sPerfMonitorEnabled = cache.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled);
+                sAnimationEnginePreset = cache.getInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, sAnimationEnginePreset);
                 MiragePerfTracker.setEnabled(sPerfMonitorEnabled);
             }
         } catch (Throwable ignored) {
@@ -381,6 +385,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     .putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, sHotseatMaxCount)
                     .putBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, sHideDndLockscreen)
                     .putBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, sPerfMonitorEnabled)
+                    .putInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, sAnimationEnginePreset)
                     .apply();
         } catch (Throwable ignored) {
         }
@@ -395,7 +400,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             if (devLevelCls != null) {
                 setNonFinalStaticFieldSafe(devLevelCls, "sDeviceLevel", 2);
                 setNonFinalStaticFieldSafe(devLevelCls, "sDeviceLevelFromFolme", 2);
-                setNonFinalStaticFieldSafe(devLevelCls, "sDeviceLevelTransitionAnimRatio", sAnimSpeedRatio);
+                setNonFinalStaticFieldSafe(devLevelCls, "sDeviceLevelTransitionAnimRatio", getEffectiveDurationRatio());
             }
         } catch (Throwable ignored) {
         }
@@ -442,10 +447,33 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (sEnabled) {
-                    param.setResult(sAnimSpeedRatio);
+                    param.setResult(getEffectiveDurationRatio());
                 }
             }
         });
+    }
+
+    private static float getEffectiveDurationRatio() {
+        float engineBase;
+        switch (sAnimationEnginePreset) {
+            case AnimPrefs.ENGINE_ORIGIN_OS: // vivo OriginOS 5 Atomic Motion: fast kinetic displacement
+                engineBase = 0.78f;
+                break;
+            case AnimPrefs.ENGINE_IOS_FLUID: // Apple iOS 18 Fluid Spring: snappy natural response
+                engineBase = 0.85f;
+                break;
+            case AnimPrefs.ENGINE_COLOR_OS: // Oppo ColorOS 14 Aquamorphic: smooth liquid tension
+                engineBase = 0.92f;
+                break;
+            case AnimPrefs.ENGINE_ONE_UI: // Samsung One UI 6.1: tactile, direct touch
+                engineBase = 0.88f;
+                break;
+            case AnimPrefs.ENGINE_HYPEROS: // Xiaomi HyperOS Classic
+            default:
+                engineBase = 1.0f;
+                break;
+        }
+        return engineBase * sAnimSpeedRatio;
     }
 
     private static void hookCpuLevelUtils(ClassLoader cl) {
@@ -597,7 +625,7 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (sEnabled) {
-                    param.setResult(sAnimSpeedRatio);
+                    param.setResult(getEffectiveDurationRatio());
                 }
             }
         });
@@ -749,23 +777,22 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                 }
             });
 
-            // In breakOpenAnim(), NEVER invoke doAnimationFinish()! Calling doAnimationFinish() mid-launch
-            // fires animationResult.finish(), which forces WindowManagerService to immediately drop the
-            // RemoteAnimation leash and snap the app window to 100% fullscreen before the close gesture can catch it.
-            // Instead, guarantee mMoveToTargetRectWhenAnimEnd is false and immediately redirect the spring back to the icon!
+            // In breakOpenAnim(), NEVER invoke doAnimationFinish() or let native mOpenAnim.end() run!
+            // In stock MIUI, breakOpenAnim() invokes mOpenAnim.end(), forcing the opening window to jump
+            // to 100% fullscreen for 1 frame before the close gesture catches it.
+            // By setting param.setResult(null), we completely suppress native MIUI breakOpenAnim()
+            // and instead smoothly reverse the spring directly from its current in-flight rect back to the icon!
             hookMethodsByName(quickstepCls, "breakOpenAnim", new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
                     sBreakOpenAnimTriggered = true;
-                    // Immediately suppress mAnimationResult on transition manager so WMS never snaps the window to fullscreen
-                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
-                }
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) {
+                    // Suppress native MIUI breakOpenAnim() from calling mOpenAnim.end()!
+                    param.setResult(null);
+
                     sIsOpenAnimRunning = false;
-                    sBreakOpenAnimTriggered = true;
-                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
                     MiragePerfTracker.stopTracking("APP_OPEN");
+                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
+
                     if (sEnabled && sNonStopSwipe) {
                         Object spring = getObjectFieldSafe(param.thisObject, "mRectFSpringAnim");
                         if (spring == null) {
@@ -785,6 +812,12 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                             }
                         }
                     }
+                }
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) {
+                    sIsOpenAnimRunning = false;
+                    sBreakOpenAnimTriggered = true;
+                    setObjectFieldSafe(param.thisObject, "mAnimationResult", null);
                 }
             });
 
@@ -831,11 +864,33 @@ public class PocoAnimHook implements IXposedHookLoadPackage {
                     }
                     // In RectFSpringAnim.setAnimParam(String key, float damping, float response)
                     if (param.args[1] instanceof Float && param.args[2] instanceof Float) {
-                        float damping = (Float) param.args[1];
-                        float response = (Float) param.args[2];
-                        // Smooth critical damping (0.84 - 0.90) avoids stiff deceleration stutter during fast exits
-                        param.args[1] = Math.min(0.90f, Math.max(0.84f, damping));
-                        param.args[2] = Math.max(0.22f, response * 0.88f * Math.min(1.0f, sAnimSpeedRatio));
+                        float targetDamping;
+                        float targetResponse;
+                        switch (sAnimationEnginePreset) {
+                            case AnimPrefs.ENGINE_ORIGIN_OS: // vivo OriginOS 5 Atomic Motion: fast kinetic bounce
+                                targetDamping = 0.80f;
+                                targetResponse = 0.24f;
+                                break;
+                            case AnimPrefs.ENGINE_IOS_FLUID: // Apple iOS 18: smooth, critical damping
+                                targetDamping = 0.86f;
+                                targetResponse = 0.28f;
+                                break;
+                            case AnimPrefs.ENGINE_COLOR_OS: // Oppo ColorOS 14: aquamorphic liquid surface tension
+                                targetDamping = 0.90f;
+                                targetResponse = 0.33f;
+                                break;
+                            case AnimPrefs.ENGINE_ONE_UI: // Samsung One UI 6.1: tactile, direct follow
+                                targetDamping = 0.88f;
+                                targetResponse = 0.30f;
+                                break;
+                            case AnimPrefs.ENGINE_HYPEROS: // Xiaomi HyperOS Classic
+                            default:
+                                targetDamping = 0.85f;
+                                targetResponse = 0.35f;
+                                break;
+                        }
+                        param.args[1] = targetDamping;
+                        param.args[2] = Math.max(0.18f, targetResponse * Math.min(1.0f, sAnimSpeedRatio));
                     }
                 }
             });

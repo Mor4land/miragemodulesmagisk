@@ -75,6 +75,7 @@ public class AnimPrefsProvider extends ContentProvider {
             bundle.putInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, prefs.getInt(AnimPrefs.KEY_HOTSEAT_MAX_COUNT, 5));
             bundle.putBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, prefs.getBoolean(AnimPrefs.KEY_HIDE_DND_LOCKSCREEN, true));
             bundle.putBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, prefs.getBoolean(AnimPrefs.KEY_PERF_MONITOR_ENABLED, true));
+            bundle.putInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, prefs.getInt(AnimPrefs.KEY_ANIMATION_ENGINE_PRESET, AnimPrefs.ENGINE_ORIGIN_OS));
 
             return bundle;
         } else if ("log_perf".equals(method)) {
