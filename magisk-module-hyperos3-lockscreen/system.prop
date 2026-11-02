@@ -1,0 +1,5 @@
+# HyperOS 3 Super Lockscreen & AOD Properties for POCO M5 (rock)
+# Enables Super Lockscreen engine and depth rendering pipeline
+
+persist.sys.aod.fullscreen.support=false
+persist.sys.aod.smart_mode=true

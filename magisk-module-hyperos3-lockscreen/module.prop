@@ -1,0 +1,6 @@
+id=mirage_hyperos3_lockscreen_port
+name=POCO M5 HyperOS 3 Lockscreen & AOD Port
+version=v3.0.2-HyperOS1
+versionCode=302
+author=Mirage (Mor4land) • Base by Kashi
+description=Портирование кастомизации экрана блокировки HyperOS 3 (Super Lockscreen, Depth Wallpaper с эффектом глубины, часы, шрифты, питомцы, поддержка IPS LCD) на POCO M5 (rock) под управлением HyperOS 1 (Android 14).
