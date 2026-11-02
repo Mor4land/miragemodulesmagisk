@@ -23,19 +23,14 @@ ui_print "- Android $ANDROID_VER • HyperOS $HYPER_NAME (Код: $HYPER_CODE)"
 # 2. Setup Staging Directories (Both product and system/product for total Magisk/KSU compatibility)
 mkdir -p "$MODPATH/product/priv-app/MIUIAod"
 mkdir -p "$MODPATH/system/product/priv-app/MIUIAod"
-mkdir -p "$MODPATH/product/overlay"
-mkdir -p "$MODPATH/system/product/overlay"
 mkdir -p "$MODPATH/product/media/wallpaper/sysui_editor_wallpaper_group"
 mkdir -p "$MODPATH/system/product/media/wallpaper/sysui_editor_wallpaper_group"
 mkdir -p "$MODPATH/product/etc/device_features"
 mkdir -p "$MODPATH/system/product/etc/device_features"
 mkdir -p "$MODPATH/system/etc/device_features"
 mkdir -p "$MODPATH/system/etc/permissions"
+mkdir -p "$MODPATH/system/product/etc/permissions"
 mkdir -p "$MODPATH/product/etc/permissions"
-
-# Hide stock OAT directory by replacing priv-app/MIUIAod
-touch "$MODPATH/product/priv-app/MIUIAod/.replace"
-touch "$MODPATH/system/product/priv-app/MIUIAod/.replace"
 
 # 3. Extract and stage Depth Wallpapers
 ui_print "- Интеграция пресетов обоев с эффектом глубины..."
