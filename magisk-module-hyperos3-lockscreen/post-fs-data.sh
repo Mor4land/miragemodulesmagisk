@@ -14,8 +14,8 @@ chcon -R u:object_r:system_file:s0 "$MODDIR" 2>/dev/null
 
 # 3. Mask stock OAT directory so ART does not execute stale stock odex/vdex
 if [ -d /product/priv-app/MIUIAod/oat ]; then
-    mount | grep -q "/product/priv-app/MIUIAod/oat" || mount -t tmpfs tmpfs /product/priv-app/MIUIAod/oat
-    chcon u:object_r:system_file:s0 /product/priv-app/MIUIAod/oat 2>/dev/null
+    mount | grep -q "/product/priv-app/MIUIAod/oat" || mount -t tmpfs -o mode=0755,context=u:object_r:system_file:s0 tmpfs /product/priv-app/MIUIAod/oat 2>/dev/null
+    chcon -R u:object_r:system_file:s0 /product/priv-app/MIUIAod/oat 2>/dev/null
 fi
 
 # 4. Bind mount our patched MIUIAod.apk directly over the stock priv-app

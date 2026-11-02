@@ -74,17 +74,19 @@ unzip -o -j "$MODPATH/files/MIUIAod.apk" "lib/$Libs/*" -d "$MODPATH/system/produ
 ui_print "- Библиотеки $Libs успешно распакованы"
 
 # 5. Privapp Whitelist installation
-if [ -f "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" ]; then
-    cp -f "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" "$MODPATH/product/etc/permissions/privapp-permissions-com.miui.aod.xml"
-    cp -f "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" "$MODPATH/product/etc/permissions/privapp_whitelist_com.miui.aod.xml"
-fi
+for perm_cand in "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" "$MODPATH/system/product/etc/permissions/privapp-permissions-com.miui.aod.xml"; do
+    if [ -f "$perm_cand" ]; then
+        mkdir -p "$MODPATH/product/etc/permissions"
+        mkdir -p "$MODPATH/system/product/etc/permissions"
+        mkdir -p "$MODPATH/system/etc/permissions"
+        cp -f "$perm_cand" "$MODPATH/product/etc/permissions/privapp-permissions-com.miui.aod.xml"
+        cp -f "$perm_cand" "$MODPATH/system/product/etc/permissions/privapp-permissions-com.miui.aod.xml"
+        cp -f "$perm_cand" "$MODPATH/system/etc/permissions/privapp-permissions-com.miui.aod.xml"
+        break
+    fi
+done
 
-# 6. IPS LCD Display Overlay Installation
-ui_print "- Настройка оверлея пробуждения и Doze для IPS экрана..."
-cp -f "$MODPATH/files/ElderlyNavigationBarOverlay.apk" "$MODPATH/product/overlay/"
-cp -f "$MODPATH/files/ElderlyNavigationBarOverlay.apk" "$MODPATH/system/product/overlay/"
-
-# 7. Device Features Patcher (rock.xml / stone.xml)
+# 6. Device Features Patcher (rock.xml / stone.xml)
 ui_print "- Патчинг флагов редактора экрана блокировки (device_features)..."
 BASE_XML=""
 for p in \
@@ -108,21 +110,16 @@ else
     echo '<?xml version="1.0" encoding="utf-8"?><features></features>' > "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml"
 fi
 
-# Insert HyperOS 3 features before </features>
+# Insert HyperOS 3 Super Lockscreen features before </features> (clean of IPS-incompatible doze flags)
 sed -i '/<\/features>/ i\
     <!-- HyperOS 3 Super Lockscreen & Depth Flags -->\
-    <bool name="support_aod">true</bool>\
     <bool name="support_keyguard_editor">true</bool>\
     <bool name="support_depth_wallpaper">true</bool>\
     <bool name="support_clock_widget">true</bool>\
     <bool name="support_super_lockscreen">true</bool>\
     <bool name="support_aod_notification_animate">true</bool>\
     <bool name="aod_support_keycode_goto_dismiss">true</bool>\
-    <bool name="support_aod_fullscreen">true</bool>\
-    <bool name="support_screen_color_persist">true</bool>\
-    <bool name="doze_display_state_supported">true</bool>\
-    <bool name="doze_proximity_check_before_pulse_intent">true</bool>\
-    <bool name="config_displayBlanksAfterDoze">false</bool>' "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml"
+    <bool name="support_screen_color_persist">true</bool>' "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml"
 
 # Mirror to both rock.xml and stone.xml across product and system targets
 for tgt in "$MODPATH/product/etc/device_features" "$MODPATH/system/product/etc/device_features" "$MODPATH/system/etc/device_features"; do

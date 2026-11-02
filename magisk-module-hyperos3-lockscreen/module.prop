@@ -1,6 +1,6 @@
 id=mirage_hyperos3_lockscreen_port
 name=POCO M5 HyperOS 3 Super Lockscreen Port
-version=v3.0.6
-versionCode=306
+version=v3.0.7
+versionCode=307
 author=Mor4land
-description=Портирование кастомизации экрана блокировки HyperOS 3 (Super Lockscreen, Depth Wallpaper 3D, кастомные часы Magazine/Classic/Rhombus, стили шрифтов, питомцы, русский язык, автоматический мост применения настроек для HyperOS 1 SystemUI) на POCO M5 (rock) под управлением HyperOS 1 (Android 14).
+description=Портирование кастомизации экрана блокировки HyperOS 3 (Super Lockscreen, Depth Wallpaper 3D, кастомные часы Magazine/Classic/Rhombus, стили шрифтов, питомцы, русский язык, автоматический мост применения настроек для HyperOS 1 SystemUI, полное устранение конфликтов privapp-permissions и doze для безопасного запуска) на POCO M5 (rock) под управлением HyperOS 1 (Android 14).
