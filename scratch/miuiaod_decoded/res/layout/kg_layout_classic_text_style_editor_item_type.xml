@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <View android:id="@id/type_divider" android:background="@color/kg_white_30" android:layout_width="fill_parent" android:layout_height="@dimen/kg_classic_text_editor_item_type_divider_height" android:layout_marginTop="@dimen/kg_classic_text_editor_item_type_divider_margin_top" android:layout_marginBottom="@dimen/kg_classic_text_editor_item_type_divider_margin_bottom" android:layout_marginStart="@dimen/kg_classic_text_editor_item_type_divider_margin_start" android:layout_marginEnd="@dimen/kg_classic_text_editor_item_type_divider_margin_end" />
+    <TextView android:textSize="@dimen/kg_classic_text_editor_item_type_label_size" android:textColor="@color/kg_white_80" android:id="@id/type_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/kg_classic_text_editor_item_type_label_margin_start" android:layout_marginEnd="@dimen/kg_classic_text_editor_item_type_label_margin_end" />
+</LinearLayout>

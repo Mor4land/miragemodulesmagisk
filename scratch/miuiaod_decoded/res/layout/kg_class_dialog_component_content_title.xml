@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="@dimen/kg_component_title_height"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <RelativeLayout android:id="@id/dialog_component_content_container" android:layout_width="fill_parent" android:layout_height="@dimen/kg_editor_container_title_high">
+        <TextView android:textSize="17.0dip" android:textColor="?clockTemplateTitleColor" android:id="@id/dialog_component_content_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_function_text_omponent_contents" android:layout_centerVertical="true" android:fontFamily="@string/kg_font_mi_sans_medium" android:layout_marginStart="@dimen/kg_editor_margin_right" android:layout_alignParentStart="true" />
+        <ImageView android:id="@id/dialog_component_content_arrow" android:paddingLeft="@dimen/kg_editor_margin_right" android:paddingRight="@dimen/kg_editor_margin_right" android:layout_width="wrap_content" android:layout_height="fill_parent" android:src="@drawable/kg_right_arrow" android:layout_centerVertical="true" android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+    <View android:background="?classicItemFontColor" android:layout_width="fill_parent" android:layout_height="1.0dip" android:layout_marginLeft="28.0dip" android:layout_marginRight="28.0dip" android:layout_marginVertical="15.629974dip" />
+</LinearLayout>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">92.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_top">52.599976dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_height">65.66998dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_left">83.66998dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_top">380.66406dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_width">39.669983dip</dimen>
+    <dimen name="kg_classic_plus_clock_frame_margin_top">53.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_height">171.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_margin_top">121.0dip</dimen>
+    <dimen name="kg_main_item_content_drawable_height">503.0547dip</dimen>
+    <dimen name="kg_main_item_content_drawable_width">226.53dip</dimen>
+</resources>

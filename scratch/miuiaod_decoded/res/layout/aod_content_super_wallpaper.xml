@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.SuperWallpaperClockView android:id="@id/clock" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_gravity="center|right|top" android:orientation="vertical" android:id="@id/single_clock_container" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:textColor="@color/content_text_color" android:gravity="right" android:layout_gravity="right" android:id="@id/city" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:alpha="0.7" />
+        <TextView android:textStyle="bold" android:textColor="@color/clock_text_color" android:gravity="right" android:layout_gravity="right" android:id="@id/time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" />
+        <TextView android:textColor="@color/content_text_color" android:gravity="right" android:layout_gravity="right" android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.5dip" android:includeFontPadding="false" android:lineSpacingMultiplier="0.92" android:alpha="0.7" />
+        <TextView android:textColor="@color/content_text_color" android:gravity="right" android:layout_gravity="right" android:id="@id/date_lunar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:alpha="0.7" />
+        <include android:layout_gravity="right" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/action_bar_subtitle_bottom_margin" layout="@layout/aod_battery" />
+    </LinearLayout>
+    <LinearLayout android:layout_gravity="center|left|top" android:orientation="vertical" android:id="@id/clock2_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:textColor="@color/content_text_color" android:gravity="left" android:layout_gravity="left" android:id="@id/city2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:alpha="0.7" />
+        <TextView android:textStyle="bold" android:textColor="@color/clock_text_color" android:gravity="left" android:layout_gravity="left" android:id="@id/time2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" />
+    </LinearLayout>
+    <include android:layout_width="fill_parent" android:layout_height="wrap_content" layout="@layout/aod_icons" />
+</com.miui.aod.widget.SuperWallpaperClockView>

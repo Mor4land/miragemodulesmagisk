@@ -1,0 +1,165 @@
+.class public final Landroidx/leanback/widget/BaseGridView$2;
+.super Landroidx/leanback/widget/OnChildViewHolderSelectedListener;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# instance fields
+.field public final synthetic $r8$classId:I
+
+.field public final synthetic this$0:Landroidx/leanback/widget/BaseGridView;
+
+.field public final synthetic val$position:I
+
+
+# direct methods
+.method public synthetic constructor <init>(Landroidx/leanback/widget/BaseGridView;II)V
+    .locals 0
+
+    .line 1
+    iput p3, p0, Landroidx/leanback/widget/BaseGridView$2;->$r8$classId:I
+
+    .line 2
+    .line 3
+    iput-object p1, p0, Landroidx/leanback/widget/BaseGridView$2;->this$0:Landroidx/leanback/widget/BaseGridView;
+
+    .line 4
+    .line 5
+    iput p2, p0, Landroidx/leanback/widget/BaseGridView$2;->val$position:I
+
+    .line 6
+    .line 7
+    invoke-direct {p0}, Landroidx/leanback/widget/OnChildViewHolderSelectedListener;-><init>()V
+
+    .line 8
+    .line 9
+    .line 10
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onChildViewHolderSelected(Landroidx/leanback/widget/BaseGridView;Landroidx/recyclerview/widget/RecyclerView$ViewHolder;I)V
+    .locals 0
+
+    .line 1
+    iget p1, p0, Landroidx/leanback/widget/BaseGridView$2;->$r8$classId:I
+
+    .line 2
+    .line 3
+    packed-switch p1, :pswitch_data_0
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+
+    .line 7
+    :pswitch_0
+    iget p1, p0, Landroidx/leanback/widget/BaseGridView$2;->val$position:I
+
+    .line 8
+    .line 9
+    if-eq p3, p1, :cond_0
+
+    .line 10
+    .line 11
+    return-void
+
+    .line 12
+    :cond_0
+    iget-object p1, p0, Landroidx/leanback/widget/BaseGridView$2;->this$0:Landroidx/leanback/widget/BaseGridView;
+
+    .line 13
+    .line 14
+    iget-object p1, p1, Landroidx/leanback/widget/BaseGridView;->mLayoutManager:Landroidx/leanback/widget/GridLayoutManager;
+
+    .line 15
+    .line 16
+    iget-object p1, p1, Landroidx/leanback/widget/GridLayoutManager;->mChildViewHolderSelectedListeners:Ljava/util/ArrayList;
+
+    .line 17
+    .line 18
+    if-eqz p1, :cond_1
+
+    .line 19
+    .line 20
+    invoke-virtual {p1, p0}, Ljava/util/ArrayList;->remove(Ljava/lang/Object;)Z
+
+    .line 21
+    .line 22
+    .line 23
+    :cond_1
+    const/4 p0, 0x0
+
+    .line 24
+    throw p0
+
+    .line 25
+    :pswitch_data_0
+    .packed-switch 0x0
+        :pswitch_0
+    .end packed-switch
+.end method
+
+.method public final onChildViewHolderSelectedAndPositioned(I)V
+    .locals 1
+
+    .line 1
+    iget v0, p0, Landroidx/leanback/widget/BaseGridView$2;->$r8$classId:I
+
+    .line 2
+    .line 3
+    packed-switch v0, :pswitch_data_0
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+
+    .line 7
+    :pswitch_0
+    iget v0, p0, Landroidx/leanback/widget/BaseGridView$2;->val$position:I
+
+    .line 8
+    .line 9
+    if-eq p1, v0, :cond_0
+
+    .line 10
+    .line 11
+    return-void
+
+    .line 12
+    :cond_0
+    iget-object p1, p0, Landroidx/leanback/widget/BaseGridView$2;->this$0:Landroidx/leanback/widget/BaseGridView;
+
+    .line 13
+    .line 14
+    iget-object p1, p1, Landroidx/leanback/widget/BaseGridView;->mLayoutManager:Landroidx/leanback/widget/GridLayoutManager;
+
+    .line 15
+    .line 16
+    iget-object p1, p1, Landroidx/leanback/widget/GridLayoutManager;->mChildViewHolderSelectedListeners:Ljava/util/ArrayList;
+
+    .line 17
+    .line 18
+    if-eqz p1, :cond_1
+
+    .line 19
+    .line 20
+    invoke-virtual {p1, p0}, Ljava/util/ArrayList;->remove(Ljava/lang/Object;)Z
+
+    .line 21
+    .line 22
+    .line 23
+    :cond_1
+    const/4 p0, 0x0
+
+    .line 24
+    throw p0
+
+    .line 25
+    :pswitch_data_0
+    .packed-switch 0x1
+        :pswitch_0
+    .end packed-switch
+.end method

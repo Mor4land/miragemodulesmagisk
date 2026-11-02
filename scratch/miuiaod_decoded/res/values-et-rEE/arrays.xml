@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>Süsteemi font</item>
+        <item>Lai nelinurkne</item>
+        <item>Lihtne must</item>
+        <item>Kahekihiline</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>Originaal</item>
+        <item>Hägusta</item>
+        <item>Rihveldatud</item>
+        <item>Sooniline</item>
+        <item>Prisma</item>
+        <item>Piludega</item>
+        <item>Lained</item>
+        <item>Ruudud</item>
+    </string-array>
+</resources>

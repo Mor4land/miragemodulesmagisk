@@ -1,0 +1,40 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine04.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "magazine_a",
+      "style": 1,
+      "primaryColor": -1,
+      "isAutoPrimaryColor": true,
+      "clockEffect": 1
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine04.jpg",
+      "mask": "sysui_editor_wallpaper_group/01_magazine/magazine04_mask.jpg",
+      "magicType": 20000,
+      "supportSubject": true,
+      "resourceType": "image"
+    },
+    "signatureInfo": {
+      "templateId": "magazine_a",
+      "content": "Floral\nMelody",
+      "isAutoPrimaryColor": true,
+      "templateFontType": 1,
+      "clockEffect": 1,
+      "alignment": 105,
+      "textSize": -1,
+      "lineSpaceValue": 0,
+      "letterSpaceValue": 0
+    },
+    "templateName": "magazine_a_style2",
+    "version": 3
+  }
+}

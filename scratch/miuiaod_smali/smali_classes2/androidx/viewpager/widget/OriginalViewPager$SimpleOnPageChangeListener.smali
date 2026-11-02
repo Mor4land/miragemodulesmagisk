@@ -1,0 +1,40 @@
+.class public Landroidx/viewpager/widget/OriginalViewPager$SimpleOnPageChangeListener;
+.super Ljava/lang/Object;
+.source "OriginalViewPager.java"
+
+# interfaces
+.implements Landroidx/viewpager/widget/OriginalViewPager$OnPageChangeListener;
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Landroidx/viewpager/widget/OriginalViewPager;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x9
+    name = "SimpleOnPageChangeListener"
+.end annotation
+
+
+# virtual methods
+.method public onPageScrollStateChanged(I)V
+    .locals 0
+
+    .line 0
+    return-void
+.end method
+
+.method public onPageScrolled(IFI)V
+    .locals 0
+
+    .line 0
+    return-void
+.end method
+
+.method public onPageSelected(I)V
+    .locals 0
+
+    .line 0
+    return-void
+.end method

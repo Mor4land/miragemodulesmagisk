@@ -1,0 +1,61 @@
+.class public final Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# instance fields
+.field public final hideSensitiveByAppLock:Z
+
+.field public final isConversation:Z
+
+.field public final isMinimized:Z
+
+.field public final isSnoozeEnabled:Z
+
+.field public final needsRedaction:Z
+
+.field public final smartActions:Ljava/util/List;
+
+.field public final smartReplies:Ljava/util/List;
+
+
+# direct methods
+.method public constructor <init>(Ljava/util/List;Ljava/util/List;ZZZZZ)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput-object p1, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->smartActions:Ljava/util/List;
+
+    .line 5
+    .line 6
+    iput-object p2, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->smartReplies:Ljava/util/List;
+
+    .line 7
+    .line 8
+    iput-boolean p3, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->isConversation:Z
+
+    .line 9
+    .line 10
+    iput-boolean p4, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->isSnoozeEnabled:Z
+
+    .line 11
+    .line 12
+    iput-boolean p5, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->isMinimized:Z
+
+    .line 13
+    .line 14
+    iput-boolean p6, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->needsRedaction:Z
+
+    .line 15
+    .line 16
+    iput-boolean p7, p0, Lcom/android/systemui/statusbar/notification/collection/inflation/NotifUiAdjustment;->hideSensitiveByAppLock:Z
+
+    .line 17
+    .line 18
+    return-void
+.end method

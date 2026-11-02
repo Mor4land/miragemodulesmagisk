@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.ScopeClockView android:id="@id/clock_panel" android:tag="@string/animatable_view_tag" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.widget.ScopeImageView android:layout_gravity="center_horizontal" android:id="@id/clock" android:layout_width="@dimen/scope_panel_size" android:layout_height="@dimen/scope_panel_size" />
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/gradient_layout" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:textSize="@dimen/aod_oneline_clock_size" android:layout_gravity="center" android:id="@id/clock_horizontal" android:paddingBottom="@dimen/aod_oneline_date_padding_bottom" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" style="@style/Aod_date_scope" />
+    </LinearLayout>
+</com.miui.aod.widget.ScopeClockView>

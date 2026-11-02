@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingVertical="@dimen/kg_hsl_head_padding_vertical"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@id/head_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/miuix_appcompat_action_mode_title_button_cancel" android:contentDescription="@string/kg_cancel" android:importantForAccessibility="yes" android:layout_marginStart="@dimen/kg_filter_bottom_sheet_head_icon_margin_start" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <TextView android:textSize="@dimen/kg_bottom_sheet_head_text_size" android:id="@id/head_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_title_effect_name" android:fontFamily="@string/kg_font_mi_sans_medium" app:layout_constraintBottom_toBottomOf="@id/head_icon" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="@id/head_icon" />
+</androidx.constraintlayout.widget.ConstraintLayout>

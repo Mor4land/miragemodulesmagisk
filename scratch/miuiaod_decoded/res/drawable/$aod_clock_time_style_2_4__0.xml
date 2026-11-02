@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="490.0dip" android:width="540.0dip" android:viewportWidth="540.0" android:viewportHeight="490.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="_R_G">
+        <group android:name="_R_G_L_1_G" android:translateX="270.0" android:translateY="245.0">
+            <path android:name="_R_G_L_1_G_D_0_P_0" android:pathData=" M132.05 217.94 C132.05,217.94 132.05,132.05 132.05,132.05 C132.05,132.05 -255.67,132.05 -255.67,132.05 C-260.32,132.05 -264.08,128.29 -264.08,123.63 C-264.08,123.63 -264.08,79.51 -264.08,79.51 C-264.08,76.96 -262.93,74.55 -260.91,72.95 C-260.91,72.95 110.87,-224.5 110.87,-224.5 C112.36,-225.71 114.21,-226.35 116.12,-226.35 C116.12,-226.35 180.21,-226.35 180.21,-226.35 C184.87,-226.35 188.63,-222.59 188.63,-217.94 C188.63,-217.94 188.63,84.9 188.63,84.9 C188.63,84.9 255.67,84.9 255.67,84.9 C260.32,84.9 264.08,88.65 264.08,93.31 C264.08,93.31 264.08,123.63 264.08,123.63 C264.08,128.29 260.32,132.05 255.67,132.05 C255.67,132.05 188.63,132.05 188.63,132.05 C188.63,132.05 188.63,217.94 188.63,217.94 C188.63,222.6 184.87,226.35 180.21,226.35 C180.21,226.35 140.46,226.35 140.46,226.35 C135.81,226.35 132.05,222.6 132.05,217.94c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.86" android:trimPathOffset="0.2777778" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+        <group android:name="_R_G_L_0_G" android:translateX="270.0" android:translateY="245.0">
+            <path android:name="_R_G_L_0_G_D_0_P_0" android:pathData=" M-201.78 84.89 C-203.69,84.89 -204.53,82.48 -203.04,81.31 C-203.04,81.31 128.76,-185.99 128.76,-185.99 C130.08,-187.05 132.05,-186.1 132.05,-184.42 C132.05,-184.42 132.05,84.89 132.05,84.89 C132.05,84.89 -201.78,84.89 -201.78,84.89c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.86" android:trimPathOffset="0.55" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+    </group>
+    <group android:name="time_group" />
+</vector>

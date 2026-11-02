@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>सिस्टीम फॉन्ट</item>
+        <item>रुंद चौरस</item>
+        <item>साधा काळा</item>
+        <item>डबल लेयर्ड</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>मूळ</item>
+        <item>ब्लर</item>
+        <item>रीडेड</item>
+        <item>रिबड</item>
+        <item>प्रिज्म</item>
+        <item>चर</item>
+        <item>लाटा</item>
+        <item>चौरस</item>
+    </string-array>
+</resources>

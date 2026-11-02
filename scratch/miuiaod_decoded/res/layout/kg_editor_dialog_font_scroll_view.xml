@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<miuix.springback.view.SpringBackLayout android:layout_width="fill_parent" android:layout_height="fill_parent" app:scrollOrientation="vertical" app:scrollableView="@id/drawable_scroll_container"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <miuix.core.widget.NestedScrollView android:id="@id/drawable_scroll_container" android:layout_width="fill_parent" android:layout_height="fill_parent">
+        <LinearLayout android:orientation="vertical" android:id="@id/drawable_font_container" android:paddingBottom="@dimen/kg_editor_dialog_content_bottom_margin" android:layout_width="fill_parent" android:layout_height="wrap_content">
+            <TextView android:id="@id/drawable_selector_view_title" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/kg_title_typography_name" style="@style/kgEditorFilterGroupTitleFont" />
+            <com.miui.keyguard.editor.edit.view.EditorDialogHorizontalRecyclerView android:id="@id/drawable_selector_view" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/kg_font_item_group_margin_vertical" android:layout_marginBottom="@dimen/kg_font_item_group_margin_vertical" app:layoutManagerOrientation="horizontal" app:layoutManagerType="linearLayoutManager" />
+            <LinearLayout android:orientation="vertical" android:id="@id/signature_editor_font_selector_container" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content">
+                <TextView android:id="@id/signature_editor_font_selector_title" android:layout_width="fill_parent" android:layout_height="wrap_content" android:text="@string/kg_title_font_name" style="@style/kgEditorFilterGroupTitleFont" />
+                <com.miui.keyguard.editor.edit.view.StyleSelectorHorizontalView android:id="@id/signature_editor_font_selector_view" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+    </miuix.core.widget.NestedScrollView>
+</miuix.springback.view.SpringBackLayout>

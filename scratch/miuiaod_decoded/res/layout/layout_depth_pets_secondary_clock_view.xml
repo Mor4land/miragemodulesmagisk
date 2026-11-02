@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.pets.DepthPetsSecondaryClock android:layout_width="fill_parent" android:layout_height="fill_parent" android:layoutDirection="ltr"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <include android:id="@id/clock_time" android:layout_width="@dimen/miui_depth_pets_width" android:layout_height="wrap_content" layout="@layout/layout_depth_pets_secondary_clock_time_view" />
+    <FrameLayout android:id="@id/magazine_info_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_depth_pets_magazine_info_container_cn_top" android:layout_centerHorizontal="true" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+</com.miui.clock.pets.DepthPetsSecondaryClock>

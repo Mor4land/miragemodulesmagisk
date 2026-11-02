@@ -1,0 +1,67 @@
+.class public final Lcom/android/keyguard/KeyguardSecurityContainerController$13;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Landroid/view/animation/Animation$AnimationListener;
+
+
+# instance fields
+.field public final synthetic this$0:Lcom/android/keyguard/KeyguardSecurityContainerController;
+
+
+# direct methods
+.method public constructor <init>(Lcom/android/keyguard/KeyguardSecurityContainerController;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lcom/android/keyguard/KeyguardSecurityContainerController$13;->this$0:Lcom/android/keyguard/KeyguardSecurityContainerController;
+
+    .line 2
+    .line 3
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onAnimationEnd(Landroid/view/animation/Animation;)V
+    .locals 0
+
+    .line 1
+    iget-object p0, p0, Lcom/android/keyguard/KeyguardSecurityContainerController$13;->this$0:Lcom/android/keyguard/KeyguardSecurityContainerController;
+
+    .line 2
+    .line 3
+    iget-object p0, p0, Lcom/android/keyguard/KeyguardSecurityContainerController;->mLockoutView:Landroid/view/View;
+
+    .line 4
+    .line 5
+    const/4 p1, 0x4
+
+    .line 6
+    invoke-virtual {p0, p1}, Landroid/view/View;->setVisibility(I)V
+
+    .line 7
+    .line 8
+    .line 9
+    return-void
+.end method
+
+.method public final onAnimationRepeat(Landroid/view/animation/Animation;)V
+    .locals 0
+
+    .line 1
+    return-void
+.end method
+
+.method public final onAnimationStart(Landroid/view/animation/Animation;)V
+    .locals 0
+
+    .line 1
+    return-void
+.end method

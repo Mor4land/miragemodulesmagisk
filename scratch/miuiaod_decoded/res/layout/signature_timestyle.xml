@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.SignatureTimeAndNotificationView android:gravity="center" android:orientation="horizontal" android:id="@id/clock_horizontal_container" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="@dimen/signature_aod_text_size" android:textColor="@android:color/white" android:layout_gravity="center_vertical" android:id="@id/clock_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" android:fontFamily="mipro-bold" />
+    <TextView android:textSize="@dimen/signature_aod_text_size" android:textColor="@android:color/white" android:layout_gravity="center_vertical" android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" android:alpha="0.6" android:fontFamily="mipro-medium" android:paddingHorizontal="6.0dip" />
+    <include android:layout_gravity="center_vertical" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1.0dip" android:layout_marginStart="5.0dip" layout="@layout/aod_battery" />
+    <include android:layout_gravity="center_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" layout="@layout/signature_aod_icons" />
+</com.miui.aod.widget.SignatureTimeAndNotificationView>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_gravity="center_horizontal" android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="29.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.widget.GradientLinearLayout android:layout_gravity="center_horizontal" android:orientation="vertical" android:id="@id/gradient_layout" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <LinearLayout android:gravity="center_vertical" android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/clock_horizontal_container" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:textSize="@dimen/signature_aod_text_size" android:textColor="@android:color/white" android:layout_gravity="center_vertical" android:id="@id/clock_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" android:fontFamily="mipro-bold" />
+            <TextView android:textSize="@dimen/signature_aod_text_size" android:textColor="@android:color/white" android:layout_gravity="center_vertical" android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:includeFontPadding="true" android:alpha="0.6" android:fontFamily="mipro-medium" android:paddingHorizontal="7.6299744dip" />
+        </LinearLayout>
+        <LinearLayout android:layout_gravity="center" android:orientation="horizontal" android:id="@id/data_dual_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:alpha="0.6">
+            <TextView android:textSize="@dimen/signature_aod_text_size" android:textColor="@android:color/white" android:id="@id/city2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:includeFontPadding="true" android:layout_marginEnd="@dimen/aod_dual_city_date_space" />
+            <TextView android:textSize="@dimen/signature_aod_text_size" android:textColor="@android:color/white" android:layout_gravity="center" android:id="@id/date_dual" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:includeFontPadding="true" />
+        </LinearLayout>
+        <TextView android:layout_gravity="center" android:id="@id/date_lunar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" style="@style/Aod_date_oneline" />
+        <LinearLayout android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/battery_step_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3.0dip" android:divider="@drawable/spacer" android:showDividers="middle">
+            <include android:layout_gravity="center_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" layout="@layout/aod_battery" />
+            <ViewStub android:layout_gravity="center_vertical" android:id="@id/step_component_view_stub" android:layout="@layout/step_widget_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </com.miui.aod.widget.GradientLinearLayout>
+    <include android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" layout="@layout/aod_icons" />
+</LinearLayout>

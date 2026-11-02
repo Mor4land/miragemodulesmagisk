@@ -1,0 +1,20 @@
+.class public abstract Lcom/android/systemui/tv/TvSystemUIModule_ProvidesDeviceProvisionedControllerFactory;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Ljavax/inject/Provider;
+
+
+# direct methods
+.method public static providesDeviceProvisionedController(Lcom/android/systemui/statusbar/policy/DeviceProvisionedControllerImpl;)V
+    .locals 0
+
+    .line 1
+    invoke-virtual {p0}, Lcom/android/systemui/statusbar/policy/DeviceProvisionedControllerImpl;->init()V
+
+    .line 2
+    .line 3
+    .line 4
+    return-void
+.end method

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="@dimen/kg_top_button_corner_radius" />
+    <solid android:color="@color/kg_main_item_template_custom_button_background_color" />
+</shape>

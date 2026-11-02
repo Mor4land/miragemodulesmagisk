@@ -1,0 +1,54 @@
+.class public final Lcom/android/systemui/screenshot/ScrollCaptureClient;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# static fields
+.field static final MATCH_ANY_TASK:I = -0x1
+
+
+# instance fields
+.field public final mBgExecutor:Ljava/util/concurrent/Executor;
+
+.field public mHostWindowToken:Landroid/os/IBinder;
+
+.field public final mWindowManagerService:Landroid/view/IWindowManager;
+
+
+# direct methods
+.method public constructor <init>(Landroid/view/IWindowManager;Ljava/util/concurrent/Executor;Landroid/content/Context;)V
+    .locals 1
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    invoke-virtual {p3}, Landroid/content/Context;->getDisplay()Landroid/view/Display;
+
+    .line 5
+    .line 6
+    .line 7
+    move-result-object p3
+
+    .line 8
+    const-string v0, "context must be associated with a Display!"
+
+    .line 9
+    .line 10
+    invoke-static {p3, v0}, Ljava/util/Objects;->requireNonNull(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;
+
+    .line 11
+    .line 12
+    .line 13
+    iput-object p2, p0, Lcom/android/systemui/screenshot/ScrollCaptureClient;->mBgExecutor:Ljava/util/concurrent/Executor;
+
+    .line 14
+    .line 15
+    iput-object p1, p0, Lcom/android/systemui/screenshot/ScrollCaptureClient;->mWindowManagerService:Landroid/view/IWindowManager;
+
+    .line 16
+    .line 17
+    return-void
+.end method

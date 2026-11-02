@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="650.0dip" android:width="460.0dip" android:viewportWidth="460.0" android:viewportHeight="650.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="_R_G">
+        <group android:name="_R_G_L_2_G" android:translateX="230.0" android:translateY="325.0">
+            <path android:name="_R_G_L_2_G_D_0_P_0" android:pathData=" M-205.3 143.18 C-205.3,61.14 -152.43,0 -88.1,-12.38 C-88.1,-12.38 -88.1,-15.49 -88.1,-15.49 C-146.33,-30.98 -183.1,-86.71 -183.1,-151.7 C-183.1,-246.12 -106.5,-313.45 -0.01,-313.45 C106.47,-313.45 181.55,-246.12 183.07,-151.7 C182.29,-86.68 144.77,-30.96 88.85,-15.49 C88.85,-15.49 88.85,-12.38 88.85,-12.38 C155.49,0 205.3,65.02 205.3,143.18 C205.3,242.23 120.27,313.45 0.01,313.45 C-120.24,313.45 -205.27,242.23 -205.27,143.18 C-205.27,143.18 -205.3,143.18 -205.3,143.18c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.9" android:trimPathOffset="0.0" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+        <group android:name="_R_G_L_1_G" android:translateX="230.0" android:translateY="325.0">
+            <path android:name="_R_G_L_1_G_D_0_P_0" android:pathData=" M133.31 139.29 C133.31,203.53 84.27,247.65 0.01,247.65 C-84.24,247.65 -133.28,203.53 -133.28,139.29 C-133.28,69.63 -76.58,20.88 0.01,20.88 C76.61,20.88 133.31,69.63 133.31,139.29c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.84" android:trimPathOffset="0.9" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+        <group android:name="_R_G_L_0_G" android:translateX="230.0" android:translateY="327.0">
+            <path android:name="_R_G_L_0_G_D_0_P_0" android:pathData=" M111.86 -147.06 C111.86,-85.15 68.2,-41.81 0.01,-41.81 C-68.17,-41.81 -113.36,-85.15 -111.83,-147.06 C-113.36,-208.97 -67.4,-249.23 0.01,-249.23 C67.43,-249.23 111.86,-208.97 111.86,-147.06c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.84" android:trimPathOffset="0.40555555" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+    </group>
+    <group android:name="time_group" />
+</vector>

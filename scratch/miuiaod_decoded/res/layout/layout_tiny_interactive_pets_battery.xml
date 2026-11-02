@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:id="@id/pets_battery" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <include android:id="@id/battery" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="@id/pets_battery" app:layout_constraintLeft_toLeftOf="@id/pets_battery" app:layout_constraintRight_toRightOf="@id/pets_battery" app:layout_constraintTop_toTopOf="@id/pets_battery" layout="@layout/layout_battery_view" />
+</androidx.constraintlayout.widget.ConstraintLayout>

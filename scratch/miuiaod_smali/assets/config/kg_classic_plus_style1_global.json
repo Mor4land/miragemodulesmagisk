@@ -1,0 +1,41 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/03_classic/classic03.jpg",
+      "magicType": 0,
+      "resourceType": "image",
+      "downloadUrl": "https://f6.market.xiaomi.com/download/ThemeMarket/02c35214396cf43138f0b77ae3180b1c2baef88b4",
+      "sha1": "baef88b4e6ee74d13eaacff55dcd69beb4795a53",
+      "videoName": "classic03"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "classic_plus",
+      "primaryColor": -1,
+      "secondaryColor": -1,
+      "enableDiffusion": false,
+      "style": 21,
+      "clockWeight": 420,
+      "classicLine1": 100,
+      "classicLine2": 71,
+      "classicLine3": 100,
+      "isAutoPrimaryColor": true,
+      "clockEffect": 1
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/03_classic/classic03.jpg",
+      "mask": "sysui_editor_wallpaper_group/03_classic/classic03_mask.jpg",
+      "magicType": 20000,
+      "resourceType": "image",
+      "supportSubject": true,
+      "downloadUrl": "https://f6.market.xiaomi.com/download/ThemeMarket/02c35214396cf43138f0b77ae3180b1c2baef88b4",
+      "sha1": "baef88b4e6ee74d13eaacff55dcd69beb4795a53",
+      "videoName": "classic03"
+    },
+    "templateName": "classic_plus_style1",
+    "version": 3
+  }
+}

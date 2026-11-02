@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.edit.view.EditorDialogTitleView android:layout_width="fill_parent" android:layout_height="@dimen/kg_editor_dialog_content_height_common"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.viewpager2.widget.ViewPager2 android:id="@id/editor_dialog_viewpager" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+</com.miui.keyguard.editor.edit.view.EditorDialogTitleView>

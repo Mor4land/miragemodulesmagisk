@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="490.0dip" android:width="70.0dip" android:viewportWidth="70.0" android:viewportHeight="490.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="_R_G">
+        <group android:name="_R_G_L_1_G" android:translateX="35.0" android:translateY="245.0">
+            <path android:name="_R_G_L_1_G_D_0_P_0" android:pathData=" M-25.68 -58.35 C-25.68,-58.35 -25.68,-95.66 -25.68,-95.66 C-25.68,-99.53 -22.55,-102.68 -18.65,-102.68 C-18.65,-102.68 18.65,-102.68 18.65,-102.68 C22.52,-102.68 25.68,-99.55 25.68,-95.66 C25.68,-95.66 25.68,-58.35 25.68,-58.35 C25.68,-54.48 22.55,-51.33 18.65,-51.33 C18.65,-51.33 -18.65,-51.33 -18.65,-51.33 C-22.52,-51.33 -25.68,-54.46 -25.68,-58.35c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.84" android:trimPathOffset="0.5777778" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+        <group android:name="_R_G_L_0_G" android:translateX="35.0" android:translateY="245.0">
+            <path android:name="_R_G_L_0_G_D_0_P_0" android:pathData=" M-25.68 95.66 C-25.68,95.66 -25.68,58.35 -25.68,58.35 C-25.68,54.48 -22.55,51.33 -18.65,51.33 C-18.65,51.33 18.65,51.33 18.65,51.33 C22.52,51.33 25.68,54.46 25.68,58.35 C25.68,58.35 25.68,95.66 25.68,95.66 C25.68,99.53 22.55,102.68 18.65,102.68 C18.65,102.68 -18.65,102.68 -18.65,102.68 C-22.52,102.68 -25.68,99.55 -25.68,95.66c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.84" android:trimPathOffset="0.07777778" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+    </group>
+    <group android:name="time_group" />
+</vector>

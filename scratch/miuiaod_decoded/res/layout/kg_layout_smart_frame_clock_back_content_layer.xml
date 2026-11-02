@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.miui.keyguardtemplate.smartframe.SmartFrameView android:id="@id/smart_frame" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+    <com.miui.clock.MiuiClockView android:id="@id/clock_view" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+    <com.miui.keyguard.editor.view.KgFrame android:layout_gravity="center_horizontal" android:id="@id/clock_frame" android:visibility="gone" android:layout_width="@dimen/kg_smart_frame_clock_frame_width" android:layout_height="@dimen/kg_smart_frame_clock_frame_height" android:layout_marginTop="@dimen/kg_smart_frame_clock_frame_margin_top" app:kg_border_radius="@dimen/kg_smart_frame_clock_frame_corner_radius" />
+    <com.miui.keyguard.editor.view.KgFrame android:layout_gravity="center_horizontal" android:id="@id/shape_frame" android:visibility="gone" android:layout_width="@dimen/kg_smart_frame_clock_shape_frame_width" android:layout_height="@dimen/kg_smart_frame_clock_shape_frame_height" android:layout_marginTop="@dimen/kg_smart_frame_clock_shape_frame_margin_top" />
+    <View android:layout_gravity="bottom|center" android:id="@id/style_anchor" android:layout_width="1.0dip" android:layout_height="1.0dip" />
+</FrameLayout>

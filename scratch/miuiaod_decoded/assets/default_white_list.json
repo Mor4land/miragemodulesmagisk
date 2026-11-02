@@ -1,0 +1,74 @@
+{
+  "white_list_shortcuts": [
+    {
+      "name": "手电筒",
+      "packageName": "miui.systemui.plugin",
+      "tag": "FLASHLIGHT_SET"
+    },
+    {
+      "name": "相机拍照",
+      "packageName": "com.android.camera",
+      "tag": "CAMERA_CAPTURE"
+    },
+    {
+      "name": "相机录像",
+      "packageName": "com.android.camera",
+      "tag": "CAMERA_VIDEO"
+    },
+    {
+      "name": "计算器",
+      "packageName": "com.miui.calculator",
+      "tag": "CALCULATOR_TITLE"
+    },
+    {
+      "name": "汇率计算",
+      "packageName": "com.miui.calculator",
+      "tag": "CURRENCY_TITLE"
+    },
+    {
+      "name": "闹钟",
+      "packageName": "com.android.deskclock",
+      "tag": "ALARM_0"
+    },
+    {
+      "name": "计时器",
+      "packageName": "com.android.deskclock",
+      "tag": "TIMER_3"
+    },
+    {
+      "name": "秒表",
+      "packageName": "com.android.deskclock",
+      "tag": "STOPWATCH_2"
+    },
+    {
+      "name": "新建录音",
+      "packageName": "com.android.soundrecorder",
+      "tag": "SOUNDRECORDER_CREATE"
+    },
+    {
+      "name": "新建笔记",
+      "packageName": "com.miui.notes",
+      "tag": "NOTES_CREATE_NOTE"
+    },
+    {
+      "name": "指南针",
+      "packageName": "com.miui.compass",
+      "tag": "COMPASS_HOME"
+    },
+    {
+      "name": "识别音乐",
+      "packageName": "com.miui.player",
+      "tag": "MUSIC_MATCH"
+    },
+    {
+      "name": "小米钱包-NFC",
+      "packageName": "com.miui.tsmclient",
+      "tag": "TSMCLIENT_SWIPE"
+    },
+    {
+      "name": "国际画报",
+      "packageName": "com.miui.android.fashiongallery",
+      "tag": "GLOBAL_WC_HOMEPAGE"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="miui_eastern_art_cursive_single_margin_top">75.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_single_notification_time_margin_top">13.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_single_time_text_size">74.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_big_text_size">200.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_big_week_time_margin_top">309.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_hour1_margin_top">82.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_hour2_big_margin_top">128.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_hour2_small_margin_top">187.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_minute1_big_margin_top">48.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_minute1_small_margin_top">56.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_minute2_small_margin_top">114.0dip</dimen>
+    <dimen name="miui_eastern_art_cursive_time_small_text_size">116.0dip</dimen>
+    <dimen name="miui_eastern_art_single_margin_top">80.0dip</dimen>
+    <dimen name="miui_eastern_art_time_big_week_time_margin_top">330.0dip</dimen>
+    <dimen name="miui_eastern_art_time_hour1_margin_top">105.0dip</dimen>
+    <dimen name="miui_eastern_art_time_hour2_big_margin_top">175.0dip</dimen>
+    <dimen name="miui_eastern_art_time_hour2_small_margin_top">208.0dip</dimen>
+    <dimen name="miui_eastern_art_time_week_time_margin_top">330.0dip</dimen>
+</resources>

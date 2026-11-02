@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_bottom_sheet_head_text_size">19.0dip</dimen>
+    <dimen name="kg_color_light_margin_top">6.2599792dip</dimen>
+    <dimen name="kg_font_filter_color_item_margin_bottom">13.0dip</dimen>
+    <dimen name="kg_font_filter_color_list_padding_top">16.599976dip</dimen>
+    <dimen name="kg_font_filter_hsl_label_margin_bottom">11.0dip</dimen>
+    <dimen name="kg_font_filter_hsl_label_margin_top">10.0dip</dimen>
+    <dimen name="kg_font_filter_object_container_margin_top">11.0dip</dimen>
+    <dimen name="kg_font_filter_object_width">165.0dip</dimen>
+    <dimen name="kg_font_filter_target_container_width">337.0dip</dimen>
+    <dimen name="kg_font_filter_type_list_padding_top">16.599976dip</dimen>
+    <dimen name="kg_font_filter_view_padding_bottom">13.0dip</dimen>
+    <dimen name="kg_font_filter_view_padding_top">10.0dip</dimen>
+    <dimen name="kg_split_container_margin_top">8.0dip</dimen>
+</resources>

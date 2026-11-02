@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">92.0dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_margin_start">45.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_start">29.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_top">61.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_frame_margin_top">45.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_margin_top">98.0dip</dimen>
+    <dimen name="kg_main_internal_pager_margin_top">193.9dip</dimen>
+    <dimen name="kg_main_item_container_height">700.46875dip</dimen>
+    <dimen name="kg_main_item_container_width">443.82812dip</dimen>
+    <dimen name="kg_main_item_container_width_minus">-443.82812dip</dimen>
+    <dimen name="kg_main_item_content_drawable_height">700.46875dip</dimen>
+    <dimen name="kg_main_item_content_drawable_width">443.82812dip</dimen>
+    <dimen name="kg_main_item_custom_button_margin_bottom">23.0dip</dimen>
+    <dimen name="kg_main_item_custom_button_padding_horizontal">20.069977dip</dimen>
+    <dimen name="kg_main_item_custom_button_padding_vertical">8.029999dip</dimen>
+    <dimen name="kg_main_item_custom_button_radius">200.69dip</dimen>
+    <dimen name="kg_main_item_custom_button_text_size">14.049988dip</dimen>
+    <dimen name="kg_main_item_floor_pager_margin_horizontal">18.059998dip</dimen>
+    <dimen name="kg_main_item_floor_pager_margin_top">27.019989dip</dimen>
+    <dimen name="kg_main_item_floor_title_bar_width">294.0dip</dimen>
+    <item type="dimen" name="kg_main_neighboring_item_min_scale">0.66</item>
+    <dimen name="kg_main_pager_margin_top">95.0dip</dimen>
+    <dimen name="kg_main_vertical_pager_offscreen_offset">111.79999dip</dimen>
+    <dimen name="kg_rhombus_clock_frame_width">400.0dip</dimen>
+    <dimen name="kg_template_view_primary_mode_margin_top">124.5dip</dimen>
+</resources>

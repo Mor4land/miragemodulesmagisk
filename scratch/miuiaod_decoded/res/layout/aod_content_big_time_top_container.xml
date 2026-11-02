@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.BigTimeTopContainerView android:orientation="vertical" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/big_time_top_container_margin_top"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:alpha="@dimen/big_time_date_time_alpha">
+        <TextView android:id="@id/city" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/big_time_date_item_space_horizontal" style="@style/AodBigTimeTopText" />
+        <TextView android:id="@id/time" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/big_time_date_item_space_horizontal" style="@style/AodBigTimeTopText" />
+        <TextView android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/big_time_date_item_space_horizontal" style="@style/AodBigTimeTopText" />
+        <TextView android:id="@id/date_lunar" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/AodBigTimeTopText" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/big_time_dual_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/big_time_date_item_space_vertical" android:alpha="@dimen/big_time_date_time_alpha">
+        <TextView android:id="@id/city2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/big_time_date_item_space_horizontal" style="@style/AodBigTimeTopText" />
+        <TextView android:id="@id/time2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="@dimen/big_time_date_item_space_horizontal" style="@style/AodBigTimeTopText" />
+        <TextView android:id="@id/date2" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/AodBigTimeTopText" />
+    </LinearLayout>
+    <include android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/big_time_battery_margin_top" layout="@layout/aod_battery" />
+    <include android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/big_time_icons_margin_top" layout="@layout/aod_icons_big_time" />
+</com.miui.aod.widget.BigTimeTopContainerView>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>சிஸ்டம் எழுத்துரு</item>
+        <item>வைடு ஸ்கொயர்</item>
+        <item>சிம்பிள் பிளாக்</item>
+        <item>இரட்டை படிமம் கொண்டது</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>அசல்</item>
+        <item>மங்குதல்</item>
+        <item>ரீடட்</item>
+        <item>ரிப்டு</item>
+        <item>பிரிசம்</item>
+        <item>குரூவ்ஸ்</item>
+        <item>அலைகள்</item>
+        <item>சதுரங்கள்</item>
+    </string-array>
+</resources>

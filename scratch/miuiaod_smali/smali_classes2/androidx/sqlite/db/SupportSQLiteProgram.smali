@@ -1,0 +1,28 @@
+.class public interface abstract Landroidx/sqlite/db/SupportSQLiteProgram;
+.super Ljava/lang/Object;
+.source "SupportSQLiteProgram.kt"
+
+# interfaces
+.implements Ljava/io/Closeable;
+
+
+# annotations
+.annotation runtime Lkotlin/Metadata;
+.end annotation
+
+
+# virtual methods
+.method public abstract bindBlob(I[B)V
+.end method
+
+.method public abstract bindDouble(ID)V
+.end method
+
+.method public abstract bindLong(IJ)V
+.end method
+
+.method public abstract bindNull(I)V
+.end method
+
+.method public abstract bindString(ILjava/lang/String;)V
+.end method

@@ -1,0 +1,122 @@
+.class public final synthetic Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$TransitionFinishedCallback;
+
+
+# instance fields
+.field public final synthetic f$0:Lcom/android/wm/shell/sosc/SoScStageCoordinator;
+
+.field public final synthetic f$1:Landroid/window/TransitionInfo$Change;
+
+.field public final synthetic f$2:Z
+
+.field public final synthetic f$3:Landroid/window/TransitionInfo$Change;
+
+.field public final synthetic f$4:Z
+
+.field public final synthetic f$5:Landroid/window/WindowContainerTransaction;
+
+.field public final synthetic f$6:Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$EnterSession;
+
+.field public final synthetic f$7:Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$TransitionFinishedCallback;
+
+
+# direct methods
+.method public synthetic constructor <init>(Lcom/android/wm/shell/sosc/SoScStageCoordinator;Landroid/window/TransitionInfo$Change;ZLandroid/window/TransitionInfo$Change;ZLandroid/window/WindowContainerTransaction;Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$EnterSession;Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$TransitionFinishedCallback;)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput-object p1, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$0:Lcom/android/wm/shell/sosc/SoScStageCoordinator;
+
+    .line 5
+    .line 6
+    iput-object p2, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$1:Landroid/window/TransitionInfo$Change;
+
+    .line 7
+    .line 8
+    iput-boolean p3, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$2:Z
+
+    .line 9
+    .line 10
+    iput-object p4, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$3:Landroid/window/TransitionInfo$Change;
+
+    .line 11
+    .line 12
+    iput-boolean p5, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$4:Z
+
+    .line 13
+    .line 14
+    iput-object p6, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$5:Landroid/window/WindowContainerTransaction;
+
+    .line 15
+    .line 16
+    iput-object p7, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$6:Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$EnterSession;
+
+    .line 17
+    .line 18
+    iput-object p8, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$7:Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$TransitionFinishedCallback;
+
+    .line 19
+    .line 20
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onFinished(Landroid/window/WindowContainerTransaction;Landroid/view/SurfaceControl$Transaction;)V
+    .locals 10
+
+    .line 1
+    iget-object v0, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$0:Lcom/android/wm/shell/sosc/SoScStageCoordinator;
+
+    .line 2
+    .line 3
+    iget-object v1, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$1:Landroid/window/TransitionInfo$Change;
+
+    .line 4
+    .line 5
+    iget-boolean v2, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$2:Z
+
+    .line 6
+    .line 7
+    iget-object v3, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$3:Landroid/window/TransitionInfo$Change;
+
+    .line 8
+    .line 9
+    iget-boolean v4, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$4:Z
+
+    .line 10
+    .line 11
+    iget-object v5, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$5:Landroid/window/WindowContainerTransaction;
+
+    .line 12
+    .line 13
+    iget-object v6, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$6:Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$EnterSession;
+
+    .line 14
+    .line 15
+    iget-object v7, p0, Lcom/android/wm/shell/sosc/SoScStageCoordinator$$ExternalSyntheticLambda20;->f$7:Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$TransitionFinishedCallback;
+
+    .line 16
+    .line 17
+    move-object v8, p1
+
+    .line 18
+    move-object v9, p2
+
+    .line 19
+    invoke-static/range {v0 .. v9}, Lcom/android/wm/shell/sosc/SoScStageCoordinator;->$r8$lambda$BCH4r9lvdZrOox9AGVXp_ngF-G4(Lcom/android/wm/shell/sosc/SoScStageCoordinator;Landroid/window/TransitionInfo$Change;ZLandroid/window/TransitionInfo$Change;ZLandroid/window/WindowContainerTransaction;Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$EnterSession;Lcom/android/wm/shell/sosc/SoScSplitScreenTransitions$TransitionFinishedCallback;Landroid/window/WindowContainerTransaction;Landroid/view/SurfaceControl$Transaction;)V
+
+    .line 20
+    .line 21
+    .line 22
+    return-void
+.end method

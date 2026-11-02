@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.edit.base.MultiTouchFrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.appcompat.widget.AppCompatImageView android:layout_gravity="bottom|center|left" android:id="@id/ribbon_back_start" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/kg_doodle_clock_ribbon_back_start_margin_bottom" />
+    <androidx.appcompat.widget.AppCompatImageView android:layout_gravity="bottom|center|right" android:id="@id/ribbon_back_end" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <androidx.appcompat.widget.AppCompatImageView android:layout_gravity="bottom|center|left" android:id="@id/ribbon_fore_start" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <androidx.appcompat.widget.AppCompatImageView android:layout_gravity="bottom|center|right" android:id="@id/ribbon_fore_end" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</com.miui.keyguard.editor.edit.base.MultiTouchFrameLayout>

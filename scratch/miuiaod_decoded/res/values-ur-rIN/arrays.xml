@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>سسٹم فانٹ</item>
+        <item>وسیع مربع</item>
+        <item>سادہ کالا</item>
+        <item>دوہری پرت</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>اصل</item>
+        <item>دھندلا</item>
+        <item>کانچ فلٹر</item>
+        <item>دھاری دار کانچ</item>
+        <item>پرزم</item>
+        <item>جوف</item>
+        <item>لہریں</item>
+        <item>مربع</item>
+    </string-array>
+</resources>

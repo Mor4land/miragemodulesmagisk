@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="@dimen/kg_main_item_content_drawable_height" android:width="@dimen/kg_main_item_content_drawable_width" android:viewportWidth="392.0" android:viewportHeight="871.0"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <group>
+        <clip-path android:pathData="M0,0h392v871h-392z" />
+        <group>
+            <clip-path android:pathData="M0,559h392v312h-392z" />
+            <path android:fillColor="#00000000" android:pathData="M-24,545C-22.43,558.81 -18.53,583.67 1.39,609.91C11.78,623.61 23.85,633.63 37.32,641.91C50.8,650.2 62.62,654.85 69.35,676.21C83.41,720.87 39.01,778.65 -2.32,792" android:strokeColor="#ffffcaa2" android:strokeWidth="14.0" android:strokeLineCap="square" />
+            <path android:fillColor="#00000000" android:pathData="M487.05,747.58C471.6,765.49 438.21,775.5 424.99,776.78C411.78,778.06 376.49,784.62 347.02,745.97C317.55,707.32 275.96,705.07 253.98,726.55C231.99,748.04 243.64,776.11 257.86,791.74C276.79,812.55 307.9,824.22 293.39,856.13C278.89,888.05 276.9,913.36 299.24,942.75" android:strokeColor="#ffffcaa2" android:strokeWidth="14.0" android:strokeLineCap="square" />
+            <path android:fillColor="#00000000" android:pathData="M-42.77,679.49C-29.68,681.37 6.72,694.79 16.98,712.06C27.25,729.33 19.77,738 18.3,755.76C16.56,776.68 32.58,786.37 51.76,788.14C88.04,791.51 116.2,767.38 142.69,789.11C169.18,810.83 159.28,864.4 136.43,895.06" android:strokeColor="#ffd87816" android:strokeWidth="14.0" android:strokeLineCap="square" />
+            <path android:fillColor="#00000000" android:pathData="M412,548C403.87,559.7 391.86,564.81 377.42,567.69C360.83,570.99 346.53,575.16 338.67,591.36C333.73,601.54 335.68,615.84 344.37,626.54C351.71,635.57 352.15,632.95 368.88,647.78C385.59,662.6 386.24,685.94 377.23,705.74C368.65,724.61 359,732.73 350.26,756.84C341.52,780.96 350.26,793.35 372.3,811.49C389.84,825.93 410.86,837.82 412,871" android:strokeColor="#ffd87816" android:strokeWidth="14.0" android:strokeLineCap="square" />
+        </group>
+    </group>
+</vector>

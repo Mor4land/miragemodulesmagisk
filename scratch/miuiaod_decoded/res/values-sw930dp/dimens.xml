@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_style_frame_extra_left">56.0dip</dimen>
+    <dimen name="kg_classic_clock_style_frame_pad_extra_width">416.0dip</dimen>
+    <dimen name="kg_classic_max_clock_frame_margin_time_pad_left">330.0dip</dimen>
+    <dimen name="kg_classic_max_clock_frame_pad_extra_width">660.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_margin_bottom">12.0dip</dimen>
+    <dimen name="kg_eastern_c_style1_frame_extra_height">730.0dip</dimen>
+    <dimen name="kg_eastern_c_style1_frame_extra_width">159.0dip</dimen>
+    <item type="dimen" name="kg_template_view_aod_dialog_preview_scale">0.16</item>
+</resources>

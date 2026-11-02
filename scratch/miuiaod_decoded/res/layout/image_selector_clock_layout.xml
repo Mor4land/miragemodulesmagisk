@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.components.view.ImageSelectorShowerView android:orientation="vertical" android:id="@id/image_selector_shower" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.components.view.SquareFrameLayout android:layout_gravity="center_horizontal" android:id="@id/image_shower_container" android:layout_width="@dimen/image_selector_shower_width" android:layout_height="@dimen/image_selector_shower_height" android:foreground="@drawable/image_selector_shower_container_fg" android:contentDescription="@string/change_picture" android:layerType="software">
+        <TextView android:textSize="15.0dip" android:textColor="#80ffffff" android:gravity="center" android:layout_gravity="center" android:id="@id/add_icon" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/add_from_local" android:drawableTop="@drawable/image_selector_default_add_ic" android:drawablePadding="12.0dip" />
+        <ImageView android:layout_gravity="center" android:id="@id/image_shower" android:visibility="gone" android:layout_width="@dimen/image_selector_shower_width" android:layout_height="@dimen/image_selector_shower_height" android:src="@drawable/image_selector_default_add_ic" android:scaleType="centerInside" />
+        <ImageView android:layout_gravity="bottom|center|left" android:id="@id/invert_btn" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="7.0dip" android:layout_marginBottom="7.0dip" android:src="@drawable/ic_invert" android:contentDescription="@string/talkback_invert_color" />
+    </com.miui.aod.components.view.SquareFrameLayout>
+</com.miui.aod.components.view.ImageSelectorShowerView>

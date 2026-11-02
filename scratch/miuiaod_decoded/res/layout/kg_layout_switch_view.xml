@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="@dimen/kg_switch_view_text_size" android:textColor="@color/kg_white_100" android:ellipsize="end" android:layout_gravity="center_vertical" android:id="@id/switch_view_tv" android:layout_width="0.0dip" android:layout_height="wrap_content" android:lines="1" android:layout_weight="1.0" android:textDirection="locale" android:layout_marginEnd="@dimen/kg_switch_view_padding_horizontal" android:textFontWeight="500" />
+    <miuix.slidingwidget.widget.SlidingSwitch android:textColor="#ffffffff" android:id="@id/switch_view_switch" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</merge>

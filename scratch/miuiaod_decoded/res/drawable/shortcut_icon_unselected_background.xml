@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:height="@dimen/keyguard_shortcut_icon_unselected_background_size_layer1" android:width="@dimen/keyguard_shortcut_icon_unselected_background_size_layer1">
+        <shape android:shape="oval">
+            <solid android:color="@color/miuix_color_transparent" />
+        </shape>
+    </item>
+    <item android:left="@dimen/keyguard_shortcut_icon_unselected_background_size_layer2" android:top="@dimen/keyguard_shortcut_icon_unselected_background_size_layer2" android:right="@dimen/keyguard_shortcut_icon_unselected_background_size_layer2" android:bottom="@dimen/keyguard_shortcut_icon_unselected_background_size_layer2">
+        <shape android:shape="oval">
+            <solid android:color="?colorSurfaceContainerLow" />
+        </shape>
+    </item>
+</layer-list>

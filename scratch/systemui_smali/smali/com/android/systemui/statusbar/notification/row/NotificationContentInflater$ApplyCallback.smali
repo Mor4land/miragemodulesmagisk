@@ -1,0 +1,21 @@
+.class abstract Lcom/android/systemui/statusbar/notification/row/NotificationContentInflater$ApplyCallback;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# direct methods
+.method public constructor <init>()V
+    .locals 0
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method public abstract getRemoteView()Landroid/widget/RemoteViews;
+.end method
+
+.method public abstract setResultView(Landroid/view/View;)V
+.end method

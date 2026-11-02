@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <miuix.springback.view.SpringBackLayout android:layout_width="fill_parent" android:layout_height="fill_parent" app:scrollableView="@id/categories_container">
+        <com.miui.aod.components.view.CategoriesItemRecyclerView android:id="@id/categories_container" android:paddingBottom="28.0dip" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="fill_parent" android:contentDescription="@null" android:importantForAccessibility="no" android:nestedScrollingEnabled="false" />
+    </miuix.springback.view.SpringBackLayout>
+    <TextView android:textSize="@dimen/miuix_preference_normal_text_size" android:textColor="@color/miuix_color_blue_dark_primary_default" android:gravity="center" android:layout_gravity="bottom|center" android:id="@id/aod_find_more" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="@dimen/aod_online_find_more_height" android:layout_marginBottom="@dimen/aod_online_find_more_bottom_margin" android:text="@string/aod_find_more" android:includeFontPadding="false" android:layout_marginHorizontal="@dimen/aod_online_find_more_horizontal_margin" />
+</FrameLayout>

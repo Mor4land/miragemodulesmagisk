@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="168.0dip" android:width="118.0dip" android:viewportWidth="118.0" android:viewportHeight="168.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="_R_G">
+        <group android:name="_R_G_L_0_G" android:translateY="-48.5">
+            <path android:name="_R_G_L_0_G_D_0_P_0" android:fillColor="#ffffffff" android:pathData=" M57.01 74.35 C72.81,74.35 83.81,83.75 83.81,98.75 C83.81,110.75 76.21,123.55 57.81,143.95 C57.81,143.95 16.41,189.95 16.41,189.95 C13.41,193.35 12.01,197.95 14.41,202.95 C16.21,206.75 20.21,209.15 24.41,209.15 C24.41,209.15 96.41,209.15 96.41,209.15 C100.81,209.15 104.61,205.95 104.61,201.15 C104.61,196.95 101.41,193.15 96.41,193.15 C96.41,193.15 35.61,193.15 35.61,193.15 C35.61,193.15 73.41,151.35 73.41,151.35 C94.01,128.75 101.61,112.75 101.61,97.95 C101.61,73.95 83.61,58.35 57.41,58.35 C38.61,58.35 24.01,66.75 15.21,81.55 C12.21,86.55 15.41,91.55 18.41,93.15 C22.41,95.35 27.01,94.35 30.41,89.35 C37.01,79.55 46.21,74.35 57.01,74.35c " android:fillAlpha="1.0" android:fillType="nonZero" />
+        </group>
+    </group>
+    <group android:name="time_group" />
+</vector>

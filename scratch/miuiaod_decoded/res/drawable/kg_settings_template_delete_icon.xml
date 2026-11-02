@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="@dimen/kg_settings_delete_template_button_size" android:width="@dimen/kg_settings_delete_template_button_size" android:viewportWidth="40.0" android:viewportHeight="40.0"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#fff30018" android:pathData="M20,32C26.627,32 32,26.627 32,20C32,13.373 26.627,8 20,8C13.373,8 8,13.373 8,20C8,26.627 13.373,32 20,32Z" />
+    <path android:fillColor="#00000000" android:pathData="M20,7.633C26.83,7.633 32.367,13.17 32.367,20C32.367,26.83 26.83,32.367 20,32.367C13.17,32.367 7.633,26.83 7.633,20C7.633,13.17 13.17,7.633 20,7.633Z" android:strokeColor="#ffffffff" android:strokeWidth="0.735294" android:strokeAlpha="0.1" />
+    <path android:fillColor="#ffffffff" android:pathData="M14.485,19.999C14.485,19.39 14.979,18.896 15.588,18.896H24.412C25.021,18.896 25.515,19.39 25.515,19.999C25.515,20.609 25.021,21.102 24.412,21.102H15.588C14.979,21.102 14.485,20.609 14.485,19.999Z" />
+</vector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_height">74.0dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_margin_start">20.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_start">13.0dip</dimen>
+</resources>

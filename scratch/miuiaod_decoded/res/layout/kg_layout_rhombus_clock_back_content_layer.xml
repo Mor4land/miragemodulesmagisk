@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.clock.MiuiClockView android:id="@id/clock_view" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+    <View android:layout_gravity="center_horizontal" android:id="@id/click_hotspot_view" android:layout_width="@dimen/kg_rhombus_clock_click_hotspot_width" android:layout_height="@dimen/kg_rhombus_clock_click_hotspot_height" android:layout_marginTop="@dimen/kg_rhombus_clock_click_hotspot_margin_top" />
+    <com.miui.keyguard.editor.view.KgFrame android:layout_gravity="center" android:id="@id/clock_frame" android:visibility="gone" android:layout_width="@dimen/kg_rhombus_clock_frame_width" android:layout_height="@dimen/kg_rhombus_clock_frame_height" />
+</FrameLayout>

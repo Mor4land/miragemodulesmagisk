@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.EdgeFrameLayout android:background="@drawable/style_category_list_item_bg" android:padding="@dimen/image_show_stroke_width" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.appcompat.widget.AppCompatImageView android:id="@id/online_imageview" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</com.miui.aod.widget.EdgeFrameLayout>

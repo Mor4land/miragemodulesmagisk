@@ -1,0 +1,22 @@
+.class public abstract Lcom/xiaomi/onetrack/util/oaid/a/h$a;
+.super Landroid/os/Binder;
+
+# interfaces
+.implements Lcom/xiaomi/onetrack/util/oaid/a/h;
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lcom/xiaomi/onetrack/util/oaid/a/h;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x409
+    name = "a"
+.end annotation
+
+.annotation system Ldalvik/annotation/MemberClasses;
+    value = {
+        Lcom/xiaomi/onetrack/util/oaid/a/h$a$a;
+    }
+.end annotation

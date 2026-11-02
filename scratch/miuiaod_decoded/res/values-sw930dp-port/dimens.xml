@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_eastern_b_clock_container_margin_left">280.0dip</dimen>
+    <dimen name="kg_eastern_b_clock_container_margin_right">280.0dip</dimen>
+    <dimen name="kg_eastern_c_style1_frame_extra_h1_margin_top">320.0dip</dimen>
+    <dimen name="kg_main_item_container_height">934.2969dip</dimen>
+    <dimen name="kg_main_item_container_width">627.89844dip</dimen>
+    <dimen name="kg_main_item_container_width_minus">-627.89844dip</dimen>
+</resources>

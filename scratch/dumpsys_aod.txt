@@ -1,0 +1,1290 @@
+Activity Resolver Table:
+  Non-Data Actions:
+      miui.keyguard.editor.settings:
+        f144b73 com.miui.aod/com.miui.keyguard.editor.EditorActivityForSettings filter 8935a30
+          Action: "miui.keyguard.editor.settings"
+          Category: "android.intent.category.DEFAULT"
+      miui.keyguard.editor:
+        cd37cad com.miui.aod/com.miui.keyguard.editor.EditorActivity filter d6fbe2
+          Action: "miui.keyguard.editor"
+          Category: "android.intent.category.DEFAULT"
+
+Receiver Resolver Table:
+  Non-Data Actions:
+      androidx.profileinstaller.action.SAVE_PROFILE:
+        d5836a9 com.miui.aod/androidx.profileinstaller.ProfileInstallReceiver filter f0be95c
+          Action: "androidx.profileinstaller.action.SAVE_PROFILE"
+      androidx.profileinstaller.action.INSTALL_PROFILE:
+        d5836a9 com.miui.aod/androidx.profileinstaller.ProfileInstallReceiver filter eecf42e
+          Action: "androidx.profileinstaller.action.INSTALL_PROFILE"
+      androidx.profileinstaller.action.SKIP_FILE:
+        d5836a9 com.miui.aod/androidx.profileinstaller.ProfileInstallReceiver filter 6de2bcf
+          Action: "androidx.profileinstaller.action.SKIP_FILE"
+      androidx.profileinstaller.action.BENCHMARK_OPERATION:
+        d5836a9 com.miui.aod/androidx.profileinstaller.ProfileInstallReceiver filter 2549465
+          Action: "androidx.profileinstaller.action.BENCHMARK_OPERATION"
+
+Service Resolver Table:
+  Non-Data Actions:
+      com.android.systemui.action.KEYGUARD_EDITOR:
+        e58253a com.miui.aod/com.miui.keyguard.editor.KeyguardEditorService filter bbbb5eb
+          Action: "com.android.systemui.action.KEYGUARD_EDITOR"
+
+Domain verification status:
+
+Permissions:
+  Permission [miui.keyguard.editor.WRITE_EDITOR_FILE] (46f1b4d):
+    sourcePackage=com.miui.aod
+    uid=1000 gids=[] type=0 prot=signature
+    perm=PermissionInfo{a670866 miui.keyguard.editor.WRITE_EDITOR_FILE}
+    flags=0x0
+
+Permissions:
+  Permission [com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (82e4602):
+    sourcePackage=com.miui.aod
+    uid=1000 gids=[] type=0 prot=signature
+    perm=PermissionInfo{fb7e454 com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}
+    flags=0x0
+
+Registered ContentProviders:
+  com.miui.aod/com.miui.keyguard.editor.data.template.TemplateFileProvider:
+    Provider{5d5fffd com.miui.aod/com.miui.keyguard.editor.data.template.TemplateFileProvider}
+  com.miui.aod/androidx.startup.InitializationProvider:
+    Provider{acb44f2 com.miui.aod/androidx.startup.InitializationProvider}
+
+ContentProvider Authorities:
+  [miui.keyguard.editor.templatefileprovider]:
+    Provider{5d5fffd com.miui.aod/com.miui.keyguard.editor.data.template.TemplateFileProvider}
+      applicationInfo=ApplicationInfo{c949b13 com.miui.aod}
+  [com.miui.aod.androidx-startup]:
+    Provider{acb44f2 com.miui.aod/androidx.startup.InitializationProvider}
+      applicationInfo=ApplicationInfo{6380150 com.miui.aod}
+
+Key Set Manager:
+  [com.miui.aod]
+      Signing KeySets: 1
+
+Packages:
+  Package [com.miui.aod] (884cd0f):
+    appId=1000
+    sharedUser=SharedUserSetting{9879ef9 android.uid.system/1000}
+    pkg=Package{ec4be3e com.miui.aod}
+    codePath=/product/priv-app/MIUIAod
+    resourcePath=/product/priv-app/MIUIAod
+    legacyNativeLibraryDir=/product/priv-app/MIUIAod/lib
+    extractNativeLibs=true
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=22103110 minSdk=33 targetSdk=34
+    minExtensionVersions=[]
+    versionName=RELEASE-PAD-2103.1.1.0-04181444
+    usesNonSdkApi=false
+    isMiuiPreinstall=false
+    splits=[base]
+    apkSigningVersion=3
+    flags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_UNRESIZEABLE ALLOW_AUDIO_PLAYBACK_CAPTURE DEFAULT_TO_DEVICE_PROTECTED_STORAGE DIRECT_BOOT_AWARE PARTIALLY_DIRECT_BOOT_AWARE PRIVILEGED PRODUCT PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    queriesPackages=[com.xiaomi.aicr]
+    dataDir=/data/user_de/0/com.miui.aod
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    usesLibraries:
+      micloud-sdk
+    usesOptionalLibraries:
+      com.miui.system
+      androidx.window.extensions
+      androidx.window.sidecar
+    usesLibraryFiles:
+      /system_ext/priv-app/RtMiCloudSDK/RtMiCloudSDK.apk
+      /system_ext/app/miuisystem/miuisystem.apk
+    timeStamp=2009-01-01 05:00:00
+    lastUpdateTime=2009-01-01 05:00:00
+    installerPackageName=null
+    installerPackageUid=-1
+    initiatingPackageName=null
+    originatingPackageName=null
+    packageSource=0
+    appMetadataFilePath=null
+    signatures=PackageSignatures{db0149f version:3, signatures:[6c02dd51], past signatures:[]}
+    installPermissionsFixed=false
+    pkgFlags=[ SYSTEM HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE ]
+    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_UNRESIZEABLE ALLOW_AUDIO_PLAYBACK_CAPTURE DEFAULT_TO_DEVICE_PROTECTED_STORAGE DIRECT_BOOT_AWARE PARTIALLY_DIRECT_BOOT_AWARE PRIVILEGED PRODUCT PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    apexModuleName=null
+    declared permissions:
+      miui.keyguard.editor.WRITE_EDITOR_FILE: prot=signature
+      com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature
+    requested permissions:
+      com.miui.weather2.permission.WRITE_DB
+      com.mi.health.permission.DEFAULT_READ_DATA
+      com.mi.health.permission.DEFAULT_WRITE_DATA
+      android.permission.KILL_BACKGROUND_PROCESSES
+      android.permission.INTERACT_ACROSS_USERS
+      android.permission.INTERACT_ACROSS_USERS_FULL
+      android.permission.VIBRATE
+      android.permission.SET_WALLPAPER
+      com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+    install permissions:
+      com.miui.bugreport.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      miuix.recyclerview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.REAL_GET_TASKS: granted=true
+      android.permission.ACCESS_CACHE_FILESYSTEM: granted=true
+      android.permission.REMOTE_AUDIO_PLAYBACK: granted=true
+      android.permission.DOWNLOAD_WITHOUT_NOTIFICATION: granted=true
+      android.permission.ACCESS_GPU_SERVICE: granted=true
+      android.permission.REGISTER_WINDOW_MANAGER_LISTENERS: granted=true
+      android.permission.BIND_INCALL_SERVICE: granted=true
+      com.android.settings.permission.CLOUD_SETTINGS_PROVIDER: granted=true
+      android.permission.WRITE_SETTINGS: granted=true
+      com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE: granted=true
+      android.permission.CONTROL_KEYGUARD: granted=true
+      com.android.provision.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.READ_WALLPAPER_INTERNAL: granted=true
+      miui.cloud.finddevice.ManageFindDevice: granted=true
+      android.permission.CONFIGURE_WIFI_DISPLAY: granted=true
+      android.permission.CONFIGURE_DISPLAY_COLOR_MODE: granted=true
+      android.permission.CONTROL_DISPLAY_COLOR_TRANSFORMS: granted=true
+      miui.permission.CROSS_ENDS_UNLOCK: granted=true
+      com.android.systemui.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.android.keychain.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.permission.UPDATE_RESTRICT_DATA: granted=true
+      android.permission.LIST_ENABLED_CREDENTIAL_PROVIDERS: granted=true
+      android.permission.LOCATION_BYPASS: granted=true
+      android.permission.BIND_ATTENTION_SERVICE: granted=true
+      com.google.android.c2dm.permission.RECEIVE: granted=true
+      com.xiaomi.xmsf.permission.MIPUSH_RECEIVE: granted=true
+      miui.systemui.plugin.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.USE_CREDENTIALS: granted=true
+      android.permission.TABLET_MODE: granted=true
+      com.xiaomi.bluetooth.permission.MMA_STATUS_CHANGED: granted=true
+      com.miui.enterprise.permission.ACTIVE_ENTERPRISE_MODE: granted=true
+      com.android.settings.permission.READ_SETTINGS: granted=true
+      com.miui.powerkeeper.permission.POWER_NOTIFY: granted=true
+      android.permission.BIND_DEVICE_ADMIN: granted=true
+      android.permission.MODIFY_AUDIO_SETTINGS: granted=true
+      android.permission.MANAGE_EXTERNAL_STORAGE: granted=true
+      com.miui.securitycenter.permission.MIPUSH_RECEIVE: granted=true
+      android.permission.ACCESS_CHECKIN_PROPERTIES: granted=true
+      android.permission.ACCESS_NOTIFICATION_POLICY: granted=true
+      android.permission.REMAP_MODIFIER_KEYS: granted=true
+      android.permission.MODIFY_AUDIO_ROUTING: granted=true
+      com.miui.qr.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.GET_APP_OPS_STATS: granted=true
+      miui.os.permisson.INIT_MIUI_ENVIRONMENT: granted=true
+      android.permission.READ_SAFETY_CENTER_STATUS: granted=true
+      android.permission.CONTROL_KEYGUARD_SECURE_NOTIFICATIONS: granted=true
+      android.permission.READ_WIFI_CREDENTIAL: granted=true
+      android.permission.QUERY_AUDIO_STATE: granted=true
+      android.miui.permission.SHELL: granted=true
+      android.permission.INSTALL_LOCATION_PROVIDER: granted=true
+      android.permission.USE_RESERVED_DISK: granted=true
+      android.permission.START_ACTIVITY_AS_CALLER: granted=true
+      android.permission.MANAGE_ACCOUNTS: granted=true
+      com.miui.antispam.permission.DATA_MONTH_REPORT: granted=true
+      com.miui.monthreport.permission.DATA_MONTH_REPORT: granted=true
+      android.permission.SYSTEM_ALERT_WINDOW: granted=true
+      android.permission.BROADCAST_PHONE_ACCOUNT_REGISTRATION: granted=true
+      com.miui.securitycenter.permission.RECEIVE_TRACK_EVERYWEEK: granted=true
+      android.permission.START_TASKS_FROM_RECENTS: granted=true
+      com.miui.powerkeeper.permission.REQUEST_WAKE: granted=true
+      android.permission.GET_TOP_ACTIVITY_INFO: granted=true
+      android.permission.CLEAR_APP_USER_DATA: granted=true
+      android.permission.MONITOR_INPUT: granted=true
+      com.xiaomi.bluetooth.permission.WIFI_ACCOUNT_AP: granted=true
+      android.permission.BROADCAST_CALLLOG_INFO: granted=true
+      android.permission.CONTROL_UI_TRACING: granted=true
+      com.miui.securitycenter.permission.ACCESS_SECURITY_CENTER_PROVIDER: granted=true
+      miui.permission.USE_INTERNAL_GENERAL_API: granted=true
+      com.android.settings.permission.MIPUSH_RECEIVE: granted=true
+      android.permission.MANAGE_VOICE_KEYPHRASES: granted=true
+      android.permission.SHUTDOWN: granted=true
+      com.miui.securitycenter.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.CHANGE_COMPONENT_ENABLED_STATE: granted=true
+      android.permission.BIND_QUICK_SETTINGS_TILE: granted=true
+      miui.permission.BUGREPORT: granted=true
+      android.permission.NFC: granted=true
+      android.permission.INTERNAL_SYSTEM_WINDOW: granted=true
+      android.permission.BIND_ROTATION_RESOLVER_SERVICE: granted=true
+      android.permission.NETWORK_SETTINGS: granted=true
+      miui.permission.READ_AND_WIRTE_PERMISSION_MANAGER: granted=true
+      android.permission.CHANGE_OVERLAY_PACKAGES: granted=true
+      com.miui.permission.ACCESS_ESE: granted=true
+      android.permission.START_ANY_ACTIVITY: granted=true
+      android.permission.CALL_PRIVILEGED: granted=true
+      android.permission.MANAGE_APP_TOKENS: granted=true
+      android.permission.CHANGE_NETWORK_STATE: granted=true
+      android.permission.MASTER_CLEAR: granted=true
+      android.permission.FOREGROUND_SERVICE: granted=true
+      android.permission.WRITE_SYNC_SETTINGS: granted=true
+      android.permission.READ_INSTALLED_SESSION_PATHS: granted=true
+      android.permission.ALLOW_PLACE_IN_MULTI_PANE_SETTINGS: granted=true
+      android.permission.MANAGE_DYNAMIC_SYSTEM: granted=true
+      com.miui.notification.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.yellowpage.permission.ACCESS_YELLOWPAGE: granted=true
+      android.permission.LAUNCH_MULTI_PANE_SETTINGS_DEEP_LINK: granted=true
+      android.permission.RESET_SHORTCUT_MANAGER_THROTTLING: granted=true
+      android.permission.RESET_FINGERPRINT_LOCKOUT: granted=true
+      android.permission.MANAGE_ACTIVITY_TASKS: granted=true
+      android.permission.RECEIVE_BOOT_COMPLETED: granted=true
+      miuix.autodensity.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.android.settings.permission.UPDATE_NEW_BLUETOOTH_PLUGINS: granted=true
+      com.google.android.googleapps.permission.GOOGLE_AUTH: granted=true
+      android.permission.FOREGROUND_SERVICE_SPECIAL_USE: granted=true
+      android.permission.MANAGE_ROLE_HOLDERS: granted=true
+      miuix.pinyin.utilities.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.PEERS_MAC_ADDRESS: granted=true
+      com.miui.securitycore.permission.KID_SPACE: granted=true
+      android.permission.DEVICE_POWER: granted=true
+      android.permission.ENFORCE_UPDATE_OWNERSHIP: granted=true
+      com.miui.securitrycenter.permission.EXTERNAL_ANLYTICS: granted=true
+      android.permission.REMOVE_TASKS: granted=true
+      android.permission.READ_PRINT_SERVICES: granted=true
+      android.permission.EXPAND_STATUS_BAR: granted=true
+      com.xiaomi.misettings.screentime: granted=true
+      android.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS: granted=true
+      android.permission.USE_ICC_AUTH_WITH_DEVICE_IDENTIFIER: granted=true
+      android.permission.RESTART_WIFI_SUBSYSTEM: granted=true
+      android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: granted=true
+      android.permission.READ_PROFILE: granted=true
+      android.permission.PROCESS_CALL_RECORD: granted=true
+      android.permission.BLUETOOTH: granted=true
+      com.anroid.settings.permission.PRIVACY_AUTHORIZATION_DIALOG: granted=true
+      com.android.alarm.permission.SET_ALARM: granted=true
+      android.permission.WRITE_MEDIA_STORAGE: granted=true
+      android.permission.WRITE_BLOCKED_NUMBERS: granted=true
+      android.permission.WATCH_APPOPS: granted=true
+      android.permission.GET_TASKS: granted=true
+      android.permission.ACCESS_SURFACE_FLINGER: granted=true
+      android.permission.BIND_REMOTE_LOCKSCREEN_VALIDATION_SERVICE: granted=true
+      com.miui.permission.FIREWALL: granted=true
+      android.permission.AUTHENTICATE_ACCOUNTS: granted=true
+      android.permission.INTERNET: granted=true
+      android.permission.BIND_RESOLVER_RANKER_SERVICE: granted=true
+      miui.permission.ACCESS_ALARM_PROVIDER: granted=true
+      android.permission.REORDER_TASKS: granted=true
+      android.permission.GET_INTENT_SENDER_INTENT: granted=true
+      com.android.camera.permission.SPLASH: granted=true
+      android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION: granted=true
+      android.permission.BLUETOOTH_ADMIN: granted=true
+      android.permission.CONTROL_VPN: granted=true
+      android.permission.UPDATE_DEVICE_STATS: granted=true
+      android.permission.READ_PRECISE_PHONE_STATE: granted=true
+      android.permission.MANAGE_FINGERPRINT: granted=true
+      android.permission.READ_PROJECTION_STATE: granted=true
+      android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS: granted=true
+      android.permission.ROTATE_SURFACE_FLINGER: granted=true
+      android.permission.SEND_SAFETY_CENTER_UPDATE: granted=true
+      android.permission.BIND_CONNECTION_SERVICE: granted=true
+      android.permission.BIND_QUICK_ACCESS_WALLET_SERVICE: granted=true
+      com.mi.android.globallauncher.permission.WRITE_SETTINGS: granted=true
+      miuix.log.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.xiaomi.calendar.permission.READ_CALENDAR: granted=true
+      com.miui.gamebooster.access.ACTIVITY: granted=true
+      android.permission.ACCESS_INSTANT_APPS: granted=true
+      com.miui.securitycore.permission.XSPACE_DUAL: granted=true
+      android.permission.MANAGE_ACCESSIBILITY: granted=true
+      com.android.launcher.permission.WRITE_SETTINGS: granted=true
+      android.permission.CONTROL_REMOTE_APP_TRANSITION_ANIMATIONS: granted=true
+      android.permission.GET_PACKAGE_SIZE: granted=true
+      android.permission.MODIFY_THEME_OVERLAY: granted=true
+      android.permission.USE_EXACT_ALARM: granted=true
+      com.miui.systemAdSolution.adSwitch.PROVIDER: granted=true
+      android.permission.TRUST_LISTENER: granted=true
+      android.permission.ACCESS_CONTEXT_HUB: granted=true
+      android.permission.MANAGE_USB: granted=true
+      android.permission.INTERACT_ACROSS_USERS_FULL: granted=true
+      com.android.updater.permission.ACCESS_UPDATESERVICE: granted=true
+      android.permission.CHANGE_ACCESSIBILITY_VOLUME: granted=true
+      android.permission.BIND_APPWIDGET: granted=true
+      android.permission.STOP_APP_SWITCHES: granted=true
+      com.miui.permission.CONTROL_PC_MODE: granted=true
+      com.xiaomi.permission.ACCESS_SECURITY_DEVICE_CREDENTIAL: granted=true
+      android.permission.RECEIVE_MEDIA_RESOURCE_USAGE: granted=true
+      android.permission.BATTERY_STATS: granted=true
+      com.miui.powerkeeper.permission.CUSTOMER_POWER: granted=true
+      miui.notification.permission.ACCESS_PROVIDER: granted=true
+      android.permission.PACKAGE_USAGE_STATS: granted=true
+      android.permission.MOUNT_UNMOUNT_FILESYSTEMS: granted=true
+      miuix.graphics.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.TETHER_PRIVILEGED: granted=true
+      android.permission.WRITE_SECURE_SETTINGS: granted=true
+      android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED: granted=true
+      com.miui.mipub.permission.WRITE_HEDUOHAO: granted=true
+      android.permission.CAPTURE_AUDIO_OUTPUT: granted=true
+      com.miui.securitycenter.permission.SYSTEM_PERMISSION_DECLARE: granted=true
+      android.permission.MONITOR_KEYBOARD_BACKLIGHT: granted=true
+      android.permission.MANAGE_DEBUGGING: granted=true
+      android.permission.MOVE_PACKAGE: granted=true
+      android.permission.SET_ACTIVITY_WATCHER: granted=true
+      android.permission.READ_BLOCKED_NUMBERS: granted=true
+      android.permission.BROADCAST_OPTION_INTERACTIVE: granted=true
+      android.permission.STATUS_BAR_SERVICE: granted=true
+      android.permission.READ_SEARCH_INDEXABLES: granted=true
+      android.permission.CONTROL_DEVICE_STATE: granted=true
+      com.android.systemui.permission.NOTIFICATION: granted=true
+      android.permission.LOG_COMPAT_CHANGE: granted=true
+      android.permission.USE_FULL_SCREEN_INTENT: granted=true
+      com.android.launcher.permission.READ_SETTINGS: granted=true
+      android.permission.READ_PRIVILEGED_PHONE_STATE: granted=true
+      android.permission.ACCESS_DOWNLOAD_MANAGER: granted=true
+      android.permission.BROADCAST_STICKY: granted=true
+      miui.permission.powerkeeper.HIDDEN_MODE_PROVIDER: granted=true
+      com.android.settings.permission.POWER_MODE_CHANGE: granted=true
+      android.permission.BLUETOOTH_PRIVILEGED: granted=true
+      com.miui.securitycenter.permission.SWITCH_DEV_MODE: granted=true
+      com.xiaomi.permission.CLOUD_MANAGER: granted=true
+      android.permission.HARDWARE_TEST: granted=true
+      android.permission.USE_BIOMETRIC_INTERNAL: granted=true
+      android.permission.OBSERVE_SENSOR_PRIVACY: granted=true, flags=[ GRANTED_BY_ROLE]
+      com.miui.gamebooster.permission.PARENT_VERIFY: granted=true
+      android.permission.SET_SYSTEM_AUDIO_CAPTION: granted=true
+      com.android.settings.permission.PULL_CLOUD_DATA: granted=true
+      com.miui.analytics.onetrack.TRACK_EVENT: granted=true
+      android.permission.INSTALL_DYNAMIC_SYSTEM: granted=true
+      android.permission.CONTROL_DISPLAY_BRIGHTNESS: granted=true
+      android.permission.SUBSTITUTE_NOTIFICATION_APP_NAME: granted=true
+      android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE: granted=true
+      com.miui.permission.MANAGE_BOOT_TIME: granted=true
+      android.permission.ACCESS_KEYGUARD_SECURE_STORAGE: granted=true
+      android.permission.BIND_JOB_SERVICE: granted=true
+      android.permission.OBSERVE_ROLE_HOLDERS: granted=true
+      miui.permission.ALARM_RINGTONE_PICKER: granted=true
+      android.permission.CONFIRM_FULL_BACKUP: granted=true
+      android.permission.SET_TIME: granted=true
+      miuix.appcompat.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.WRITE_APN_SETTINGS: granted=true
+      android.permission.CHANGE_WIFI_STATE: granted=true
+      android.permission.CAMERA_OPEN_CLOSE_LISTENER: granted=true
+      com.miui.securitycenter.permission.GLOBAL_PACKAGEINSTALLER: granted=true
+      com.xiaomi.permission.AUTH_SERVICE: granted=true
+      android.permission.MODIFY_DAY_NIGHT_MODE: granted=true
+      android.permission.INPUT_CONSUMER: granted=true
+      android.permission.MANAGE_BIOMETRIC: granted=true
+      android.permission.PACKAGE_VERIFICATION_AGENT: granted=true
+      android.permission.SET_ORIENTATION: granted=true
+      android.permission.MANAGE_USERS: granted=true
+      android.permission.DELETE_CACHE_FILES: granted=true
+      android.permission.ACCESS_NETWORK_STATE: granted=true
+      miuix.preference.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.MODIFY_DEFAULT_AUDIO_EFFECTS: granted=true
+      android.permission.DISABLE_KEYGUARD: granted=true
+      android.permission.OBSERVE_NETWORK_POLICY: granted=true
+      android.permission.BACKUP: granted=true
+      android.permission.CHANGE_CONFIGURATION: granted=true
+      android.permission.USER_ACTIVITY: granted=true
+      android.permission.LOCAL_MAC_ADDRESS: granted=true
+      android.permission.READ_LOGS: granted=true
+      com.miui.gameturbo.permission.ACTIVE_MANAGER: granted=true
+      android.permission.COPY_PROTECTED_DATA: granted=true
+      com.miui.permission.CONTROL_PC_LAUNCHER: granted=true
+      android.permission.MANAGE_CONTENT_SUGGESTIONS: granted=true
+      com.miui.bugreport.permission.DUMP_CACHED_LOG: granted=true
+      android.permission.INTERACT_ACROSS_USERS: granted=true
+      miuix.transition.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.SET_WALLPAPER: granted=true
+      com.miui.mipub.permission.READ_HEDUOHAO: granted=true
+      android.permission.SET_KEYBOARD_LAYOUT: granted=true
+      android.permission.WAKEUP_SURFACE_FLINGER: granted=true
+      com.xiaomi.bluetooth.permission.NEW_VERSION_PLUGIN_UPGRADE: granted=true
+      android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS: granted=true
+      com.android.settings.permission.SWITCH_DEV_MODE: granted=true
+      miui.permission.ACCESS_RECORDS: granted=true
+      android.permission.READ_DREAM_STATE: granted=true
+      android.permission.QUERY_DO_NOT_ASK_CREDENTIALS_ON_BOOT: granted=true
+      android.permission.START_VIEW_APP_FEATURES: granted=true
+      com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.securitycenter.permission.TOP_GAME_LIST: granted=true
+      android.permission.MANAGE_LOCATION_POLICY: granted=true
+      android.permission.HANDLE_QUERY_PACKAGE_RESTART: granted=true
+      com.xiaomi.permission.USE_KEYBAG: granted=true
+      android.permission.READ_NETWORK_USAGE_HISTORY: granted=true
+      com.miui.systemAdSolution.LOCAL_AD_PROVIDER: granted=true
+      android.permission.MANAGE_APP_OPS_RESTRICTIONS: granted=true
+      android.permission.KILL_BACKGROUND_PROCESSES: granted=true
+      android.permission.MANAGE_USER_OEM_UNLOCK_STATE: granted=true
+      com.android.phone.permission.ACCESS_LAST_KNOWN_CELL_ID: granted=true
+      android.permission.USE_FINGERPRINT: granted=true
+      android.permission.REQUEST_NETWORK_SCORES: granted=true
+      android.permission.ACCESS_VOICE_INTERACTION_SERVICE: granted=true
+      miui.cloud.finddevice.AccessFindDevice: granted=true
+      android.permission.MANAGE_SENSOR_PRIVACY: granted=true, flags=[ GRANTED_BY_ROLE]
+      android.permission.CONNECTIVITY_USE_RESTRICTED_NETWORKS: granted=true
+      com.miui.dock.permission.DOCK_EVENT: granted=true
+      android.permission.SOUNDTRIGGER_DELEGATE_IDENTITY: granted=true
+      android.permission.WRITE_USER_DICTIONARY: granted=true
+      android.permission.READ_DREAM_SUPPRESSION: granted=true
+      android.permission.READ_SYNC_STATS: granted=true
+      android.permission.WRITE_DREAM_STATE: granted=true
+      android.permission.ACCESS_SHORTCUTS: granted=true
+      android.permission.REBOOT: granted=true
+      com.miui.guardprovider.permission.Guard_Provider: granted=true
+      android.permission.READ_PEOPLE_DATA: granted=true
+      android.permission.SCHEDULE_EXACT_ALARM: granted=true
+      com.android.updater.permission.RECEIVE_BROADCAST: granted=true
+      android.permission.REQUEST_DELETE_PACKAGES: granted=true
+      android.permission.OEM_UNLOCK_STATE: granted=true
+      com.xiaomi.trustservice.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.MANAGE_DEVICE_ADMINS: granted=true
+      android.permission.CLEAR_APP_CACHE: granted=true
+      android.permission.BIND_CONTROLS: granted=true
+      android.permission.CHANGE_APP_IDLE_STATE: granted=true
+      android.permission.BIND_SETTINGS_SUGGESTIONS_SERVICE: granted=true
+      android.permission.TEST_BLACKLISTED_PASSWORD: granted=true
+      android.permission.MANAGE_NETWORK_POLICY: granted=true
+      android.permission.ADD_TRUSTED_DISPLAY: granted=true
+      android.permission.MANAGE_NOTIFICATION_LISTENERS: granted=true
+      android.permission.SET_POINTER_SPEED: granted=true
+      miui.permission.ACCESS_MILINK_CAST: granted=true
+      android.permission.MANAGE_NOTIFICATIONS: granted=true
+      android.permission.USE_COLORIZED_NOTIFICATIONS: granted=true
+      com.miui.bugreport.permission.MIPUSH_RECEIVE: granted=true
+      com.android.systemui.permission.SELF: granted=true
+      miui.permission.BACKUP_PROXY: granted=true
+      android.permission.SEND_SHOW_SUSPENDED_APP_DETAILS: granted=true
+      android.permission.CONNECTIVITY_INTERNAL: granted=true
+      android.permission.MANAGE_MEDIA_PROJECTION: granted=true
+      android.permission.ALLOW_SLIPPERY_TOUCHES: granted=true
+      android.permission.READ_SYNC_SETTINGS: granted=true
+      android.permission.START_ACTIVITIES_FROM_BACKGROUND: granted=true
+      android.permission.BIND_CELL_BROADCAST_SERVICE: granted=true
+      com.xiaomi.gallery.permission.CLOUD: granted=true
+      android.permission.READ_COMPAT_CHANGE_CONFIG: granted=true
+      com.miui.weather2.permission.WRITE_DB: granted=true
+      com.miui.gallery.permission.USE_API: granted=true
+      android.permission.SET_WALLPAPER_DIM_AMOUNT: granted=true
+      android.permission.LOADER_USAGE_STATS: granted=true
+      android.permission.OVERRIDE_WIFI_CONFIG: granted=true
+      android.permission.FORCE_STOP_PACKAGES: granted=true
+      android.permission.SUGGEST_MANUAL_TIME_AND_ZONE: granted=true
+      miuix.nestedheader.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.securityadd.permission.SUPERPOWER_RECEIVE: granted=true
+      android.permission.MODIFY_TOUCH_MODE_STATE: granted=true
+      android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS: granted=true
+      android.permission.ACCESS_NOTIFICATIONS: granted=true
+      android.permission.HANDLE_CALL_INTENT: granted=true
+      android.permission.MEDIA_RESOURCE_OVERRIDE_PID: granted=true
+      com.xiaomi.xmsf.permission.USE_XMSF_TRAFFIC: granted=true
+      android.permission.CUSTOMIZE_SYSTEM_UI: granted=true
+      android.permission.VIBRATE: granted=true
+      android.permission.CAPTURE_BLACKOUT_CONTENT: granted=true
+      com.android.certinstaller.INSTALL_AS_USER: granted=true
+      android.permission.MANAGE_APP_HIBERNATION: granted=true
+      android.permission.MODIFY_ACCESSIBILITY_DATA: granted=true
+      android.permission.MANAGE_ACTIVITY_STACKS: granted=true
+      android.permission.HANDLE_CAR_MODE_CHANGES: granted=true
+      android.permission.CHANGE_DEVICE_IDLE_TEMP_WHITELIST: granted=true
+      android.permission.INTERACT_ACROSS_PROFILES: granted=true
+      android.permission.READ_USER_DICTIONARY: granted=true
+      com.miui.permission.AUDIO_VOIP_RECORD_STATE_CHANGED_ACTION: granted=true
+      com.android.server.telecom.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.SET_CLIP_SOURCE: granted=true
+      com.miui.support.cardview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.CREATE_USERS: granted=true
+      android.permission.MANAGE_SLICE_PERMISSIONS: granted=true
+      android.permission.READ_CLIPBOARD_IN_BACKGROUND: granted=true
+      android.permission.MODIFY_NETWORK_ACCOUNTING: granted=true
+      android.permission.MANAGE_SCOPED_ACCESS_DIRECTORY_PERMISSIONS: granted=true
+      android.provision.permission.SEND_PROVISION_COMPLETE_BROADCAST: granted=true
+      android.permission.CRYPT_KEEPER: granted=true
+      com.miui.securitycenter.permission.PERM_USE_INFO: granted=true
+      com.miui.permission.MANAGE_SMS_INTERCEPT: granted=true
+      android.permission.GET_DETAILED_TASKS: granted=true
+      com.miui.powerkeeper.permission.MIPUSH_RECEIVE: granted=true
+      android.permission.ACCESS_WIFI_STATE: granted=true
+      android.permission.READ_APP_SPECIFIC_LOCALES: granted=true
+      com.miui.yellowpage.permission.BROADCAST_EVENT: granted=true
+      android.permission.GET_RUNTIME_PERMISSIONS: granted=true
+      com.miui.home.launcher.permission.UNINSTALL_SHORTCUT: granted=true
+      android.permission.USE_BIOMETRIC: granted=true
+      android.permission.MANAGE_SMARTSPACE: granted=true
+      android.permission.ACT_AS_PACKAGE_FOR_ACCESSIBILITY: granted=true
+      com.android.setting.permission.GLOBAL_SEARCH: granted=true
+      android.permission.MANAGE_APP_OPS_MODES: granted=true
+      com.android.systemui.permission.PLUGIN: granted=true
+      com.android.settings.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      miui.permission.BLE_IMMEDIATE_ALERT: granted=true
+      android.permission.CONTROL_INCALL_EXPERIENCE: granted=true
+      android.permission.MODIFY_PHONE_STATE: granted=true
+      android.permission.ACCESS_VR_MANAGER: granted=true
+      com.android.launcher.permission.INSTALL_SHORTCUT: granted=true
+      android.permission.STATUS_BAR: granted=true
+      android.permission.READ_FRAME_BUFFER: granted=true
+      android.permission.QUERY_ALL_PACKAGES: granted=true
+      com.google.android.gms.permission.AD_ID: granted=true
+      android.permission.DUMP: granted=true
+      com.miui.securitycenter.permission.GAMEBOOSTER_PROVIDER: granted=true
+      android.permission.READ_DEVICE_CONFIG: granted=true
+      com.miui.permission.AUDIO_RECORD_STATE_CHANGED_ACTION: granted=true
+      android.permission.LOCATION_HARDWARE: granted=true
+      android.permission.SUPPRESS_CLIPBOARD_ACCESS_NOTIFICATION: granted=true
+      android.permission.UNLIMITED_TOASTS: granted=true
+      android.permission.QUERY_ADMIN_POLICY: granted=true
+      android.permission.MODIFY_SETTINGS_OVERRIDEABLE_BY_RESTORE: granted=true
+      android.permission.WAKE_LOCK: granted=true
+      com.miui.securitycore.permission.TOF_SERVICE: granted=true
+      android.permission.SET_UNRESTRICTED_KEEP_CLEAR_AREAS: granted=true
+      android.permission.INJECT_EVENTS: granted=true
+      android.permission.BIND_NETWORK_RECOMMENDATION_SERVICE: granted=true
+      com.miui.securityadd.permission.GAMEBOOSTER_PROVIDER: granted=true
+      miui.permission.EXTRA_NETWORK: granted=true
+      android.permission.UPDATE_APP_OPS_STATS: granted=true
+      com.miui.antispam.permission.CONTENTPROVIDER: granted=true
+      android.permission.OBSERVE_GRANT_REVOKE_PERMISSIONS: granted=true
+      android.permission.READ_OEM_UNLOCK_STATE: granted=true
+      android.permission.ACCESS_AMBIENT_CONTEXT_EVENT: granted=true
+      android.permission.SET_SCREEN_COMPATIBILITY: granted=true
+      com.miui.securitycore.permission.DELETE_SECONDSPACE: granted=true
+      android.permission.MEDIA_CONTENT_CONTROL: granted=true
+      android.permission.DELETE_PACKAGES: granted=true
+    User 0: ceDataInode=5305 installed=true hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=0 instant=false virtual=false
+      installReason=0
+      firstInstallTime=2009-01-01 05:00:00
+      uninstallReason=0
+      overlay paths:
+        /product/overlay/GestureLineOverlay.apk
+        /data/resource-cache/com.android.systemui-neutral-ubTm.frro
+        /data/resource-cache/com.android.systemui-accent-DIg5.frro
+        /data/resource-cache/com.android.systemui-dynamic-60TA.frro
+      legacy overlay paths:
+        /product/overlay/GestureLineOverlay.apk
+      
+com.miui.system overlay paths:
+          /product/overlay/GestureLineOverlay.apk
+          /data/resource-cache/com.android.systemui-neutral-ubTm.frro
+          /data/resource-cache/com.android.systemui-accent-DIg5.frro
+          /data/resource-cache/com.android.systemui-dynamic-60TA.frro
+        
+com.miui.system legacy overlay paths:
+        /product/overlay/GestureLineOverlay.apk
+      
+micloud-sdk overlay paths:
+          /product/overlay/GestureLineOverlay.apk
+          /data/resource-cache/com.android.systemui-neutral-ubTm.frro
+          /data/resource-cache/com.android.systemui-accent-DIg5.frro
+          /data/resource-cache/com.android.systemui-dynamic-60TA.frro
+        
+micloud-sdk legacy overlay paths:
+        /product/overlay/GestureLineOverlay.apk
+
+Queries:
+  system apps queryable: false
+  queries via forceQueryable:
+  forceQueryable:
+    [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+  queries via package name:
+    [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]:
+      com.android.chrome
+      com.miui.android.fashiongallery
+  queries via component:
+    [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]:
+      [com.android.bluetooth,com.xiaomi.bluetooth]
+      com.google.android.projection.gearhead
+      com.google.android.googlequicksearchbox
+      com.google.android.youtube
+      ru.yandex.music
+      com.cxinventor.file.explorer
+      com.zhiliaoapp.musically
+      com.radolyn.ayugram
+  queryable via interaction:
+    User 0:
+      [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]:
+        [com.mediatek.gbaservice,com.android.mms.service,com.android.ons,com.mediatek.ims,com.mediatek.capctrl.service,com.android.phone,com.android.providers.telephony,com.android.stk,com.mediatek.telephony]
+        [com.android.bluetooth,com.xiaomi.bluetooth]
+        com.android.nfc
+        com.android.se
+        [com.google.android.networkstack.tethering,com.google.android.cellbroadcastservice,com.google.android.networkstack]
+        com.android.thememanager
+        com.android.updater
+        com.xiaomi.finddevice
+        [com.android.calllogbackup,com.android.providers.userdictionary,com.android.providers.contacts,com.android.providers.blockednumber]
+        com.android.externalstorage
+        com.android.providers.calendar
+        com.android.htmlviewer
+        [com.android.mtp,com.android.providers.downloads.ui,com.android.providers.media,com.android.soundpicker,com.android.providers.downloads]
+        com.android.statementservice
+        com.google.android.apps.turbo
+        com.google.android.apps.wellbeing
+        com.google.android.partnersetup
+        com.miui.cloudbackup
+        com.android.camera
+        com.mi.globalminusscreen
+        [com.google.android.gms,com.google.android.gsf]
+        com.google.android.googlequicksearchbox
+        com.xiaomi.aicr
+        com.google.android.apps.restore
+        com.mi.android.globallauncher
+        com.google.android.apps.safetyhub
+        com.android.vending
+        com.google.android.as
+        com.google.android.as.oss
+        com.google.android.dialer
+        com.google.android.apps.messaging
+        com.xiaomi.xmsf
+        com.miui.misound
+        com.mi.android.globalFileexplorer
+        com.xiaomi.discover
+        com.google.android.gm
+        com.google.android.inputmethod.latin
+        com.xiaomi.account
+        com.android.chrome
+        com.miui.miwallpaper
+        com.google.android.youtube
+        [com.miui.cloudservice,com.miui.micloudsync]
+        com.milink.service
+        com.google.android.apps.maps
+        com.google.android.tts
+        com.miui.core
+        com.android.deskclock
+        com.xiaomi.simactivate.service
+        com.google.android.apps.subscriptions.red
+        com.google.android.contacts
+        com.google.android.calendar
+        com.google.android.setupwizard
+        com.lbe.security.miui
+        com.mediatek.duraspeed
+        com.android.printspooler
+        com.google.android.ext.services
+        com.google.android.providers.media.module
+        com.google.android.federatedcompute
+        com.google.android.ondevicepersonalization.services
+        com.google.android.cellbroadcastreceiver
+        com.google.android.permissioncontroller
+        com.android.rkpdapp
+        com.android.devicelockcontroller
+        com.miui.weather2
+        ru.urentbike.app
+        com.google.android.apps.photos
+        com.happproxy
+        com.google.android.photopicker
+        com.google.android.apps.docs
+        com.preff.kb.xm
+        ru.ozon.app.android
+        com.wstxda.viper4android
+        com.azure.authenticator
+        ru.yandex.yandexmaps
+        com.whatsapp
+        com.pinterest
+        com.discord
+        ru.yandex.music
+        llc.itdev.incy
+        com.valvesoftware.android.steam.community
+        com.cxinventor.file.explorer
+        com.xiaomi.calendar
+        com.gorillasoftware.everyproxy
+        com.google.android.apps.youtube.creator
+        com.google.android.verifier
+        ru.vk.store
+        com.idamob.tinkoff.android
+        com.zhiliaoapp.musically
+        com.tribalfs.pixels
+        com.google.android.apps.labs.whisk
+        com.radolyn.ayugram
+        ru.oneme.app
+        ru.yandex.taxi
+      [com.android.bluetooth,com.xiaomi.bluetooth]:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      [com.google.android.networkstack.tethering,com.google.android.cellbroadcastservice,com.google.android.networkstack]:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.thememanager:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.xiaomi.finddevice:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      [com.android.calllogbackup,com.android.providers.userdictionary,com.android.providers.contacts,com.android.providers.blockednumber]:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.providers.calendar:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.htmlviewer:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      [com.android.mtp,com.android.providers.downloads.ui,com.android.providers.media,com.android.soundpicker,com.android.providers.downloads]:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.statementservice:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.turbo:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.partnersetup:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.miui.cloudbackup:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      [com.google.android.gms,com.google.android.gsf]:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.googlequicksearchbox:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.restore:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.mi.android.globallauncher:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.safetyhub:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.vending:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.as:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.messaging:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.xiaomi.xmsf:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.miui.misound:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.gm:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.inputmethod.latin:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.miui.miwallpaper:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.youtube:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      [com.miui.cloudservice,com.miui.micloudsync]:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.milink.service:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.maps:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.contacts:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.calendar:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.lbe.security.miui:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.printspooler:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.ext.services:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.providers.media.module:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.permissioncontroller:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.rkpdapp:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.android.devicelockcontroller:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.miui.weather2:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      ru.urentbike.app:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.photos:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.preff.kb.xm:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      ru.yandex.yandexmaps:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.whatsapp:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      ru.yandex.music:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      llc.itdev.incy:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.xiaomi.calendar:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.apps.youtube.creator:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.mirage.pocoanim:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.google.android.verifier:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      ru.vk.store:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.tribalfs.pixels:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      ru.oneme.app:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      ru.yandex.taxi:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      com.xiaomi.xmsf:
+        [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]
+      [com.mediatek,com.mediatek.location.lppe.main,com.xiaomi.cameratools,com.miui.securitycore,miui.systemui.plugin,com.huaqin.sarcontroller,com.miui.notification,com.miui.qr,com.xiaomi.trustservice,com.xiaomi.mtb,com.android.wallpaperbackup,com.android.keychain,com.modemdebug,com.android.inputdevices,com.miui.securitycenter,com.miui.powerkeeper,com.miui.cit,com.miui.freeform,com.mediatek.voicecommand,android,com.mediatek.atci.service,com.android.providers.settings,com.android.provision,com.android.server.telecom,com.android.location.fused,com.huaqin.clearefs,com.miui.aod,com.android.settings,com.trustonic.teeservice,com.miui.audiomonitor,com.miui.screenrecorder,com.xiaomi.barrage,com.miui.face,com.xiaomi.misettings,com.android.dynsystem,com.android.localtransport,com.android.systemui]:
+        [com.google.android.gms,com.google.android.gsf]
+  queryable via uses-library:
+
+Shared users:
+  SharedUser [android.uid.system] (9879ef9):
+    appId=1000
+    Packages
+      PackageSetting{54f622 com.mediatek/1000}
+      PackageSetting{a92c79 com.mediatek.location.lppe.main/1000}
+      PackageSetting{1248c72 com.xiaomi.cameratools/1000}
+      PackageSetting{186b8c3 com.miui.securitycore/1000}
+      PackageSetting{202ffd4 miui.systemui.plugin/1000}
+      PackageSetting{22afdbe com.huaqin.sarcontroller/1000}
+      PackageSetting{25e756c com.miui.notification/1000}
+      PackageSetting{2f0526e com.miui.qr/1000}
+      PackageSetting{3737c58 com.xiaomi.trustservice/1000}
+      PackageSetting{3e561c1 com.xiaomi.mtb/1000}
+      PackageSetting{43229f2 com.android.wallpaperbackup/1000}
+      PackageSetting{4921e1f com.android.keychain/1000}
+      PackageSetting{4f2cacb com.modemdebug/1000}
+      PackageSetting{589cd48 com.miui.daemon/1000}
+      PackageSetting{59537ca com.android.inputdevices/1000}
+      PackageSetting{5d00604 com.miui.securitycenter/1000}
+      PackageSetting{67125e9 com.miui.powerkeeper/1000}
+      PackageSetting{67ff7ed com.miui.cit/1000}
+      PackageSetting{6b70696 com.miui.freeform/1000}
+      PackageSetting{71d019a com.mediatek.voicecommand/1000}
+      PackageSetting{731b57d android/1000}
+      PackageSetting{7390154 com.mediatek.atci.service/1000}
+      PackageSetting{77758b3 com.android.providers.settings/1000}
+      PackageSetting{7871735 com.android.provision/1000}
+      PackageSetting{7c47d3b com.android.server.telecom/1000}
+      PackageSetting{7e148a7 com.android.location.fused/1000}
+      PackageSetting{8497e70 com.huaqin.clearefs/1000}
+      PackageSetting{884cd0f com.miui.aod/1000}
+      PackageSetting{8b99d66 com.android.settings/1000}
+      PackageSetting{92c62a8 com.trustonic.teeservice/1000}
+      PackageSetting{aae96bc com.miui.audiomonitor/1000}
+      PackageSetting{c1ef1b1 com.miui.screenrecorder/1000}
+      PackageSetting{c7a4540 com.xiaomi.barrage/1000}
+      PackageSetting{ca558fd com.miui.face/1000}
+      PackageSetting{cea0b2c com.miui.bugreport/1000}
+      PackageSetting{d93b2af com.xiaomi.misettings/1000}
+      PackageSetting{df3b217 com.android.dynsystem/1000}
+      PackageSetting{fa0119c com.android.localtransport/1000}
+      PackageSetting{faba645 com.android.systemui/1000}
+    install permissions:
+      com.miui.bugreport.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      miuix.recyclerview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.REAL_GET_TASKS: granted=true
+      android.permission.ACCESS_CACHE_FILESYSTEM: granted=true
+      android.permission.REMOTE_AUDIO_PLAYBACK: granted=true
+      android.permission.DOWNLOAD_WITHOUT_NOTIFICATION: granted=true
+      android.permission.ACCESS_GPU_SERVICE: granted=true
+      android.permission.REGISTER_WINDOW_MANAGER_LISTENERS: granted=true
+      android.permission.BIND_INCALL_SERVICE: granted=true
+      com.android.settings.permission.CLOUD_SETTINGS_PROVIDER: granted=true
+      android.permission.WRITE_SETTINGS: granted=true
+      com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE: granted=true
+      android.permission.CONTROL_KEYGUARD: granted=true
+      com.android.provision.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.READ_WALLPAPER_INTERNAL: granted=true
+      miui.cloud.finddevice.ManageFindDevice: granted=true
+      android.permission.CONFIGURE_WIFI_DISPLAY: granted=true
+      android.permission.CONFIGURE_DISPLAY_COLOR_MODE: granted=true
+      android.permission.CONTROL_DISPLAY_COLOR_TRANSFORMS: granted=true
+      miui.permission.CROSS_ENDS_UNLOCK: granted=true
+      com.android.systemui.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.android.keychain.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.permission.UPDATE_RESTRICT_DATA: granted=true
+      android.permission.LIST_ENABLED_CREDENTIAL_PROVIDERS: granted=true
+      android.permission.LOCATION_BYPASS: granted=true
+      android.permission.BIND_ATTENTION_SERVICE: granted=true
+      com.google.android.c2dm.permission.RECEIVE: granted=true
+      com.xiaomi.xmsf.permission.MIPUSH_RECEIVE: granted=true
+      miui.systemui.plugin.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.USE_CREDENTIALS: granted=true
+      android.permission.TABLET_MODE: granted=true
+      com.xiaomi.bluetooth.permission.MMA_STATUS_CHANGED: granted=true
+      com.miui.enterprise.permission.ACTIVE_ENTERPRISE_MODE: granted=true
+      com.android.settings.permission.READ_SETTINGS: granted=true
+      com.miui.powerkeeper.permission.POWER_NOTIFY: granted=true
+      android.permission.BIND_DEVICE_ADMIN: granted=true
+      android.permission.MODIFY_AUDIO_SETTINGS: granted=true
+      android.permission.MANAGE_EXTERNAL_STORAGE: granted=true
+      com.miui.securitycenter.permission.MIPUSH_RECEIVE: granted=true
+      android.permission.ACCESS_CHECKIN_PROPERTIES: granted=true
+      android.permission.ACCESS_NOTIFICATION_POLICY: granted=true
+      android.permission.REMAP_MODIFIER_KEYS: granted=true
+      android.permission.MODIFY_AUDIO_ROUTING: granted=true
+      com.miui.qr.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.GET_APP_OPS_STATS: granted=true
+      miui.os.permisson.INIT_MIUI_ENVIRONMENT: granted=true
+      android.permission.READ_SAFETY_CENTER_STATUS: granted=true
+      android.permission.CONTROL_KEYGUARD_SECURE_NOTIFICATIONS: granted=true
+      android.permission.READ_WIFI_CREDENTIAL: granted=true
+      android.permission.QUERY_AUDIO_STATE: granted=true
+      android.miui.permission.SHELL: granted=true
+      android.permission.INSTALL_LOCATION_PROVIDER: granted=true
+      android.permission.USE_RESERVED_DISK: granted=true
+      android.permission.START_ACTIVITY_AS_CALLER: granted=true
+      android.permission.MANAGE_ACCOUNTS: granted=true
+      com.miui.antispam.permission.DATA_MONTH_REPORT: granted=true
+      com.miui.monthreport.permission.DATA_MONTH_REPORT: granted=true
+      android.permission.SYSTEM_ALERT_WINDOW: granted=true
+      android.permission.BROADCAST_PHONE_ACCOUNT_REGISTRATION: granted=true
+      com.miui.securitycenter.permission.RECEIVE_TRACK_EVERYWEEK: granted=true
+      android.permission.START_TASKS_FROM_RECENTS: granted=true
+      com.miui.powerkeeper.permission.REQUEST_WAKE: granted=true
+      android.permission.GET_TOP_ACTIVITY_INFO: granted=true
+      android.permission.CLEAR_APP_USER_DATA: granted=true
+      android.permission.MONITOR_INPUT: granted=true
+      com.xiaomi.bluetooth.permission.WIFI_ACCOUNT_AP: granted=true
+      android.permission.BROADCAST_CALLLOG_INFO: granted=true
+      android.permission.CONTROL_UI_TRACING: granted=true
+      com.miui.securitycenter.permission.ACCESS_SECURITY_CENTER_PROVIDER: granted=true
+      miui.permission.USE_INTERNAL_GENERAL_API: granted=true
+      com.android.settings.permission.MIPUSH_RECEIVE: granted=true
+      android.permission.MANAGE_VOICE_KEYPHRASES: granted=true
+      android.permission.SHUTDOWN: granted=true
+      com.miui.securitycenter.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.CHANGE_COMPONENT_ENABLED_STATE: granted=true
+      android.permission.BIND_QUICK_SETTINGS_TILE: granted=true
+      miui.permission.BUGREPORT: granted=true
+      android.permission.NFC: granted=true
+      android.permission.INTERNAL_SYSTEM_WINDOW: granted=true
+      android.permission.BIND_ROTATION_RESOLVER_SERVICE: granted=true
+      android.permission.NETWORK_SETTINGS: granted=true
+      miui.permission.READ_AND_WIRTE_PERMISSION_MANAGER: granted=true
+      android.permission.CHANGE_OVERLAY_PACKAGES: granted=true
+      com.miui.permission.ACCESS_ESE: granted=true
+      android.permission.START_ANY_ACTIVITY: granted=true
+      android.permission.CALL_PRIVILEGED: granted=true
+      android.permission.MANAGE_APP_TOKENS: granted=true
+      android.permission.CHANGE_NETWORK_STATE: granted=true
+      android.permission.MASTER_CLEAR: granted=true
+      android.permission.FOREGROUND_SERVICE: granted=true
+      android.permission.WRITE_SYNC_SETTINGS: granted=true
+      android.permission.READ_INSTALLED_SESSION_PATHS: granted=true
+      android.permission.ALLOW_PLACE_IN_MULTI_PANE_SETTINGS: granted=true
+      android.permission.MANAGE_DYNAMIC_SYSTEM: granted=true
+      com.miui.notification.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.yellowpage.permission.ACCESS_YELLOWPAGE: granted=true
+      android.permission.LAUNCH_MULTI_PANE_SETTINGS_DEEP_LINK: granted=true
+      android.permission.RESET_SHORTCUT_MANAGER_THROTTLING: granted=true
+      android.permission.RESET_FINGERPRINT_LOCKOUT: granted=true
+      android.permission.MANAGE_ACTIVITY_TASKS: granted=true
+      android.permission.RECEIVE_BOOT_COMPLETED: granted=true
+      miuix.autodensity.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.android.settings.permission.UPDATE_NEW_BLUETOOTH_PLUGINS: granted=true
+      com.google.android.googleapps.permission.GOOGLE_AUTH: granted=true
+      android.permission.FOREGROUND_SERVICE_SPECIAL_USE: granted=true
+      android.permission.MANAGE_ROLE_HOLDERS: granted=true
+      miuix.pinyin.utilities.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.PEERS_MAC_ADDRESS: granted=true
+      com.miui.securitycore.permission.KID_SPACE: granted=true
+      android.permission.DEVICE_POWER: granted=true
+      android.permission.ENFORCE_UPDATE_OWNERSHIP: granted=true
+      com.miui.securitrycenter.permission.EXTERNAL_ANLYTICS: granted=true
+      android.permission.REMOVE_TASKS: granted=true
+      android.permission.READ_PRINT_SERVICES: granted=true
+      android.permission.EXPAND_STATUS_BAR: granted=true
+      com.xiaomi.misettings.screentime: granted=true
+      android.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS: granted=true
+      android.permission.USE_ICC_AUTH_WITH_DEVICE_IDENTIFIER: granted=true
+      android.permission.RESTART_WIFI_SUBSYSTEM: granted=true
+      android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS: granted=true
+      android.permission.READ_PROFILE: granted=true
+      android.permission.PROCESS_CALL_RECORD: granted=true
+      android.permission.BLUETOOTH: granted=true
+      com.anroid.settings.permission.PRIVACY_AUTHORIZATION_DIALOG: granted=true
+      com.android.alarm.permission.SET_ALARM: granted=true
+      android.permission.WRITE_MEDIA_STORAGE: granted=true
+      android.permission.WRITE_BLOCKED_NUMBERS: granted=true
+      android.permission.WATCH_APPOPS: granted=true
+      android.permission.GET_TASKS: granted=true
+      android.permission.ACCESS_SURFACE_FLINGER: granted=true
+      android.permission.BIND_REMOTE_LOCKSCREEN_VALIDATION_SERVICE: granted=true
+      com.miui.permission.FIREWALL: granted=true
+      android.permission.AUTHENTICATE_ACCOUNTS: granted=true
+      android.permission.INTERNET: granted=true
+      android.permission.BIND_RESOLVER_RANKER_SERVICE: granted=true
+      miui.permission.ACCESS_ALARM_PROVIDER: granted=true
+      android.permission.REORDER_TASKS: granted=true
+      android.permission.GET_INTENT_SENDER_INTENT: granted=true
+      com.android.camera.permission.SPLASH: granted=true
+      android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION: granted=true
+      android.permission.BLUETOOTH_ADMIN: granted=true
+      android.permission.CONTROL_VPN: granted=true
+      android.permission.UPDATE_DEVICE_STATS: granted=true
+      android.permission.READ_PRECISE_PHONE_STATE: granted=true
+      android.permission.MANAGE_FINGERPRINT: granted=true
+      android.permission.READ_PROJECTION_STATE: granted=true
+      android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS: granted=true
+      android.permission.ROTATE_SURFACE_FLINGER: granted=true
+      android.permission.SEND_SAFETY_CENTER_UPDATE: granted=true
+      android.permission.BIND_CONNECTION_SERVICE: granted=true
+      android.permission.BIND_QUICK_ACCESS_WALLET_SERVICE: granted=true
+      com.mi.android.globallauncher.permission.WRITE_SETTINGS: granted=true
+      miuix.log.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.xiaomi.calendar.permission.READ_CALENDAR: granted=true
+      com.miui.gamebooster.access.ACTIVITY: granted=true
+      android.permission.ACCESS_INSTANT_APPS: granted=true
+      com.miui.securitycore.permission.XSPACE_DUAL: granted=true
+      android.permission.MANAGE_ACCESSIBILITY: granted=true
+      com.android.launcher.permission.WRITE_SETTINGS: granted=true
+      android.permission.CONTROL_REMOTE_APP_TRANSITION_ANIMATIONS: granted=true
+      android.permission.GET_PACKAGE_SIZE: granted=true
+      android.permission.MODIFY_THEME_OVERLAY: granted=true
+      android.permission.USE_EXACT_ALARM: granted=true
+      com.miui.systemAdSolution.adSwitch.PROVIDER: granted=true
+      android.permission.TRUST_LISTENER: granted=true
+      android.permission.ACCESS_CONTEXT_HUB: granted=true
+      android.permission.MANAGE_USB: granted=true
+      android.permission.INTERACT_ACROSS_USERS_FULL: granted=true
+      com.android.updater.permission.ACCESS_UPDATESERVICE: granted=true
+      android.permission.CHANGE_ACCESSIBILITY_VOLUME: granted=true
+      android.permission.BIND_APPWIDGET: granted=true
+      android.permission.STOP_APP_SWITCHES: granted=true
+      com.miui.permission.CONTROL_PC_MODE: granted=true
+      com.xiaomi.permission.ACCESS_SECURITY_DEVICE_CREDENTIAL: granted=true
+      android.permission.RECEIVE_MEDIA_RESOURCE_USAGE: granted=true
+      android.permission.BATTERY_STATS: granted=true
+      com.miui.powerkeeper.permission.CUSTOMER_POWER: granted=true
+      miui.notification.permission.ACCESS_PROVIDER: granted=true
+      android.permission.PACKAGE_USAGE_STATS: granted=true
+      android.permission.MOUNT_UNMOUNT_FILESYSTEMS: granted=true
+      miuix.graphics.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.TETHER_PRIVILEGED: granted=true
+      android.permission.WRITE_SECURE_SETTINGS: granted=true
+      android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED: granted=true
+      com.miui.mipub.permission.WRITE_HEDUOHAO: granted=true
+      android.permission.CAPTURE_AUDIO_OUTPUT: granted=true
+      com.miui.securitycenter.permission.SYSTEM_PERMISSION_DECLARE: granted=true
+      android.permission.MONITOR_KEYBOARD_BACKLIGHT: granted=true
+      android.permission.MANAGE_DEBUGGING: granted=true
+      android.permission.MOVE_PACKAGE: granted=true
+      android.permission.SET_ACTIVITY_WATCHER: granted=true
+      android.permission.READ_BLOCKED_NUMBERS: granted=true
+      android.permission.BROADCAST_OPTION_INTERACTIVE: granted=true
+      android.permission.STATUS_BAR_SERVICE: granted=true
+      android.permission.READ_SEARCH_INDEXABLES: granted=true
+      android.permission.CONTROL_DEVICE_STATE: granted=true
+      com.android.systemui.permission.NOTIFICATION: granted=true
+      android.permission.LOG_COMPAT_CHANGE: granted=true
+      android.permission.USE_FULL_SCREEN_INTENT: granted=true
+      com.android.launcher.permission.READ_SETTINGS: granted=true
+      android.permission.READ_PRIVILEGED_PHONE_STATE: granted=true
+      android.permission.ACCESS_DOWNLOAD_MANAGER: granted=true
+      android.permission.BROADCAST_STICKY: granted=true
+      miui.permission.powerkeeper.HIDDEN_MODE_PROVIDER: granted=true
+      com.android.settings.permission.POWER_MODE_CHANGE: granted=true
+      android.permission.BLUETOOTH_PRIVILEGED: granted=true
+      com.miui.securitycenter.permission.SWITCH_DEV_MODE: granted=true
+      com.xiaomi.permission.CLOUD_MANAGER: granted=true
+      android.permission.HARDWARE_TEST: granted=true
+      android.permission.USE_BIOMETRIC_INTERNAL: granted=true
+      android.permission.OBSERVE_SENSOR_PRIVACY: granted=true, flags=[ GRANTED_BY_ROLE]
+      com.miui.gamebooster.permission.PARENT_VERIFY: granted=true
+      android.permission.SET_SYSTEM_AUDIO_CAPTION: granted=true
+      com.android.settings.permission.PULL_CLOUD_DATA: granted=true
+      com.miui.analytics.onetrack.TRACK_EVENT: granted=true
+      android.permission.INSTALL_DYNAMIC_SYSTEM: granted=true
+      android.permission.CONTROL_DISPLAY_BRIGHTNESS: granted=true
+      android.permission.SUBSTITUTE_NOTIFICATION_APP_NAME: granted=true
+      android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE: granted=true
+      com.miui.permission.MANAGE_BOOT_TIME: granted=true
+      android.permission.ACCESS_KEYGUARD_SECURE_STORAGE: granted=true
+      android.permission.BIND_JOB_SERVICE: granted=true
+      android.permission.OBSERVE_ROLE_HOLDERS: granted=true
+      miui.permission.ALARM_RINGTONE_PICKER: granted=true
+      android.permission.CONFIRM_FULL_BACKUP: granted=true
+      android.permission.SET_TIME: granted=true
+      miuix.appcompat.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.WRITE_APN_SETTINGS: granted=true
+      android.permission.CHANGE_WIFI_STATE: granted=true
+      android.permission.CAMERA_OPEN_CLOSE_LISTENER: granted=true
+      com.miui.securitycenter.permission.GLOBAL_PACKAGEINSTALLER: granted=true
+      com.xiaomi.permission.AUTH_SERVICE: granted=true
+      android.permission.MODIFY_DAY_NIGHT_MODE: granted=true
+      android.permission.INPUT_CONSUMER: granted=true
+      android.permission.MANAGE_BIOMETRIC: granted=true
+      android.permission.PACKAGE_VERIFICATION_AGENT: granted=true
+      android.permission.SET_ORIENTATION: granted=true
+      android.permission.MANAGE_USERS: granted=true
+      android.permission.DELETE_CACHE_FILES: granted=true
+      android.permission.ACCESS_NETWORK_STATE: granted=true
+      miuix.preference.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.MODIFY_DEFAULT_AUDIO_EFFECTS: granted=true
+      android.permission.DISABLE_KEYGUARD: granted=true
+      android.permission.OBSERVE_NETWORK_POLICY: granted=true
+      android.permission.BACKUP: granted=true
+      android.permission.CHANGE_CONFIGURATION: granted=true
+      android.permission.USER_ACTIVITY: granted=true
+      android.permission.LOCAL_MAC_ADDRESS: granted=true
+      android.permission.READ_LOGS: granted=true
+      com.miui.gameturbo.permission.ACTIVE_MANAGER: granted=true
+      android.permission.COPY_PROTECTED_DATA: granted=true
+      com.miui.permission.CONTROL_PC_LAUNCHER: granted=true
+      android.permission.MANAGE_CONTENT_SUGGESTIONS: granted=true
+      com.miui.bugreport.permission.DUMP_CACHED_LOG: granted=true
+      android.permission.INTERACT_ACROSS_USERS: granted=true
+      miuix.transition.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.SET_WALLPAPER: granted=true
+      com.miui.mipub.permission.READ_HEDUOHAO: granted=true
+      android.permission.SET_KEYBOARD_LAYOUT: granted=true
+      android.permission.WAKEUP_SURFACE_FLINGER: granted=true
+      com.xiaomi.bluetooth.permission.NEW_VERSION_PLUGIN_UPGRADE: granted=true
+      android.permission.BROADCAST_CLOSE_SYSTEM_DIALOGS: granted=true
+      com.android.settings.permission.SWITCH_DEV_MODE: granted=true
+      miui.permission.ACCESS_RECORDS: granted=true
+      android.permission.READ_DREAM_STATE: granted=true
+      android.permission.QUERY_DO_NOT_ASK_CREDENTIALS_ON_BOOT: granted=true
+      android.permission.START_VIEW_APP_FEATURES: granted=true
+      com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.securitycenter.permission.TOP_GAME_LIST: granted=true
+      android.permission.MANAGE_LOCATION_POLICY: granted=true
+      android.permission.HANDLE_QUERY_PACKAGE_RESTART: granted=true
+      com.xiaomi.permission.USE_KEYBAG: granted=true
+      android.permission.READ_NETWORK_USAGE_HISTORY: granted=true
+      com.miui.systemAdSolution.LOCAL_AD_PROVIDER: granted=true
+      android.permission.MANAGE_APP_OPS_RESTRICTIONS: granted=true
+      android.permission.KILL_BACKGROUND_PROCESSES: granted=true
+      android.permission.MANAGE_USER_OEM_UNLOCK_STATE: granted=true
+      com.android.phone.permission.ACCESS_LAST_KNOWN_CELL_ID: granted=true
+      android.permission.USE_FINGERPRINT: granted=true
+      android.permission.REQUEST_NETWORK_SCORES: granted=true
+      android.permission.ACCESS_VOICE_INTERACTION_SERVICE: granted=true
+      miui.cloud.finddevice.AccessFindDevice: granted=true
+      android.permission.MANAGE_SENSOR_PRIVACY: granted=true, flags=[ GRANTED_BY_ROLE]
+      android.permission.CONNECTIVITY_USE_RESTRICTED_NETWORKS: granted=true
+      com.miui.dock.permission.DOCK_EVENT: granted=true
+      android.permission.SOUNDTRIGGER_DELEGATE_IDENTITY: granted=true
+      android.permission.WRITE_USER_DICTIONARY: granted=true
+      android.permission.READ_DREAM_SUPPRESSION: granted=true
+      android.permission.READ_SYNC_STATS: granted=true
+      android.permission.WRITE_DREAM_STATE: granted=true
+      android.permission.ACCESS_SHORTCUTS: granted=true
+      android.permission.REBOOT: granted=true
+      com.miui.guardprovider.permission.Guard_Provider: granted=true
+      android.permission.READ_PEOPLE_DATA: granted=true
+      android.permission.SCHEDULE_EXACT_ALARM: granted=true
+      com.android.updater.permission.RECEIVE_BROADCAST: granted=true
+      android.permission.REQUEST_DELETE_PACKAGES: granted=true
+      android.permission.OEM_UNLOCK_STATE: granted=true
+      com.xiaomi.trustservice.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.MANAGE_DEVICE_ADMINS: granted=true
+      android.permission.CLEAR_APP_CACHE: granted=true
+      android.permission.BIND_CONTROLS: granted=true
+      android.permission.CHANGE_APP_IDLE_STATE: granted=true
+      android.permission.BIND_SETTINGS_SUGGESTIONS_SERVICE: granted=true
+      android.permission.TEST_BLACKLISTED_PASSWORD: granted=true
+      android.permission.MANAGE_NETWORK_POLICY: granted=true
+      android.permission.ADD_TRUSTED_DISPLAY: granted=true
+      android.permission.MANAGE_NOTIFICATION_LISTENERS: granted=true
+      android.permission.SET_POINTER_SPEED: granted=true
+      miui.permission.ACCESS_MILINK_CAST: granted=true
+      android.permission.MANAGE_NOTIFICATIONS: granted=true
+      android.permission.USE_COLORIZED_NOTIFICATIONS: granted=true
+      com.miui.bugreport.permission.MIPUSH_RECEIVE: granted=true
+      com.android.systemui.permission.SELF: granted=true
+      miui.permission.BACKUP_PROXY: granted=true
+      android.permission.SEND_SHOW_SUSPENDED_APP_DETAILS: granted=true
+      android.permission.CONNECTIVITY_INTERNAL: granted=true
+      android.permission.MANAGE_MEDIA_PROJECTION: granted=true
+      android.permission.ALLOW_SLIPPERY_TOUCHES: granted=true
+      android.permission.READ_SYNC_SETTINGS: granted=true
+      android.permission.START_ACTIVITIES_FROM_BACKGROUND: granted=true
+      android.permission.BIND_CELL_BROADCAST_SERVICE: granted=true
+      com.xiaomi.gallery.permission.CLOUD: granted=true
+      android.permission.READ_COMPAT_CHANGE_CONFIG: granted=true
+      com.miui.weather2.permission.WRITE_DB: granted=true
+      com.miui.gallery.permission.USE_API: granted=true
+      android.permission.SET_WALLPAPER_DIM_AMOUNT: granted=true
+      android.permission.LOADER_USAGE_STATS: granted=true
+      android.permission.OVERRIDE_WIFI_CONFIG: granted=true
+      android.permission.FORCE_STOP_PACKAGES: granted=true
+      android.permission.SUGGEST_MANUAL_TIME_AND_ZONE: granted=true
+      miuix.nestedheader.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.miui.securityadd.permission.SUPERPOWER_RECEIVE: granted=true
+      android.permission.MODIFY_TOUCH_MODE_STATE: granted=true
+      android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS: granted=true
+      android.permission.ACCESS_NOTIFICATIONS: granted=true
+      android.permission.HANDLE_CALL_INTENT: granted=true
+      android.permission.MEDIA_RESOURCE_OVERRIDE_PID: granted=true
+      com.xiaomi.xmsf.permission.USE_XMSF_TRAFFIC: granted=true
+      android.permission.CUSTOMIZE_SYSTEM_UI: granted=true
+      android.permission.VIBRATE: granted=true
+      android.permission.CAPTURE_BLACKOUT_CONTENT: granted=true
+      com.android.certinstaller.INSTALL_AS_USER: granted=true
+      android.permission.MANAGE_APP_HIBERNATION: granted=true
+      android.permission.MODIFY_ACCESSIBILITY_DATA: granted=true
+      android.permission.MANAGE_ACTIVITY_STACKS: granted=true
+      android.permission.HANDLE_CAR_MODE_CHANGES: granted=true
+      android.permission.CHANGE_DEVICE_IDLE_TEMP_WHITELIST: granted=true
+      android.permission.INTERACT_ACROSS_PROFILES: granted=true
+      android.permission.READ_USER_DICTIONARY: granted=true
+      com.miui.permission.AUDIO_VOIP_RECORD_STATE_CHANGED_ACTION: granted=true
+      com.android.server.telecom.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.SET_CLIP_SOURCE: granted=true
+      com.miui.support.cardview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.CREATE_USERS: granted=true
+      android.permission.MANAGE_SLICE_PERMISSIONS: granted=true
+      android.permission.READ_CLIPBOARD_IN_BACKGROUND: granted=true
+      android.permission.MODIFY_NETWORK_ACCOUNTING: granted=true
+      android.permission.MANAGE_SCOPED_ACCESS_DIRECTORY_PERMISSIONS: granted=true
+      android.provision.permission.SEND_PROVISION_COMPLETE_BROADCAST: granted=true
+      android.permission.CRYPT_KEEPER: granted=true
+      com.miui.securitycenter.permission.PERM_USE_INFO: granted=true
+      com.miui.permission.MANAGE_SMS_INTERCEPT: granted=true
+      android.permission.GET_DETAILED_TASKS: granted=true
+      com.miui.powerkeeper.permission.MIPUSH_RECEIVE: granted=true
+      android.permission.ACCESS_WIFI_STATE: granted=true
+      android.permission.READ_APP_SPECIFIC_LOCALES: granted=true
+      com.miui.yellowpage.permission.BROADCAST_EVENT: granted=true
+      android.permission.GET_RUNTIME_PERMISSIONS: granted=true
+      com.miui.home.launcher.permission.UNINSTALL_SHORTCUT: granted=true
+      android.permission.USE_BIOMETRIC: granted=true
+      android.permission.MANAGE_SMARTSPACE: granted=true
+      android.permission.ACT_AS_PACKAGE_FOR_ACCESSIBILITY: granted=true
+      com.android.setting.permission.GLOBAL_SEARCH: granted=true
+      android.permission.MANAGE_APP_OPS_MODES: granted=true
+      com.android.systemui.permission.PLUGIN: granted=true
+      com.android.settings.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      miui.permission.BLE_IMMEDIATE_ALERT: granted=true
+      android.permission.CONTROL_INCALL_EXPERIENCE: granted=true
+      android.permission.MODIFY_PHONE_STATE: granted=true
+      android.permission.ACCESS_VR_MANAGER: granted=true
+      com.android.launcher.permission.INSTALL_SHORTCUT: granted=true
+      android.permission.STATUS_BAR: granted=true
+      android.permission.READ_FRAME_BUFFER: granted=true
+      android.permission.QUERY_ALL_PACKAGES: granted=true
+      com.google.android.gms.permission.AD_ID: granted=true
+      android.permission.DUMP: granted=true
+      com.miui.securitycenter.permission.GAMEBOOSTER_PROVIDER: granted=true
+      android.permission.READ_DEVICE_CONFIG: granted=true
+      com.miui.permission.AUDIO_RECORD_STATE_CHANGED_ACTION: granted=true
+      android.permission.LOCATION_HARDWARE: granted=true
+      android.permission.SUPPRESS_CLIPBOARD_ACCESS_NOTIFICATION: granted=true
+      android.permission.UNLIMITED_TOASTS: granted=true
+      android.permission.QUERY_ADMIN_POLICY: granted=true
+      android.permission.MODIFY_SETTINGS_OVERRIDEABLE_BY_RESTORE: granted=true
+      android.permission.WAKE_LOCK: granted=true
+      com.miui.securitycore.permission.TOF_SERVICE: granted=true
+      android.permission.SET_UNRESTRICTED_KEEP_CLEAR_AREAS: granted=true
+      android.permission.INJECT_EVENTS: granted=true
+      android.permission.BIND_NETWORK_RECOMMENDATION_SERVICE: granted=true
+      com.miui.securityadd.permission.GAMEBOOSTER_PROVIDER: granted=true
+      miui.permission.EXTRA_NETWORK: granted=true
+      android.permission.UPDATE_APP_OPS_STATS: granted=true
+      com.miui.antispam.permission.CONTENTPROVIDER: granted=true
+      android.permission.OBSERVE_GRANT_REVOKE_PERMISSIONS: granted=true
+      android.permission.READ_OEM_UNLOCK_STATE: granted=true
+      android.permission.ACCESS_AMBIENT_CONTEXT_EVENT: granted=true
+      android.permission.SET_SCREEN_COMPATIBILITY: granted=true
+      com.miui.securitycore.permission.DELETE_SECONDSPACE: granted=true
+      android.permission.MEDIA_CONTENT_CONTROL: granted=true
+      android.permission.DELETE_PACKAGES: granted=true
+    User 0: 
+      gids=[2001, 1065, 1005, 3002, 3003, 3001, 3007, 1007, 3006]
+      runtime permissions:
+        android.permission.POST_NOTIFICATIONS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_CALL_LOG: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.ACCESS_FINE_LOCATION: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_PHONE_NUMBERS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_MEDIA_VISUAL_USER_SELECTED: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.BLUETOOTH_CONNECT: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_EXTERNAL_STORAGE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.ACCESS_COARSE_LOCATION: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_PHONE_STATE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.SEND_SMS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.CALL_PHONE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_MEDIA_IMAGES: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.CAMERA: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.WRITE_CALL_LOG: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_MEDIA_AUDIO: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_MEDIA_VIDEO: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.BLUETOOTH_ADVERTISE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.GET_ACCOUNTS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.WRITE_EXTERNAL_STORAGE: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        miui.permission.ACCESS_BLE_SETTINGS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.RECORD_AUDIO: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.READ_CONTACTS: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.ACCESS_BACKGROUND_LOCATION: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+        android.permission.BLUETOOTH_SCAN: granted=true, flags=[ SYSTEM_FIXED|GRANTED_BY_DEFAULT|RESTRICTION_INSTALLER_EXEMPT|RESTRICTION_SYSTEM_EXEMPT|RESTRICTION_UPGRADE_EXEMPT]
+
+Dexopt state:
+  [com.miui.aod]
+    path: /product/priv-app/MIUIAod/MIUIAod.apk
+      arm64: [status=run-from-apk-fallback] [reason=bg-dexopt] [primary-abi]
+        [location is /data/dalvik-cache/arm64/product@priv-app@MIUIAod@MIUIAod.apk@classes.dex]
+    base APK odex file size: MIUIAod.odex: 136Kb MIUIAod.vdex: 13284Kb 
+
+Compiler stats:
+  [com.miui.aod]
+     MIUIAod.apk - 1787

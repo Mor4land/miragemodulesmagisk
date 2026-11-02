@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.edit.view.EditorDialogNoTitleBarView android:layout_width="fill_parent" android:layout_height="wrap_content" app:fixedPaddingVetical="false" app:smallCorner="true"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.miui.keyguard.editor.edit.view.ClassicSelectorContainer android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="15.0dip" app:containerMaxHeight="@dimen/kg_classic_text_editor_non_text_max_height" app:containerMinHeight="@dimen/kg_classic_text_editor_min_height">
+        <com.miui.keyguard.editor.edit.view.StyleSelectorView android:id="@id/text_area_editor_selector_view" android:layout_width="fill_parent" android:layout_height="wrap_content" app:labelVisible="false" app:layoutManagerType="linearLayoutManager" />
+    </com.miui.keyguard.editor.edit.view.ClassicSelectorContainer>
+    <View android:background="?classicItemFontColor" android:layout_width="fill_parent" android:layout_height="0.74dip" android:layout_marginLeft="@dimen/kg_editor_margin_right" android:layout_marginRight="@dimen/kg_editor_margin_right" android:layout_marginBottom="15.0dip" />
+    <com.miui.keyguard.editor.edit.view.ClassicSelectorContainer android:layout_width="fill_parent" android:layout_height="wrap_content" app:containerMaxHeight="@dimen/kg_classic_text_editor_non_text_max_height" app:containerMinHeight="@dimen/kg_classic_text_editor_min_height">
+        <com.miui.keyguard.editor.edit.view.StyleSelectorView android:id="@id/text_area_editor_selector_view1" android:layout_width="fill_parent" android:layout_height="wrap_content" app:labelVisible="false" app:layoutManagerType="linearLayoutManager" />
+    </com.miui.keyguard.editor.edit.view.ClassicSelectorContainer>
+    <View android:background="?classicItemFontColor" android:layout_width="fill_parent" android:layout_height="0.74dip" android:layout_marginLeft="@dimen/kg_editor_margin_right" android:layout_marginRight="@dimen/kg_editor_margin_right" android:layout_marginBottom="15.0dip" />
+    <com.miui.keyguard.editor.edit.view.ClassicSelectorContainer android:layout_width="fill_parent" android:layout_height="wrap_content" app:containerMaxHeight="@dimen/kg_classic_text_editor_non_text_max_height" app:containerMinHeight="@dimen/kg_classic_text_editor_min_height">
+        <com.miui.keyguard.editor.edit.view.StyleSelectorView android:id="@id/text_area_editor_selector_view2" android:layout_width="fill_parent" android:layout_height="wrap_content" app:labelVisible="false" app:layoutManagerType="linearLayoutManager" />
+    </com.miui.keyguard.editor.edit.view.ClassicSelectorContainer>
+</com.miui.keyguard.editor.edit.view.EditorDialogNoTitleBarView>

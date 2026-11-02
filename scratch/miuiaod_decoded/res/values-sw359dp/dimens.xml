@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_main_item_content_drawable_height">493.0dip</dimen>
+    <dimen name="kg_main_item_content_drawable_width">207.69dip</dimen>
+</resources>

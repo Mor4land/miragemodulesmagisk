@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="aod_textstyle_height">342.0dip</dimen>
+    <dimen name="aod_textstyle_width">342.0dip</dimen>
+    <dimen name="sun_text_size">31.199982dip</dimen>
+    <dimen name="sun_text_size_s">19.0dip</dimen>
+</resources>

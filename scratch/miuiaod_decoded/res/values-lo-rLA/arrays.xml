@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>ຮູບແບບຕົວອັກສອນລະບົບ</item>
+        <item>ສີ່ຫຼ່ຽມກວ້າງ</item>
+        <item>ສີດໍາງ່າຍດາຍ</item>
+        <item>ສອງຊັ້ນ</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>ຕົ້ນສະບັບ</item>
+        <item>ມົວ</item>
+        <item>Reeded</item>
+        <item>ຢາງ</item>
+        <item>Prism</item>
+        <item>Grooves</item>
+        <item>ຄື້ນ</item>
+        <item>ສີ່ຫຼ່ຽມ</item>
+    </string-array>
+</resources>

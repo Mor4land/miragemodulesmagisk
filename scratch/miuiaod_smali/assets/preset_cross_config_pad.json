@@ -1,0 +1,119 @@
+[
+  {
+    "title": "kg_template_title_classic",
+    "desc": "kg_template_description_classic",
+    "templates": [
+      {
+        "templateName": "kg_classic_max_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic01.jpg",
+        "preload": true,
+        "loadingColor": -3889517
+      },
+      {
+        "templateName": "kg_classic_max_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic02.jpg",
+        "loadingColor": -3889517
+      },
+      {
+        "templateName": "kg_classic_max_style3",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic03.jpg",
+        "loadingColor": -13662
+      },
+      {
+        "templateName": "kg_classic_max_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic04.jpg",
+        "loadingColor": -13662
+      },
+      {
+        "templateName": "kg_classic_max_style5",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic05.jpg",
+        "loadingColor": -3889517
+      }
+    ]
+  },
+  {
+    "title": "kg_template_title_magazine",
+    "desc": "kg_template_description_magazine",
+    "templates": [
+      {
+        "templateName": "kg_pad_c_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine01.jpg",
+        "loadingColor": -9931674,
+        "templateId": "pad_exclusive_c"
+      },
+      {
+        "templateName": "kg_pad_c_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine02.jpg",
+        "depth": true,
+        "loadingColor": -9931674,
+        "templateId": "pad_exclusive_c"
+      },
+      {
+        "templateName": "kg_pad_a_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine03.jpg",
+        "loadingColor": -9931674,
+        "templateId": "pad_exclusive_a"
+      },
+      {
+        "templateName": "kg_pad_a_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine04.jpg",
+        "depth": true,
+        "loadingColor": -9931674,
+        "templateId": "pad_exclusive_a"
+      },
+      {
+        "templateName": "kg_pad_b_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine05.jpg",
+        "loadingColor": -9931674,
+        "templateId": "pad_exclusive_b"
+      }
+    ]
+  },
+  {
+    "title": "kg_template_title_eastern_art",
+    "desc": "kg_template_description_eastern_art",
+    "templates": [
+      {
+        "templateName": "kg_eastern_c_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east01.jpg",
+        "loadingColor": -9931674,
+        "hideFlag": 1
+      },
+      {
+        "templateName": "kg_eastern_c_style5",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east02.jpg",
+        "loadingColor": -9931674,
+        "hideFlag": 5
+      },
+      {
+        "templateName": "kg_eastern_c_style5_1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east02.jpg",
+        "loadingColor": -9931674,
+        "hideFlag": 9
+      },
+      {
+        "templateName": "kg_rhombus_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/00_rhombus/rhombus01.jpg",
+        "loadingColor": -10925521
+      },
+      {
+        "templateName": "kg_eastern_b_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east04.jpg",
+        "loadingColor": -9931674,
+        "hideFlag": 4
+      },
+      {
+        "templateName": "kg_eastern_a_style3",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east06.jpg",
+        "depth": true,
+        "loadingColor": -9931674
+      },
+      {
+        "templateName": "kg_eastern_a_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east07.jpg",
+        "depth": true,
+        "loadingColor": -9931674
+      }
+    ]
+  }
+]

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.view.FilterIconLayout android:background="@drawable/kg_selector_drawable_selector_frame_bg_common" android:layout_width="@dimen/kg_magazine_signature_font_style_width" android:layout_height="@dimen/kg_magazine_signature_font_style_height"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:layout_gravity="center" android:id="@id/drawable_selector_item_icon" android:background="@drawable/kg_selector_drawable_selector_item_bg_common" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_margin="@dimen/kg_font_drawable_item_margin" android:scaleType="center" />
+</com.miui.keyguard.editor.view.FilterIconLayout>

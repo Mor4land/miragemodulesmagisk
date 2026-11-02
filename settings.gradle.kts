@@ -10,6 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
@@ -21,3 +22,5 @@ include(":poco-scenarios")
 include(":poco-tongue-scroll")
 include(":poco-debloat")
 include(":xposed-stub")
+include(":magisk-template")
+

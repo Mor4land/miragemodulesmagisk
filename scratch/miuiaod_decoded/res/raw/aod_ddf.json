@@ -1,0 +1,134 @@
+{
+  "type": "urn:aiot-spec-v3:com.mi.phones:device:phone:0:1.0",
+  "description": "",
+  "protocol-version": "3.0",
+  "class": "MiPhone",
+  "dynamic": -1,
+  "ddfid": 11993089,
+  "modules": [
+    {
+      "iid": 1,
+      "type": "urn:aiot-spec-v3:com.mi.phones:module:[com.miui.aod]:0:1.0",
+      "description": "aod module",
+      "name": "com.miui.aod",
+      "services": [
+        {
+          "iid": 1,
+          "type": "urn:aiot-spec-v3:com.mi.phones:service:[com.miui.aod/aod]:0:1.0",
+          "description": "aod service",
+          "name": "aod",
+          "actions": [
+            {
+              "type": "urn:aiot-spec-v3:com.mi.phones:action:[com.miui.aod/aod/openaodsettings]:0:1.0",
+              "description": "打开息屏设置页面",
+              "in": [
+              ],
+              "out": [
+                {
+                  "format": "int32",
+                  "name": "status",
+                  "description": "执行状态",
+                  "value-list": [
+                    {
+                      "value": 0,
+                      "description": "打开成功"
+                    },
+                    {
+                      "value": -11,
+                      "description": "不支持此功能"
+                    },
+                    {
+                      "value": -1,
+                      "description": "打开失败"
+                    },
+                    {
+                      "value": -10,
+                      "description": "已在息屏设置页面"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "urn:aiot-spec-v3:com.mi.phones:action:[com.miui.aod/aod/setaodstatus]:0:1.0",
+              "description": "打开/关闭息屏",
+              "in": [
+                {
+                  "format": "boolean",
+                  "name": "enable",
+                  "description": "开启/关闭息屏"
+                }
+              ],
+              "out": [
+                {
+                  "format": "int32",
+                  "name": "status",
+                  "description": "执行状态",
+                  "value-list": [
+                    {
+                      "value": 0,
+                      "description": "执行成功"
+                    },
+                    {
+                      "value": -11,
+                      "description": "不支持此功能"
+                    },
+                    {
+                      "value": -1,
+                      "description": "执行失败"
+                    },
+                    {
+                      "value": -10,
+                      "description": "当前息屏已经是该状态，无需执行"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "urn:aiot-spec-v3:com.mi.phones:action:[com.miui.aod/aod/getaodstatus]:0:1.0",
+              "description": "查询当前息屏状态",
+              "in": [],
+              "out": [
+                {
+                  "format": "int32",
+                  "name": "status",
+                  "description": "执行状态",
+                  "value-list": [
+                    {
+                      "value": 0,
+                      "description": "执行成功"
+                    },
+                    {
+                      "value": -11,
+                      "description": "不支持此功能"
+                    },
+                    {
+                      "value": -1,
+                      "description": "执行失败"
+                    }
+                  ]
+                },
+                {
+                  "format": "int32",
+                  "name": "result",
+                  "description": "执行结果",
+                  "value-list": [
+                    {
+                      "value": 0,
+                      "description": "关闭状态"
+                    },
+                    {
+                      "value": 1,
+                      "description": "打开状态"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

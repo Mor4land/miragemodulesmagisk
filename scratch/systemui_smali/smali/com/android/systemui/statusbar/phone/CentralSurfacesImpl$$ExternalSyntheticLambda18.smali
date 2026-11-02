@@ -1,0 +1,115 @@
+.class public final synthetic Lcom/android/systemui/statusbar/phone/CentralSurfacesImpl$$ExternalSyntheticLambda18;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lcom/android/systemui/statusbar/NotificationShadeDepthController$DepthListener;
+
+
+# instance fields
+.field public final synthetic f$0:F
+
+.field public final synthetic f$1:Lcom/android/systemui/statusbar/BackDropView;
+
+
+# direct methods
+.method public synthetic constructor <init>(FLcom/android/systemui/statusbar/BackDropView;)V
+    .locals 0
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    iput p1, p0, Lcom/android/systemui/statusbar/phone/CentralSurfacesImpl$$ExternalSyntheticLambda18;->f$0:F
+
+    .line 5
+    .line 6
+    iput-object p2, p0, Lcom/android/systemui/statusbar/phone/CentralSurfacesImpl$$ExternalSyntheticLambda18;->f$1:Lcom/android/systemui/statusbar/BackDropView;
+
+    .line 7
+    .line 8
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onWallpaperZoomOutChanged(F)V
+    .locals 2
+
+    .line 1
+    const/high16 v0, 0x3f800000    # 1.0f
+
+    .line 2
+    .line 3
+    iget v1, p0, Lcom/android/systemui/statusbar/phone/CentralSurfacesImpl$$ExternalSyntheticLambda18;->f$0:F
+
+    .line 4
+    .line 5
+    invoke-static {v1, v0, p1}, Landroid/util/MathUtils;->lerp(FFF)F
+
+    .line 6
+    .line 7
+    .line 8
+    move-result p1
+
+    .line 9
+    iget-object p0, p0, Lcom/android/systemui/statusbar/phone/CentralSurfacesImpl$$ExternalSyntheticLambda18;->f$1:Lcom/android/systemui/statusbar/BackDropView;
+
+    .line 10
+    .line 11
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getWidth()I
+
+    .line 12
+    .line 13
+    .line 14
+    move-result v0
+
+    .line 15
+    int-to-float v0, v0
+
+    .line 16
+    const/high16 v1, 0x40000000    # 2.0f
+
+    .line 17
+    .line 18
+    div-float/2addr v0, v1
+
+    .line 19
+    invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->setPivotX(F)V
+
+    .line 20
+    .line 21
+    .line 22
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getHeight()I
+
+    .line 23
+    .line 24
+    .line 25
+    move-result v0
+
+    .line 26
+    int-to-float v0, v0
+
+    .line 27
+    div-float/2addr v0, v1
+
+    .line 28
+    invoke-virtual {p0, v0}, Landroid/widget/FrameLayout;->setPivotY(F)V
+
+    .line 29
+    .line 30
+    .line 31
+    invoke-virtual {p0, p1}, Landroid/widget/FrameLayout;->setScaleX(F)V
+
+    .line 32
+    .line 33
+    .line 34
+    invoke-virtual {p0, p1}, Landroid/widget/FrameLayout;->setScaleY(F)V
+
+    .line 35
+    .line 36
+    .line 37
+    return-void
+.end method

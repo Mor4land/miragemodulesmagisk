@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_gravity="center_horizontal" android:id="@id/parent_container" android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <include android:id="@id/left_next_container" layout="@layout/kg_settings_template_layer_item" />
+    <include android:id="@id/left_container" layout="@layout/kg_settings_template_layer_item" />
+    <include android:id="@id/target_container" layout="@layout/kg_settings_template_layer_item" />
+    <include android:id="@id/right_container" layout="@layout/kg_settings_template_layer_item" />
+    <include android:id="@id/right_next_container" layout="@layout/kg_settings_template_layer_item" />
+</FrameLayout>

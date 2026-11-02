@@ -1,0 +1,37 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/02_east/east04.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "rhombus",
+      "primaryColor": -1,
+      "secondaryColor": -382422,
+      "primaryFontColorPanelId": 0,
+      "secondaryFontColorPanelId": 0,
+      "isAutoPrimaryColor": true,
+      "isAutoSecondaryColor": true,
+      "clockEffect": 1,
+      "style": 2,
+      "enableDiffusion": false
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/02_east/east04.jpg",
+      "magicType": 0,
+      "resourceType": "image",
+      "largeScreenHierarchyEnable": {
+        "smallScreenWithNotificationHierarchyEnable": false,
+        "largeScreenPortWithNotificationHierarchyEnable": false,
+        "largeScreenLandWithNotificationHierarchyEnable": false
+      }
+    },
+    "templateName": "eastern_b_style2",
+    "version": 3
+  }
+}

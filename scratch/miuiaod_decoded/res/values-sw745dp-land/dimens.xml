@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">76.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_top">46.0dip</dimen>
+    <dimen name="kg_classic_max_clock_frame_margin_time_pad_left">290.0dip</dimen>
+    <dimen name="kg_classic_max_clock_frame_pad_extra_width">580.0dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_height">90.0dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_left">407.0dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_top">303.0dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_width">54.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_frame_margin_top">48.0dip</dimen>
+    <dimen name="kg_clock_template_height">93.0dip</dimen>
+    <dimen name="kg_clock_template_image_height">82.0dip</dimen>
+    <dimen name="kg_clock_template_image_width">130.0dip</dimen>
+    <dimen name="kg_clock_template_row_height">150.0dip</dimen>
+    <dimen name="kg_clock_template_width">142.0dip</dimen>
+    <item type="dimen" name="kg_combine_edit_template_scale">0.6466</item>
+    <dimen name="kg_eastern_a_clock_container_margin_bottom">48.0dip</dimen>
+    <dimen name="kg_eastern_a_clock_container_margin_right">399.0dip</dimen>
+    <dimen name="kg_eastern_a_clock_container_margin_top">48.0dip</dimen>
+    <dimen name="kg_eastern_a_style1_clock_element_margin_bottom">140.0dip</dimen>
+    <dimen name="kg_eastern_a_style1_clock_element_margin_top">120.0dip</dimen>
+    <dimen name="kg_eastern_a_style2_clock_element_margin_bottom">66.0dip</dimen>
+    <dimen name="kg_eastern_a_style2_clock_element_margin_top">133.0dip</dimen>
+    <dimen name="kg_function_depth_preset_margin_bottom">55.0dip</dimen>
+    <dimen name="kg_function_depth_preset_margin_right">236.0dip</dimen>
+    <dimen name="kg_main_internal_pager_margin_top">195.0dip</dimen>
+    <dimen name="kg_main_item_container_height">340.0dip</dimen>
+    <dimen name="kg_main_item_container_width">544.0dip</dimen>
+    <dimen name="kg_main_item_container_width_minus">-544.0dip</dimen>
+    <dimen name="kg_main_item_content_drawable_height">340.0dip</dimen>
+    <dimen name="kg_main_item_content_drawable_width">509.5dip</dimen>
+    <item type="dimen" name="kg_main_neighboring_item_min_scale">0.62</item>
+    <dimen name="kg_main_pager_margin_top">95.0dip</dimen>
+    <dimen name="kg_main_vertical_pager_offscreen_offset">56.0dip</dimen>
+    <dimen name="kg_rhombus_clock_click_hotspot_margin_top">110.0dip</dimen>
+    <dimen name="kg_rhombus_clock_frame_height">548.0dip</dimen>
+    <dimen name="kg_rhombus_clock_frame_width">347.0dip</dimen>
+    <dimen name="kg_template_view_primary_mode_margin_top">83.0dip</dimen>
+</resources>

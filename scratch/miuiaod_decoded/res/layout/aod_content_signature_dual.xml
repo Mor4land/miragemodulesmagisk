@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.SignatureAodView android:layout_gravity="center_horizontal" android:id="@id/signature_container" android:tag="@string/animatable_view_tag" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.components.view.SquareVerticalTextView android:textColor="@color/content_text_color" android:layout_gravity="center|top" android:id="@id/signature_content_tv" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+    <include android:layout_width="fill_parent" android:layout_height="wrap_content" layout="@layout/signature_timestyle_dual" />
+</com.miui.aod.widget.SignatureAodView>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.linkagestyle.LinkageStyleClockView android:id="@id/linkage_clock_container" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:id="@id/clock" android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/clock_info_container" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintTop_toBottomOf="@id/clock">
+        <FrameLayout android:id="@id/icon_container_placeholder" android:padding="@dimen/icon_container_margin_start" android:visibility="invisible" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+</com.miui.aod.linkagestyle.LinkageStyleClockView>

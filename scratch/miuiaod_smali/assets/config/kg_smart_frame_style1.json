@@ -1,0 +1,34 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine08.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "smart_frame",
+      "primaryColor": -14862006,
+      "secondaryColor": -3681318,
+      "primaryFontColorPanelId": 13,
+      "secondaryFontColorPanelId": 13,
+      "isAutoSecondaryColor": false,
+      "style": 6
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine08.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    },
+    "smartFrame": {
+      "solidColor": -3681318,
+      "isAutoSolidColor": false,
+      "shape": 6
+    },
+    "templateName": "smart_frame_style1",
+    "version": 3
+  }
+}

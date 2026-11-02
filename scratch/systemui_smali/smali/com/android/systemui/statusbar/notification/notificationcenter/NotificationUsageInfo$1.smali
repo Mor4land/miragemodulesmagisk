@@ -1,0 +1,38 @@
+.class public final Lcom/android/systemui/statusbar/notification/notificationcenter/NotificationUsageInfo$1;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Landroid/os/Parcelable$Creator;
+
+
+# virtual methods
+.method public final createFromParcel(Landroid/os/Parcel;)Ljava/lang/Object;
+    .locals 0
+
+    .line 1
+    new-instance p0, Lcom/android/systemui/statusbar/notification/notificationcenter/NotificationUsageInfo;
+
+    .line 2
+    .line 3
+    invoke-direct {p0, p1}, Lcom/android/systemui/statusbar/notification/notificationcenter/NotificationUsageInfo;-><init>(Landroid/os/Parcel;)V
+
+    .line 4
+    .line 5
+    .line 6
+    return-object p0
+.end method
+
+.method public final newArray(I)[Ljava/lang/Object;
+    .locals 0
+
+    .line 1
+    const/4 p0, 0x0
+
+    .line 2
+    new-array p0, p0, [Lcom/android/systemui/statusbar/notification/notificationcenter/NotificationUsageInfo;
+
+    .line 3
+    .line 4
+    return-object p0
+.end method

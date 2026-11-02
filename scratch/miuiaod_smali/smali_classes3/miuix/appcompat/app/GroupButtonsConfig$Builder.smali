@@ -1,0 +1,14 @@
+.class public Lmiuix/appcompat/app/GroupButtonsConfig$Builder;
+.super Ljava/lang/Object;
+.source "GroupButtonsConfig.java"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Lmiuix/appcompat/app/GroupButtonsConfig;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x9
+    name = "Builder"
+.end annotation

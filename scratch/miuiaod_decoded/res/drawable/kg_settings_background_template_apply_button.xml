@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/kg_settings_template_apply_normal_color" />
+            <corners android:radius="@dimen/kg_settings_template_apply_button_radius" />
+        </shape>
+    </item>
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/kg_settings_template_apply_disable_color" />
+            <corners android:radius="@dimen/kg_settings_template_apply_button_radius" />
+        </shape>
+    </item>
+</selector>

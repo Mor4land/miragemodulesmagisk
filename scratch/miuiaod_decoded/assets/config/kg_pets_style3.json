@@ -1,0 +1,39 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/04_pets/pets03.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "depth_pets",
+      "primaryColor": -1,
+      "secondaryColor": -3289601,
+      "primaryFontColorPanelId": 1,
+      "secondaryFontColorPanelId": 13,
+      "clockEffect": 0
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/04_pets/pets03.jpg",
+      "mask": "sysui_editor_wallpaper_group/04_pets/pets03_mask.jpg",
+      "magicType": 20000,
+      "resourceType": "image",
+      "supportSubject": true,
+      "downloadUrl": "https://f6.market.xiaomi.com/download/ThemeMarket/061e5081c09034a59a2ab2605275a8c9bcf01b2e3",
+      "sha1": "cf01b2e39a84dbec295cc9a1238000da821d5619",
+      "fileSize": 39514570,
+      "videoName": "pets03",
+      "largeScreenHierarchyEnable": {
+        "smallScreenWithNotificationHierarchyEnable": false,
+        "largeScreenPortWithNotificationHierarchyEnable": false,
+        "largeScreenLandWithNotificationHierarchyEnable": false
+      }
+    },
+    "templateName": "pets_style3",
+    "version": 3
+  }
+}

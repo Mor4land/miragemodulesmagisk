@@ -1,0 +1,44 @@
+.class public abstract Landroidx/core/hardware/fingerprint/FingerprintManagerCompat$AuthenticationCallback;
+.super Ljava/lang/Object;
+.source "FingerprintManagerCompat.java"
+
+
+# annotations
+.annotation system Ldalvik/annotation/EnclosingClass;
+    value = Landroidx/core/hardware/fingerprint/FingerprintManagerCompat;
+.end annotation
+
+.annotation system Ldalvik/annotation/InnerClass;
+    accessFlags = 0x409
+    name = "AuthenticationCallback"
+.end annotation
+
+
+# virtual methods
+.method public onAuthenticationError(ILjava/lang/CharSequence;)V
+    .locals 0
+
+    .line 0
+    return-void
+.end method
+
+.method public onAuthenticationFailed()V
+    .locals 0
+
+    .line 0
+    return-void
+.end method
+
+.method public onAuthenticationHelp(ILjava/lang/CharSequence;)V
+    .locals 0
+
+    .line 0
+    return-void
+.end method
+
+.method public onAuthenticationSucceeded(Landroidx/core/hardware/fingerprint/FingerprintManagerCompat$AuthenticationResult;)V
+    .locals 0
+
+    .line 0
+    return-void
+.end method

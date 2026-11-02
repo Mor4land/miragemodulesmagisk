@@ -1,0 +1,39 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/os3_classic/classic02.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "classic_plus",
+      "clockEffect": 1,
+      "enableDiffusion": false,
+      "primaryColor": -1,
+      "secondaryColor": -1,
+      "style": 22,
+      "clockWeight": 420,
+      "classicLine1": 100,
+      "isAutoPrimaryColor": true,
+      "isAutoSecondaryColor": true
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/os3_classic/classic02.jpg",
+      "mask": "sysui_editor_wallpaper_group/os3_classic/classic02_mask.jpg",
+      "magicType": 20000,
+      "resourceType": "image",
+      "supportSubject": true,
+      "largeScreenHierarchyEnable": {
+        "smallScreenWithNotificationHierarchyEnable": false,
+        "largeScreenPortWithNotificationHierarchyEnable": false,
+        "largeScreenLandWithNotificationHierarchyEnable": false
+      }
+    },
+    "templateName": "classic_max_style2",
+    "version": 3
+  }
+}

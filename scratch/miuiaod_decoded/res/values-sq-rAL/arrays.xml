@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>Sistemi i modelit të shkrimit</item>
+        <item>Katror i gjerë</item>
+        <item>E zezë e thjeshtë</item>
+        <item>Me dy shtresa</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>Origjinale</item>
+        <item>Turbullt</item>
+        <item>Kallamishte</item>
+        <item>Me brinjë</item>
+        <item>Prizmi</item>
+        <item>Brazda</item>
+        <item>Valë</item>
+        <item>Katrorë</item>
+    </string-array>
+</resources>

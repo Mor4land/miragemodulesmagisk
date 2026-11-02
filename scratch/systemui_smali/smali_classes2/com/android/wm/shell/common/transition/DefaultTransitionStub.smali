@@ -1,0 +1,90 @@
+.class public abstract Lcom/android/wm/shell/common/transition/DefaultTransitionStub;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# direct methods
+.method public static getInstance()Lcom/android/wm/shell/common/transition/DefaultTransitionStub;
+    .locals 1
+
+    .line 1
+    const-class v0, Lcom/android/wm/shell/common/transition/DefaultTransitionStub;
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Lcom/miui/base/MiuiStubUtil;->getInstance(Ljava/lang/Class;)Ljava/lang/Object;
+
+    .line 4
+    .line 5
+    .line 6
+    move-result-object v0
+
+    .line 7
+    check-cast v0, Lcom/android/wm/shell/common/transition/DefaultTransitionStub;
+
+    .line 8
+    .line 9
+    return-object v0
+.end method
+
+
+# virtual methods
+.method public abstract allowDisplayRotationAnimation(Landroid/window/TransitionInfo;Landroid/window/TransitionInfo$Change;I)Z
+.end method
+
+.method public abstract applyScaleTransformation(JLandroid/view/SurfaceControl$Transaction;Landroid/view/SurfaceControl;Landroid/view/animation/Animation;Landroid/view/animation/Transformation;)V
+.end method
+
+.method public abstract beginSchedThreads([IJI)V
+.end method
+
+.method public abstract dimAnimationDimmerAboveIfNeeded(Landroid/view/animation/Animation;Landroid/view/SurfaceControl;Landroid/view/SurfaceControl$Transaction;)Landroid/view/animation/Animation;
+.end method
+
+.method public abstract dimAnimationDimmerBelowIfNeeded(Landroid/view/animation/Animation;Landroid/view/SurfaceControl$Transaction;)Landroid/view/animation/Animation;
+.end method
+
+.method public abstract disableTaskAnimation(ZLandroid/view/WindowManager$LayoutParams;)Z
+.end method
+
+.method public abstract enableCustomTranslucentAnimation(Landroid/view/WindowManager$LayoutParams;)Z
+.end method
+
+.method public abstract getScaleCurrentDuration(Landroid/window/TransitionInfo;F)F
+.end method
+
+.method public abstract initContext(Landroid/content/Context;)V
+.end method
+
+.method public abstract isCompatibilityMode()Z
+.end method
+
+.method public abstract isScaleType(I)Z
+.end method
+
+.method public abstract loadMiuiDefaultTransitionNotCheck(Landroid/window/TransitionInfo;Landroid/window/TransitionInfo$Change;I)Landroid/view/animation/Animation;
+.end method
+
+.method public abstract loadScaleAnimation(Landroid/window/TransitionInfo;Landroid/window/TransitionInfo$Change;)Landroid/view/animation/Animation;
+.end method
+
+.method public abstract onScaleAnimationFinish(Landroid/view/SurfaceControl$Transaction;)V
+.end method
+
+.method public abstract prepareScaleAnimation(Landroid/window/TransitionInfo;Landroid/window/TransitionInfo$Change;Landroid/view/SurfaceControl$Transaction;)V
+.end method
+
+.method public abstract stepAnimationDimmerIfNeeded(Landroid/view/animation/Animation;Landroid/view/SurfaceControl$Transaction;)Z
+.end method
+
+.method public abstract stopAnimationDimmer(Landroid/view/animation/Animation;Landroid/view/SurfaceControl$Transaction;)V
+.end method
+
+.method public abstract updateAnimationIfNeed(Landroid/content/Context;Landroid/view/animation/Animation;Landroid/window/TransitionInfo;Landroid/window/TransitionInfo$Change;Z)Landroid/view/animation/Animation;
+.end method
+
+.method public abstract updateFloatingWindowAnimation(Landroid/view/animation/Animation;Landroid/view/SurfaceControl;Landroid/view/SurfaceControl$Transaction;Landroid/view/animation/Transformation;)V
+.end method
+
+.method public abstract useDefaultAnimationAttr(Landroid/view/WindowManager$LayoutParams;ILandroid/window/TransitionInfo;Landroid/window/TransitionInfo$Change;)Z
+.end method

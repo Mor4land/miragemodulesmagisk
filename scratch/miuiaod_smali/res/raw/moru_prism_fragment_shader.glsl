@@ -1,0 +1,127 @@
+#version 300 es
+precision mediump float;
+
+uniform sampler2D uUITex;
+uniform sampler2D normalTex;
+uniform sampler2D uLight;
+uniform sampler2D normalMaskTex;
+
+uniform  lowp vec4 uScaleOffset;
+uniform  lowp vec2 uScaleCenter;
+
+uniform lowp vec4 uNormalScaleXYThickDis;
+uniform lowp vec4 uAspIORLightShadow;
+uniform lowp float uSurfaceRatio;
+uniform lowp float uDisplacement;
+uniform lowp vec2 uNormalOffsetXY;
+uniform lowp float uDarkness;
+uniform lowp float uReveal;
+
+uniform vec4 uSaturnContrast;
+uniform float uProgress;
+
+
+in highp mat4x4 uvmatrix;
+
+out vec4 fragColor;
+
+const vec3 LuminCoeff = vec3(0.2126, 0.7152, 0.0722);
+
+vec4 transform(vec3 diffuse) {
+    float lum = dot(LuminCoeff, diffuse);
+
+    float per = 1. - uReveal;
+    per = per * smoothstep(0., uReveal, lum);
+    diffuse *= per;
+    return vec4(diffuse, 1.);
+}
+
+vec3 doubleRefract(vec3 inLight, vec3 upperNormal, vec3 lowerNormal, float depth, float distance, float ior) {
+    vec3 upperOutDir = normalize(refract(inLight, upperNormal, ior));
+
+    // path of which the light travels after the first refraction
+    vec3 upperPath = upperOutDir * depth;
+
+    vec3 lowerOutDir = normalize(refract(upperOutDir, lowerNormal, ior));
+
+    // path of which the light travels after the second refraction
+    vec3 lowerPath = lowerOutDir * distance;
+
+    vec3 path = upperPath + lowerPath;
+
+    // TODO: rush to deliver. keep x only for now
+    // for now keep only the x component
+    return vec3(path.x, 0.0, 0.0);
+}
+
+
+float map(float value, float min1, float max1, float min2, float max2) {
+    return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+vec3 blendMultiply(vec3 dst, vec3 src) {
+    return dst*src;
+}
+
+vec3 blendMultiply(vec3 dst, vec3 src, float opacity) {
+    return mix(dst,blendMultiply(dst, src),opacity);
+}
+
+vec3 blendScreen(vec3 dst, vec3 src) {
+    return mix(src, vec3(1.0), dst);
+}
+vec3 blendScreen(vec3 dst, vec3 src, float opacity) {
+    return mix(dst, blendScreen(dst, src), opacity);
+}
+
+vec4 drawEffect(highp vec4 U,float lod) {
+    highp  vec2 texCoord = U.zw;
+    // corresponding coordinate on normal map and depth map
+    highp  vec2 localCoord = U.xy;
+
+    // normal of the upper surface, normalized
+    vec3 upperNormal = texture(normalTex, localCoord).xyz;
+    upperNormal = normalize(2.0 * upperNormal - 1.0);
+
+    // normal of the lowersurface, normalized
+    vec3 lowerNormal = vec3(0.0, 1.0, 0.0);
+
+    // distance between the upper surface and the lower surface
+    // in blender coordinate, offset out from screen
+    vec4 depthColor = texture(uLight, localCoord);
+    float depth = -depthColor.r * uDisplacement - uNormalScaleXYThickDis.z;
+    vec3 refractOffset = doubleRefract(vec3(0.0, 1.0, 0.0), upperNormal, lowerNormal, depth, uNormalScaleXYThickDis.w, mix(1.0, uAspIORLightShadow.y, uProgress));
+    vec3 refractCoord = refractOffset * vec3(uAspIORLightShadow.x * uSurfaceRatio) * vec3(uScaleOffset.xy, 1.0) + vec3(texCoord, 0.0);
+    vec4 color = textureLod(uUITex, refractCoord.xy,lod);
+    return color;
+}
+
+void main() {
+
+    highp  vec2 maskCoord = uvmatrix[0].xy;
+    vec3 normalMask = texture(normalMaskTex, maskCoord).xyz;
+    float lod = 0.0;
+    if (normalMask.r > 0.5 && uProgress > 0.5)
+    {
+        lod = 4.0;
+    }
+
+    vec4 color =  drawEffect(uvmatrix[0],lod + 0.1);
+    color += drawEffect(uvmatrix[1],lod + 0.5);
+    color += drawEffect(uvmatrix[2],lod + 1.0);
+    color*=0.33334;
+
+    vec2 localCoord = uvmatrix[0].xy;
+    vec4 depth_light_shadow = texture(uLight, localCoord);
+
+    vec4 light = vec4(depth_light_shadow.ggg * uProgress, uAspIORLightShadow.z);
+    vec4 shadow = vec4(depth_light_shadow.bbb * uProgress, uAspIORLightShadow.w);
+
+    // 0. darken the color
+    color.rgb = color.rgb * (1.0 - uDarkness);
+    // 1. multiply blend shadow
+    color.rgb = blendMultiply(color.rgb, shadow.bbb, shadow.b);
+    // 2. screen blend light
+    color.rgb = blendScreen(color.rgb, light.ggg, light.g);
+    fragColor = transform(color.rgb);
+}

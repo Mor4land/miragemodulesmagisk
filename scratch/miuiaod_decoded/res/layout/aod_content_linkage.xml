@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.linkagestyle.LinkageStyleClockView android:id="@id/linkage_clock_container" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:id="@id/clock" android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/clock_info_container" android:layout_width="fill_parent" android:layout_height="wrap_content" app:layout_constraintTop_toBottomOf="@id/clock">
+        <TextView android:textColor="@color/content_text_color" android:gravity="center" android:layout_gravity="center" android:id="@id/date" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.5dip" android:includeFontPadding="false" android:lineSpacingMultiplier="0.92" android:alpha="0.7" />
+        <TextView android:textColor="@color/content_text_color" android:layout_gravity="center" android:id="@id/date_lunar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:alpha="0.7" />
+        <include android:layout_gravity="center" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/action_bar_subtitle_bottom_margin" layout="@layout/aod_battery" />
+        <include android:layout_gravity="center" android:layout_width="fill_parent" android:layout_height="wrap_content" app:layout_constraintTop_toBottomOf="@id/clock_info_container" layout="@layout/aod_icons" />
+    </LinearLayout>
+</com.miui.aod.linkagestyle.LinkageStyleClockView>

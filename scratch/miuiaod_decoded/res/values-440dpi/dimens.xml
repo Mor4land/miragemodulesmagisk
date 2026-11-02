@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="battery_meter_height">20.0dip</dimen>
+    <dimen name="battery_meter_progress_center_left_offset">0.85dip</dimen>
+    <dimen name="battery_meter_progress_height">8.429993dip</dimen>
+    <dimen name="battery_meter_progress_mask_height">8.429993dip</dimen>
+    <dimen name="battery_meter_progress_mask_scale_path_to_dp">0.100299954dip</dimen>
+    <dimen name="battery_meter_progress_mask_width">1.6056824dip</dimen>
+    <dimen name="battery_meter_progress_width">19.669983dip</dimen>
+    <dimen name="battery_meter_width">31.0dip</dimen>
+</resources>

@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.MessageArrowView android:textColor="@color/miuix_appcompat_message_view_text_color_light" android:background="@drawable/miuix_appcompat_message_view_bg_guide_light" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/step_to_image_community" android:paddingStart="@dimen/list_margin_start" android:paddingEnd="@dimen/list_margin_start"
+  xmlns:android="http://schemas.android.com/apk/res/android" />

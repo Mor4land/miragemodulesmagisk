@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>Fonti ya mfumo</item>
+        <item>Mraba mpana</item>
+        <item>Nyeusi ya kawaida</item>
+        <item>Yenye tabaka mbili</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>Asili</item>
+        <item>Waa</item>
+        <item>Imepambwa isionekane vizuri</item>
+        <item>Imepambwa kwa unamu</item>
+        <item>Mche</item>
+        <item>Mifuo</item>
+        <item>Mawimbi</item>
+        <item>Miraba</item>
+    </string-array>
+</resources>

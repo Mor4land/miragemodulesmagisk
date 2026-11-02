@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>Sistemska pisava</item>
+        <item>Širok kvadrat</item>
+        <item>Enostavna črna</item>
+        <item>Dvoslojna</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>Original</item>
+        <item>Zameglitev</item>
+        <item>Trstičasto</item>
+        <item>Rebrasto</item>
+        <item>Prizma</item>
+        <item>Utori</item>
+        <item>Valovi</item>
+        <item>Kvadrati</item>
+    </string-array>
+</resources>

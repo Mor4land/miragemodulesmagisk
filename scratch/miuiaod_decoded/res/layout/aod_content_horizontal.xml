@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.HorizontalClockView android:id="@id/clock" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.widget.GradientLinearLayout android:orientation="vertical" android:id="@id/gradient_layout" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <TextView android:layout_gravity="center" android:id="@id/clock_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="true" style="@style/Aod_widget_horizontal" />
+        <TextView android:textStyle="bold" android:layout_gravity="center" android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/date_margin_top" android:layout_marginBottom="@dimen/date_margin_bottom" android:includeFontPadding="false" style="@style/Aod_date_horizontal" />
+        <TextView android:textStyle="bold" android:layout_gravity="center" android:id="@id/date_lunar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/date_margin_bottom" android:includeFontPadding="false" style="@style/Aod_date_horizontal" />
+        <LinearLayout android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/battery_step_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:divider="@drawable/spacer" android:showDividers="middle">
+            <include android:layout_gravity="center_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" layout="@layout/aod_battery" />
+            <ViewStub android:layout_gravity="center_vertical" android:id="@id/step_component_view_stub" android:layout="@layout/step_widget_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </com.miui.aod.widget.GradientLinearLayout>
+</com.miui.aod.widget.HorizontalClockView>

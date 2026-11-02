@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/hsl_container" android:paddingBottom="@dimen/kg_font_filter_hsl_container_padding_bottom" android:layout_width="fill_parent" android:layout_height="@dimen/kg_editor_dialog_content_height_common"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <include android:id="@id/hsl_head" android:layout_width="fill_parent" android:layout_height="wrap_content" layout="@layout/kg_filter_bottom_sheet_head" />
+    <TextView android:id="@id/color_value_editor_hue_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_color_value_editor_hue" style="@style/KgFontFilterHslLabelStyle" />
+    <miuix.androidbasewidget.widget.SeekBar android:id="@id/hue_seek_bar" android:max="360" style="@style/KgColorEditorHslSeekbar" />
+    <TextView android:id="@id/color_value_editor_saturation_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_color_value_editor_saturation" style="@style/KgFontFilterHslLabelStyle" />
+    <miuix.androidbasewidget.widget.SeekBar android:id="@id/saturation_seek_bar" style="@style/KgColorEditorHslSeekbar" />
+    <TextView android:id="@id/color_value_editor_lightness_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_color_value_editor_lightness" style="@style/KgFontFilterHslLabelStyle" />
+    <miuix.androidbasewidget.widget.SeekBar android:id="@id/lightness_seek_bar" style="@style/KgColorEditorHslSeekbar" />
+</LinearLayout>

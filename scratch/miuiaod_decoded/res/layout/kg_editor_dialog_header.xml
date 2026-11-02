@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:id="@id/editor_dialog_header_container" android:paddingTop="@dimen/kg_editor_dialog_header_padding_vertical" android:paddingBottom="@dimen/kg_editor_dialog_header_padding_vertical" android:focusable="true" android:focusableInTouchMode="true" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@id/cancel_icon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/miuix_appcompat_action_mode_title_button_cancel" android:layout_centerVertical="true" android:contentDescription="@string/kg_cancel" android:layout_marginStart="@dimen/kg_editor_container_padding" android:layout_marginEnd="@dimen/kg_editor_container_padding" />
+    <miuix.miuixbasewidget.widget.FilterSortView android:gravity="center_vertical" android:id="@id/sliding_title" android:layout_width="@dimen/kg_editor_dialog_title_bar_container_width" android:layout_height="wrap_content" android:layout_centerHorizontal="true" style="?slidingTitleStyle" />
+</RelativeLayout>

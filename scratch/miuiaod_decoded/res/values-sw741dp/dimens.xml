@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">76.0dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_margin_start">34.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_start">18.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_top">48.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_frame_margin_top">45.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_margin_top">105.0dip</dimen>
+    <dimen name="kg_clock_template_height">149.0dip</dimen>
+    <dimen name="kg_clock_template_image_height">135.0dip</dimen>
+    <dimen name="kg_clock_template_image_radius">12.0dip</dimen>
+    <dimen name="kg_clock_template_image_width">120.0dip</dimen>
+    <dimen name="kg_clock_template_row_height">207.0dip</dimen>
+    <dimen name="kg_clock_template_width">134.0dip</dimen>
+    <dimen name="kg_eastern_a_style1_hierarchy_avoid_check_top">267.0dip</dimen>
+    <dimen name="kg_eastern_a_style2_hierarchy_avoid_check_top">226.0dip</dimen>
+    <dimen name="kg_eastern_b_style1_hierarchy_avoid_check_top">138.0dip</dimen>
+    <dimen name="kg_eastern_b_style2_hierarchy_avoid_check_top">224.0dip</dimen>
+    <dimen name="kg_eastern_c_style1_hierarchy_notification_avoid_check_top">83.0dip</dimen>
+    <dimen name="kg_magazine_a_clock_signature_area_frame_margin_top">80.0dip</dimen>
+    <dimen name="kg_magazine_b_clock_frame_width">472.0dip</dimen>
+    <item type="dimen" name="kg_main_neighboring_item_min_scale">0.74</item>
+    <dimen name="kg_rhombus_clock_frame_height">562.0dip</dimen>
+    <dimen name="kg_rhombus_clock_frame_width">357.0dip</dimen>
+</resources>

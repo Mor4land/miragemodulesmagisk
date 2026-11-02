@@ -1,0 +1,137 @@
+.class public final Lcom/android/keyguard/KeyguardUpdateMonitor$10;
+.super Landroid/hardware/fingerprint/FingerprintManager$LockoutResetCallback;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# instance fields
+.field public final synthetic this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+
+# direct methods
+.method public constructor <init>(Lcom/android/keyguard/KeyguardUpdateMonitor;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lcom/android/keyguard/KeyguardUpdateMonitor$10;->this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+    .line 2
+    .line 3
+    invoke-direct {p0}, Landroid/hardware/fingerprint/FingerprintManager$LockoutResetCallback;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onLockoutReset(I)V
+    .locals 3
+
+    .line 1
+    iget-object p1, p0, Lcom/android/keyguard/KeyguardUpdateMonitor$10;->this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+    .line 2
+    .line 3
+    invoke-virtual {p1}, Lcom/android/keyguard/KeyguardUpdateMonitor;->stopListeningForFingerprint()V
+
+    .line 4
+    .line 5
+    .line 6
+    iget-object p1, p0, Lcom/android/keyguard/KeyguardUpdateMonitor$10;->this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+    .line 7
+    .line 8
+    iget-object v0, p1, Lcom/android/keyguard/KeyguardUpdateMonitor;->mKeyguardFingerprintWakeLock:Landroid/os/PowerManager$WakeLock;
+
+    .line 9
+    .line 10
+    if-nez v0, :cond_0
+
+    .line 11
+    .line 12
+    iget-object p1, p1, Lcom/android/keyguard/KeyguardUpdateMonitor;->mContext:Landroid/content/Context;
+
+    .line 13
+    .line 14
+    const-string v0, "power"
+
+    .line 15
+    .line 16
+    invoke-virtual {p1, v0}, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+
+    .line 17
+    .line 18
+    .line 19
+    move-result-object p1
+
+    .line 20
+    check-cast p1, Landroid/os/PowerManager;
+
+    .line 21
+    .line 22
+    if-eqz p1, :cond_0
+
+    .line 23
+    .line 24
+    iget-object v0, p0, Lcom/android/keyguard/KeyguardUpdateMonitor$10;->this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+    .line 25
+    .line 26
+    const/4 v1, 0x1
+
+    .line 27
+    const-string v2, "fingerprint"
+
+    .line 28
+    .line 29
+    invoke-virtual {p1, v1, v2}, Landroid/os/PowerManager;->newWakeLock(ILjava/lang/String;)Landroid/os/PowerManager$WakeLock;
+
+    .line 30
+    .line 31
+    .line 32
+    move-result-object p1
+
+    .line 33
+    iput-object p1, v0, Lcom/android/keyguard/KeyguardUpdateMonitor;->mKeyguardFingerprintWakeLock:Landroid/os/PowerManager$WakeLock;
+
+    .line 34
+    .line 35
+    :cond_0
+    iget-object p1, p0, Lcom/android/keyguard/KeyguardUpdateMonitor$10;->this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+    .line 36
+    .line 37
+    iget-object p1, p1, Lcom/android/keyguard/KeyguardUpdateMonitor;->mKeyguardFingerprintWakeLock:Landroid/os/PowerManager$WakeLock;
+
+    .line 38
+    .line 39
+    if-eqz p1, :cond_1
+
+    .line 40
+    .line 41
+    const-wide/16 v0, 0x3e8
+
+    .line 42
+    .line 43
+    invoke-virtual {p1, v0, v1}, Landroid/os/PowerManager$WakeLock;->acquire(J)V
+
+    .line 44
+    .line 45
+    .line 46
+    :cond_1
+    iget-object p0, p0, Lcom/android/keyguard/KeyguardUpdateMonitor$10;->this$0:Lcom/android/keyguard/KeyguardUpdateMonitor;
+
+    .line 47
+    .line 48
+    const/4 p1, 0x0
+
+    .line 49
+    invoke-virtual {p0, p1}, Lcom/android/keyguard/KeyguardUpdateMonitor;->handleFingerprintLockoutReset(I)V
+
+    .line 50
+    .line 51
+    .line 52
+    return-void
+.end method

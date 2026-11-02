@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape>
+            <corners android:radius="@dimen/kg_align_select_view_radius" />
+            <solid android:color="?signatureSelectorBgColor" />
+        </shape>
+    </item>
+</selector>

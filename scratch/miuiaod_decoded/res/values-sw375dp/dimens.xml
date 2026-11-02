@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">86.0dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_gap">6.0dip</dimen>
+    <dimen name="kg_classic_clock_text_area_frame_height">34.0dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_height">61.0dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_left">78.32999dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_top">357.0547dip</dimen>
+    <dimen name="kg_classic_max_clock_hierarchy_avoid_check_width">37.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_margin_top">115.0dip</dimen>
+    <dimen name="kg_magazine_b_clock_signature_area_frame_margin_top">365.0dip</dimen>
+    <dimen name="kg_magazine_b_clock_signature_area_frame_trans">250.0dip</dimen>
+</resources>

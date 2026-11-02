@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.appcompat.widget.LinearLayoutCompat android:layout_gravity="center" android:id="@id/content_wrapper" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <com.miui.keyguard.editor.edit.view.BorderedImageView android:id="@id/template_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:scaleType="centerCrop" android:contentDescription="@string/kg_template_preview_content_description" android:layout_marginEnd="@dimen/kg_template_view_alert_dialog_preview_space" />
+        <FrameLayout android:id="@id/aod_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="@string/kg_apply_dialog_desktop_preview" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+</FrameLayout>

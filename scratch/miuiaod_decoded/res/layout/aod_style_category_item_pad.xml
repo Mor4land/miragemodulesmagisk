@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:id="@id/item_container" android:padding="@dimen/aod_setting_category_item_padding" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:contentDescription="@null" android:importantForAccessibility="no"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.components.view.AodContainerView android:id="@id/aod_style_item" android:background="@drawable/bg_aod_item_container_pad" android:clickable="false" android:clipChildren="true" android:clipToPadding="true" android:descendantFocusability="blocksDescendants" android:layout_width="fill_parent" android:layout_height="fill_parent" android:drawSelectorOnTop="true" android:adjustViewBounds="true">
+        <ImageView android:layout_gravity="center" android:id="@id/aod_bg" android:layout_width="fill_parent" android:layout_height="fill_parent" android:scaleType="fitCenter" />
+        <include android:layout_gravity="center" android:layout_width="wrap_content" android:layout_height="wrap_content" layout="@layout/clock_content" />
+        <ImageView android:layout_gravity="center|right|top" android:id="@id/label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:scaleType="centerCrop" />
+    </com.miui.aod.components.view.AodContainerView>
+</LinearLayout>

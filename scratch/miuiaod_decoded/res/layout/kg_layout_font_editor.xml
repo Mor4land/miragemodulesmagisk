@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/container" android:paddingBottom="@dimen/kg_font_item_group_margin_vertical" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.miui.keyguard.editor.edit.view.StyleSelectorHorizontalView android:id="@id/selector" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginVertical="@dimen/kg_font_title_margin_vertical" app:labelVisible="false" app:layoutManagerType="linearLayoutManager" />
+    <include android:id="@id/font_weight_slider" layout="@layout/kg_classic_font_weight_slider" />
+</LinearLayout>

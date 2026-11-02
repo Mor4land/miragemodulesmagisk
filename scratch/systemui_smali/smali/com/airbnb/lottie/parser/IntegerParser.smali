@@ -1,0 +1,68 @@
+.class public final Lcom/airbnb/lottie/parser/IntegerParser;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lcom/airbnb/lottie/parser/ValueParser;
+
+
+# static fields
+.field public static final INSTANCE:Lcom/airbnb/lottie/parser/IntegerParser;
+
+
+# direct methods
+.method public static constructor <clinit>()V
+    .locals 1
+
+    .line 1
+    new-instance v0, Lcom/airbnb/lottie/parser/IntegerParser;
+
+    .line 2
+    .line 3
+    invoke-direct {v0}, Lcom/airbnb/lottie/parser/IntegerParser;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    sput-object v0, Lcom/airbnb/lottie/parser/IntegerParser;->INSTANCE:Lcom/airbnb/lottie/parser/IntegerParser;
+
+    .line 7
+    .line 8
+    return-void
+.end method
+
+
+# virtual methods
+.method public final parse(Lcom/airbnb/lottie/parser/moshi/JsonReader;F)Ljava/lang/Object;
+    .locals 0
+
+    .line 1
+    invoke-static {p1}, Lcom/airbnb/lottie/parser/JsonUtils;->valueFromObject(Lcom/airbnb/lottie/parser/moshi/JsonReader;)F
+
+    .line 2
+    .line 3
+    .line 4
+    move-result p0
+
+    .line 5
+    mul-float/2addr p0, p2
+
+    .line 6
+    invoke-static {p0}, Ljava/lang/Math;->round(F)I
+
+    .line 7
+    .line 8
+    .line 9
+    move-result p0
+
+    .line 10
+    invoke-static {p0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+
+    .line 11
+    .line 12
+    .line 13
+    move-result-object p0
+
+    .line 14
+    return-object p0
+.end method

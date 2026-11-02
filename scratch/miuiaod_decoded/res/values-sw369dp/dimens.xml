@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_font_filter_object_width">157.5dip</dimen>
+    <dimen name="kg_font_filter_target_container_width">323.79688dip</dimen>
+    <dimen name="kg_top_button_padding_vertical">6.0dip</dimen>
+    <dimen name="kg_wallpaper_filter_view_margin_top">6.799988dip</dimen>
+</resources>

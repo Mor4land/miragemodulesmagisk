@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.DualClockPanelContainerView android:orientation="vertical" android:id="@id/clock_panel_container" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <include layout="@layout/clock_panel_layout" />
+    <com.miui.aod.widget.GradientLinearLayoutForPanel android:layout_gravity="center" android:orientation="vertical" android:id="@id/date_battery_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/clock_panel_margin">
+        <LinearLayout android:layout_gravity="center" android:orientation="horizontal" android:id="@id/date_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/date_margin_bottom">
+            <TextView android:textStyle="bold" android:gravity="start" android:layout_gravity="start" android:id="@id/city" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:layout_marginEnd="@dimen/aod_dual_city_date_space" style="@style/Aod_date_horizontal" />
+            <TextView android:textStyle="bold" android:gravity="start" android:layout_gravity="start" android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" style="@style/Aod_date_horizontal" />
+        </LinearLayout>
+        <LinearLayout android:layout_gravity="center" android:orientation="horizontal" android:id="@id/date_container_dual" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/date_margin_bottom">
+            <TextView android:textStyle="bold" android:gravity="start" android:layout_gravity="start" android:id="@id/city2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:layout_marginEnd="@dimen/aod_dual_city_date_space" style="@style/Aod_date_horizontal" />
+            <TextView android:textStyle="bold" android:gravity="start" android:layout_gravity="start" android:id="@id/date_dual" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" style="@style/Aod_date_horizontal" />
+        </LinearLayout>
+        <TextView android:textStyle="bold" android:layout_gravity="center" android:id="@id/date_lunar" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/date_margin_bottom" android:includeFontPadding="false" style="@style/Aod_date_horizontal" />
+        <LinearLayout android:layout_gravity="center" android:orientation="horizontal" android:id="@id/battery_step_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:divider="@drawable/spacer" android:showDividers="middle">
+            <include android:layout_gravity="center_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" layout="@layout/aod_battery" />
+            <ViewStub android:layout_gravity="center_vertical" android:id="@id/step_component_view_stub" android:layout="@layout/step_widget_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </com.miui.aod.widget.GradientLinearLayoutForPanel>
+</com.miui.aod.widget.DualClockPanelContainerView>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.edit.view.StyleSelectorContainer android:orientation="vertical" android:id="@id/single_color_selector_root_view" android:layout_width="@dimen/kg_editor_container_width" android:layout_height="wrap_content" android:layout_marginHorizontal="@dimen/kg_editor_margin_horizontal" android:paddingVertical="@dimen/kg_single_color_editor_padding" app:fixedPaddingVetical="false"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.miui.keyguard.editor.edit.view.HighTextContrastCompatContainer android:orientation="vertical" android:id="@id/high_text_contrast_container" android:layout_width="fill_parent" android:layout_height="wrap_content">
+        <com.miui.keyguard.editor.edit.view.StyleSelectorView android:id="@id/single_color_selector_view" android:layout_width="fill_parent" android:layout_height="wrap_content" app:gridLayoutManagerSpanCount="2" app:labelMarginBottom="0.0dip" app:labelVisible="false" app:layoutManagerOrientation="horizontal" app:layoutManagerType="gridLayoutManager" />
+        <miuix.androidbasewidget.widget.SeekBar android:id="@id/color_editor_lightness_sb" android:layout_width="fill_parent" android:layout_height="@dimen/kg_color_value_editor_seekbar_height" style="@style/KgColorEditorLightnessSeekbar" />
+    </com.miui.keyguard.editor.edit.view.HighTextContrastCompatContainer>
+</com.miui.keyguard.editor.edit.view.StyleSelectorContainer>

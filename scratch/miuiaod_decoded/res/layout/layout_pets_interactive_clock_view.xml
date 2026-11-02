@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.tiny.pets.interactive.InteractivePetsClock android:layout_width="fill_parent" android:layout_height="fill_parent" android:layoutDirection="ltr"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <include android:id="@id/clock_time" android:layout_width="@dimen/tiny_pets_width" android:layout_height="@dimen/tiny_pets_height" layout="@layout/layout_interactive_pets_clock_base_view" />
+    <ImageView android:id="@id/svg_container" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</com.miui.clock.tiny.pets.interactive.InteractivePetsClock>

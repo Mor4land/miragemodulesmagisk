@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.homepage.view.viewpager.SpringLayout android:id="@id/viewpager_floor_container" android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.keyguard.editor.homepage.view.viewpager.DampViewPager2 android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/viewpager_floor" android:clipChildren="false" android:layout_width="@dimen/kg_main_item_container_width" android:layout_height="wrap_content" android:layout_marginTop="@dimen/kg_main_internal_pager_margin_top" />
+</com.miui.keyguard.editor.homepage.view.viewpager.SpringLayout>

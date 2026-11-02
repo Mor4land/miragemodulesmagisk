@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="650.0dip" android:width="460.0dip" android:viewportWidth="460.0" android:viewportHeight="650.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="_R_G">
+        <group android:name="_R_G_L_1_G" android:translateX="230.0" android:translateY="325.0">
+            <path android:name="_R_G_L_1_G_D_0_P_0" android:pathData=" M-137.88 251.91 C-178.48,208.57 -206.07,135.8 -206.07,23.58 C-206.07,-196.99 -121.81,-313.85 13.79,-313.85 C111.56,-313.85 179.46,-255.57 198.92,-166.44 C200.45,-159.47 195.18,-152.88 188.04,-152.88 C188.04,-152.88 138.02,-152.88 138.02,-152.88 C133.07,-152.88 128.72,-156.16 127.34,-160.94 C112.51,-211.79 74.24,-248.86 13.79,-248.86 C-80.43,-248.86 -137.13,-162.18 -137.13,-13.56 C-137.13,-13.56 -132.52,-13.56 -132.52,-13.56 C-99.58,-66.2 -48.26,-94.83 16.1,-94.83 C122.59,-94.83 206.07,-10.45 206.07,107.96 C206.07,145.88 197.63,179.95 180.78,210.9 C147.06,273.59 85.78,313.85 3.83,313.07 C-45.21,312.3 -97.27,296.05 -137.88,251.94 C-137.88,251.94 -137.88,251.91 -137.88,251.91c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.88" android:trimPathOffset="0.16666667" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+        <group android:name="_R_G_L_0_G" android:translateX="230.0" android:translateY="325.0">
+            <path android:name="_R_G_L_0_G_D_0_P_0" android:pathData=" M134.85 107.96 C134.85,186.92 78.93,247.27 3.86,247.27 C-71.21,247.27 -127.13,182.25 -127.13,108.74 C-127.13,35.22 -68.16,-29.03 6.91,-29.03 C78.15,-29.03 134.85,28.25 134.85,107.96c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.0" android:trimPathEnd="0.84" android:trimPathOffset="0.0" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+    </group>
+    <group android:name="time_group" />
+</vector>

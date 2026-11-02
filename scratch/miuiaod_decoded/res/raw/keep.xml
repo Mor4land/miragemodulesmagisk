@@ -1,0 +1,3 @@
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:shrinkMode="strict"
+    tools:keep="@drawable/*_clock_layer,@drawable/*_signature_layer,@drawable/*_below_layer"/>

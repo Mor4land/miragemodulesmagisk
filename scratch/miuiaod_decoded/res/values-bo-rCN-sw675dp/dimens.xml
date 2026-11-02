@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_signature_area_frame_height">88.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_margin_top">128.0dip</dimen>
+    <item type="dimen" name="kg_template_view_aod_dialog_preview_scale">0.206</item>
+</resources>

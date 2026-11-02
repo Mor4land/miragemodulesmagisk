@@ -1,0 +1,44 @@
+.class public interface abstract Lmiuix/animation/IVisibleStyle;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lmiuix/animation/IStateContainer;
+
+
+# virtual methods
+.method public varargs abstract hide([Lmiuix/animation/base/AnimConfig;)V
+.end method
+
+.method public varargs abstract setAlpha(F[Lmiuix/animation/IVisibleStyle$VisibleType;)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public abstract setBound(IIII)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public abstract setFlags(J)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public abstract setHide()Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public abstract setMove(II)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public varargs abstract setMove(II[Lmiuix/animation/IVisibleStyle$VisibleType;)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public varargs abstract setScale(F[Lmiuix/animation/IVisibleStyle$VisibleType;)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public abstract setShow()Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public abstract setShowDelay(J)Lmiuix/animation/IVisibleStyle;
+.end method
+
+.method public varargs abstract show([Lmiuix/animation/base/AnimConfig;)V
+.end method
+
+.method public abstract useAutoAlpha(Z)Lmiuix/animation/IVisibleStyle;
+.end method

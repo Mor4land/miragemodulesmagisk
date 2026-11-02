@@ -1,0 +1,31 @@
+.class public interface abstract Lcom/miui/maml/util/MamlViewManager;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Landroid/view/ViewManager;
+
+
+# virtual methods
+.method public abstract addView(Landroid/view/View;ILandroid/view/ViewGroup$LayoutParams;)V
+.end method
+
+.method public getViewContext()Landroid/content/Context;
+    .locals 0
+
+    .line 1
+    const/4 p0, 0x0
+
+    .line 2
+    return-object p0
+.end method
+
+.method public getViewLocationOnScreen()Landroid/graphics/Rect;
+    .locals 0
+
+    .line 1
+    const/4 p0, 0x0
+
+    .line 2
+    return-object p0
+.end method

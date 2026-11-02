@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">93.0dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_gap">6.799988dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_height">72.0dip</dimen>
+    <dimen name="kg_classic_clock_content_area_height">63.599976dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_top">54.799988dip</dimen>
+    <dimen name="kg_classic_clock_signature_extra_margin_top">10.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_height">178.0dip</dimen>
+    <dimen name="kg_magazine_a_clock_area_frame_margin_horizontal">4.0dip</dimen>
+    <dimen name="kg_magazine_a_clock_frame_height">448.375dip</dimen>
+    <dimen name="kg_magazine_a_clock_frame_margin_horizontal">1.5dip</dimen>
+    <dimen name="kg_magazine_a_clock_frame_margin_top">36.039978dip</dimen>
+    <dimen name="kg_magazine_a_clock_signature_area_frame_height">378.41406dip</dimen>
+    <dimen name="kg_magazine_a_clock_signature_area_frame_margin_top">84.79999dip</dimen>
+    <dimen name="kg_magazine_a_clock_time_area_frame_height">172.78dip</dimen>
+    <dimen name="kg_magazine_a_clock_time_area_frame_margin_bottom">233.19998dip</dimen>
+    <dimen name="kg_magazine_b_clock_frame_height">448.23438dip</dimen>
+    <dimen name="kg_magazine_b_clock_frame_margin_top">51.939972dip</dimen>
+    <dimen name="kg_magazine_b_clock_frame_width">279.83594dip</dimen>
+    <dimen name="kg_magazine_b_clock_signature_area_frame_height">306.1953dip</dimen>
+    <dimen name="kg_magazine_b_clock_signature_area_frame_margin_top">371.0dip</dimen>
+    <dimen name="kg_magazine_b_clock_signature_area_frame_width">377.35938dip</dimen>
+    <dimen name="kg_magazine_b_hierarchy_avoid_rect_height">25.439972dip</dimen>
+    <dimen name="kg_magazine_b_hierarchy_avoid_rect_left">42.599976dip</dimen>
+    <dimen name="kg_magazine_b_hierarchy_avoid_rect_top">112.81998dip</dimen>
+    <dimen name="kg_magazine_b_hierarchy_avoid_rect_width">84.79999dip</dimen>
+    <dimen name="kg_magazine_c_clock_frame_height">303.15625dip</dimen>
+    <dimen name="kg_magazine_c_clock_frame_margin_top">36.039978dip</dimen>
+    <dimen name="kg_rhombus_clock_click_hotspot_margin_top">181.0dip</dimen>
+    <dimen name="kg_rhombus_clock_frame_height">660.0dip</dimen>
+    <dimen name="kg_rhombus_clock_frame_width">374.39844dip</dimen>
+    <dimen name="kg_smart_frame_clock_frame_height">535.0dip</dimen>
+    <dimen name="kg_smart_frame_clock_shape_frame_height">520.0dip</dimen>
+    <dimen name="kg_smart_frame_clock_shape_frame_width">380.0dip</dimen>
+</resources>

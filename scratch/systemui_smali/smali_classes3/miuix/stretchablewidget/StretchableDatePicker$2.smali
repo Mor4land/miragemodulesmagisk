@@ -1,0 +1,73 @@
+.class public final Lmiuix/stretchablewidget/StretchableDatePicker$2;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lmiuix/pickerwidget/widget/DateTimePicker$OnDateTimeChangedListener;
+
+
+# instance fields
+.field public final synthetic this$0:Lmiuix/stretchablewidget/StretchableDatePicker;
+
+.field public final synthetic val$context:Landroid/content/Context;
+
+
+# direct methods
+.method public constructor <init>(Lmiuix/stretchablewidget/StretchableDatePicker;Landroid/content/Context;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lmiuix/stretchablewidget/StretchableDatePicker$2;->this$0:Lmiuix/stretchablewidget/StretchableDatePicker;
+
+    .line 2
+    .line 3
+    iput-object p2, p0, Lmiuix/stretchablewidget/StretchableDatePicker$2;->val$context:Landroid/content/Context;
+
+    .line 4
+    .line 5
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 6
+    .line 7
+    .line 8
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onDateTimeChanged(J)V
+    .locals 2
+
+    .line 1
+    iget-object v0, p0, Lmiuix/stretchablewidget/StretchableDatePicker$2;->this$0:Lmiuix/stretchablewidget/StretchableDatePicker;
+
+    .line 2
+    .line 3
+    iget-object v1, v0, Lmiuix/stretchablewidget/StretchableDatePicker;->mCalendar:Lmiuix/pickerwidget/date/Calendar;
+
+    .line 4
+    .line 5
+    invoke-virtual {v1, p1, p2}, Lmiuix/pickerwidget/date/Calendar;->setTimeInMillis(J)V
+
+    .line 6
+    .line 7
+    .line 8
+    iget-boolean v1, v0, Lmiuix/stretchablewidget/StretchableDatePicker;->mIsLunar:Z
+
+    .line 9
+    .line 10
+    iget-object p0, p0, Lmiuix/stretchablewidget/StretchableDatePicker$2;->val$context:Landroid/content/Context;
+
+    .line 11
+    .line 12
+    invoke-static {v0, v1, p0}, Lmiuix/stretchablewidget/StretchableDatePicker;->access$100(Lmiuix/stretchablewidget/StretchableDatePicker;ZLandroid/content/Context;)V
+
+    .line 13
+    .line 14
+    .line 15
+    iput-wide p1, v0, Lmiuix/stretchablewidget/StretchableDatePicker;->mTime:J
+
+    .line 16
+    .line 17
+    return-void
+.end method

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <miuix.preference.SingleChoicePreference android:title="@string/temporary_style" android:key="aod_temporary_style" android:summary="@string/temporary_style_summary" />
+    <miuix.preference.SingleChoicePreference android:title="@string/always_style" android:key="aod_always_style" android:summary="@string/always_style_symmary_new" />
+    <miuix.preference.SingleChoicePreference android:title="@string/smart_style" android:key="aod_smart_style" android:summary="@string/smart_style_summary" />
+    <miuix.preference.PreferenceCategory android:key="aod_show">
+        <miuix.preference.SingleChoicePreference android:title="@string/scheduled_style" android:key="aod_scheduled_style" android:summary="@string/scheduled_style_summary" />
+        <miuix.preference.TextPreference android:layout="@layout/aod_mode_power_button_layout" android:title="@string/paper_mode_start_time_title" android:key="aod_mode_start_time" android:dependency="aod_scheduled_style" app:isPreferenceVisible="false" />
+        <miuix.preference.TextPreference android:layout="@layout/aod_mode_power_button_layout" android:title="@string/paper_mode_end_time_title" android:key="aod_mode_end_time" android:dependency="aod_scheduled_style" app:isPreferenceVisible="false" />
+    </miuix.preference.PreferenceCategory>
+    <miuix.preference.CheckBoxPreference android:persistent="false" android:title="@string/disable_aod_in_power_save_mode" android:key="disable_aod_in_power_save_mode" android:summary="@string/disable_aod_in_power_save_mode_summary" />
+    <miuix.preference.CommentPreference android:text="@string/summary" />
+</PreferenceScreen>

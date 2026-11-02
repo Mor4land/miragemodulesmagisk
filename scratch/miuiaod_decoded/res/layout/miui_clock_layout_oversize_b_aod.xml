@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.oversize.b.OversizeBAodClock android:clipChildren="false" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="wrap_content" android:clipToOutline="false"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="horizontal" android:id="@id/time_view" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/oversize_b_aod_margin_top" android:layoutDirection="ltr" android:clipToOutline="false" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <LinearLayout android:orientation="horizontal" android:id="@id/oversize_b_hour" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:importantForAccessibility="no" android:layoutDirection="ltr" android:clipToOutline="false">
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/hour1" android:layout_width="@dimen/miui_oversize_b_time_w" android:layout_height="@dimen/miui_oversize_b_time_h" />
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/hour2" android:layout_width="@dimen/miui_oversize_b_time_w" android:layout_height="@dimen/miui_oversize_b_time_h" />
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:id="@id/oversize_b_minute" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:importantForAccessibility="no" android:layoutDirection="ltr" android:clipToOutline="false">
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/minute1" android:layout_width="@dimen/miui_oversize_b_time_w" android:layout_height="@dimen/miui_oversize_b_time_h" />
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/minute2" android:layout_width="@dimen/miui_oversize_b_time_w" android:layout_height="@dimen/miui_oversize_b_time_h" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:id="@id/oversize_b_date_con" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="@id/time_view" app:layout_constraintTop_toBottomOf="@id/time_view">
+        <TextView android:textSize="@dimen/oversize_b_aod_date_size" android:id="@id/oversize_b_date" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:textSize="@dimen/oversize_b_aod_date_size" android:id="@id/oversize_b_week" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="@dimen/miui_oversize_b_date_margin" />
+    </LinearLayout>
+    <FrameLayout android:id="@id/clock_battery_container" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="@id/oversize_b_date_con" app:layout_constraintTop_toBottomOf="@id/oversize_b_date_con" />
+    <FrameLayout android:id="@id/magazine_info_container" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="@id/oversize_b_date_con" app:layout_constraintTop_toBottomOf="@id/clock_battery_container" />
+</com.miui.clock.oversize.b.OversizeBAodClock>

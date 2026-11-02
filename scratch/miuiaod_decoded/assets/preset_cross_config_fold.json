@@ -1,0 +1,152 @@
+[
+  {
+    "title": "kg_template_title_classic",
+    "desc": "kg_template_description_classic",
+    "templates": [
+      {
+        "templateName": "kg_classic_max_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic01.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/os3_classic/classic01_mask.jpg",
+        "depth": true,
+        "preload": true,
+        "loadingColor": -3889517
+      },
+      {
+        "templateName": "kg_classic_max_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic02.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/os3_classic/classic02_mask.jpg",
+        "depth": true,
+        "loadingColor": -3889517
+      },
+      {
+        "templateName": "kg_classic_max_style3",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic03.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/os3_classic/classic03_mask.jpg",
+        "depth": true,
+        "loadingColor": -13662
+      },
+      {
+        "templateName": "kg_classic_max_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic04.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/os3_classic/classic04_mask.jpg",
+        "depth": true,
+        "loadingColor": -13662
+      },
+      {
+        "templateName": "kg_classic_max_style5",
+        "wallpaperPath": "sysui_editor_wallpaper_group/os3_classic/classic05.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/os3_classic/classic05_mask.jpg",
+        "depth": true,
+        "loadingColor": -3889517
+      }
+    ]
+  },
+  {
+    "title": "kg_template_title_magazine",
+    "desc": "kg_template_description_magazine",
+    "templates": [
+      {
+        "templateName": "kg_oversize_b_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine01.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/01_magazine/magazine01_mask.jpg",
+        "depth": true,
+        "loadingColor": -10592674
+      },
+      {
+        "templateName": "kg_magazine_a_style3",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine02.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/01_magazine/magazine02_mask.jpg",
+        "depth": true,
+        "loadingColor": -9534095
+      },
+      {
+        "templateName": "kg_magazine_c_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine03.jpg",
+        "_effectWallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine03_with_magic.jpg",
+        "loadingColor": -10592674
+      },
+      {
+        "templateName": "kg_magazine_c_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine04.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/01_magazine/magazine04_mask.jpg",
+        "depth": true,
+        "loadingColor": -4276546
+      },
+      {
+        "templateName": "kg_doodle_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine05.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/01_magazine/magazine05_mask.jpg",
+        "depth": true,
+        "loadingColor": -13662
+      },
+      {
+        "templateName": "kg_magazine_b_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine06.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/01_magazine/magazine06_mask.jpg",
+        "depth": true,
+        "loadingColor": -5471646
+      },
+      {
+        "templateName": "kg_oversize_a_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/01_magazine/magazine07.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/01_magazine/magazine07_mask.jpg",
+        "depth": true,
+        "loadingColor": -13662
+      }
+    ]
+  },
+  {
+    "title": "kg_template_title_eastern_art",
+    "desc": "kg_template_description_eastern_art",
+    "templates": [
+      {
+        "templateName": "kg_eastern_c_style1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east01.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/02_east/east01_mask.jpg",
+        "depth": true,
+        "loadingColor": -9931674,
+        "hideFlag": 1
+      },
+      {
+        "templateName": "kg_eastern_c_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east02.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/02_east/east02_mask.jpg",
+        "depth": true,
+        "loadingColor": -9931674,
+        "hideFlag": 5
+      },
+      {
+        "templateName": "kg_eastern_c_style2_1",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east02.jpg",
+        "depth": true,
+        "loadingColor": -9931674,
+        "hideFlag": 9
+      },
+      {
+        "templateName": "kg_rhombus_style2",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east03.jpg",
+        "loadingColor": -9931674
+      },
+      {
+        "templateName": "kg_eastern_b_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east04.jpg",
+        "loadingColor": -9931674,
+        "hideFlag": 4
+      },
+      {
+        "templateName": "kg_eastern_a_style3",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east06.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/02_east/east06_mask.jpg",
+        "depth": true,
+        "loadingColor": -9931674
+      },
+      {
+        "templateName": "kg_eastern_a_style4",
+        "wallpaperPath": "sysui_editor_wallpaper_group/02_east/east07.jpg",
+        "maskPath": "sysui_editor_wallpaper_group/02_east/east07_mask.jpg",
+        "depth": true,
+        "loadingColor": -9931674
+      }
+    ]
+  }
+]

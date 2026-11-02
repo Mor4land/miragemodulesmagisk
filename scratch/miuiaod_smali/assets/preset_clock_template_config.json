@@ -1,0 +1,333 @@
+[
+  {
+    "titleId": "kg_template_title_classic",
+    "templates": [
+      {
+        "templateRes": "kg_clock_template_classic_max",
+        "templateConfig": {
+          "templateName": "classic_max",
+          "clockInfo": {
+            "templateId": "classic_max",
+            "classicLine1": 100,
+            "clockWeight": 420,
+            "style": 21
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_classic_plus_style1",
+        "templateConfig": {
+          "templateName": "classic_plus",
+          "clockInfo": {
+            "templateId": "classic_plus",
+            "style": 21,
+            "clockWeight": 420,
+            "classicLine1": 100,
+            "classicLine2": 71,
+            "classicLine3": 103
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_classic_plus_style2",
+        "templateConfig": {
+          "templateName": "classic_plus",
+          "clockInfo": {
+            "templateId": "classic_plus",
+            "style": 21,
+            "clockWeight": 420,
+            "classicLine1": 100,
+            "classicLine2": 72,
+            "classicLine3": 103
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_classic_style1",
+        "templateConfig": {
+          "templateName": "classic",
+          "clockInfo": {
+            "templateId": "classic",
+            "style": 21,
+            "classicLine1": 0,
+            "classicLine2": 300,
+            "classicLine3": 202,
+            "classicLine4": 400
+          }
+        }
+      }
+    ]
+  },
+  {
+    "titleId": "kg_template_title_oversize_time",
+    "hideFlag": 0,
+    "templates": [
+      {
+        "templateRes": "kg_clock_template_oversize_b_style1",
+        "templateConfig": {
+          "templateName": "oversize_b",
+          "clockInfo": {
+            "templateId": "oversize_b"
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_oversize_a_style1",
+        "templateConfig": {
+          "templateName": "oversize_a",
+          "clockInfo": {
+            "templateId": "oversize_a",
+            "style": 1
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_oversize_a_style3",
+        "templateConfig": {
+          "templateName": "oversize_a",
+          "clockInfo": {
+            "templateId": "oversize_a",
+            "style": 3
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_oversize_a_style2",
+        "templateConfig": {
+          "templateName": "oversize_a",
+          "clockInfo": {
+            "templateId": "oversize_a",
+            "style": 2
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_magazine_c_style3",
+        "templateConfig": {
+          "templateName": "magazine_c",
+          "clockInfo": {
+            "templateId": "magazine_c",
+            "style": 7
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_magazine_c_style1",
+        "templateConfig": {
+          "templateName": "magazine_c",
+          "clockInfo": {
+            "templateId": "magazine_c",
+            "style": 6
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_magazine_c_style4",
+        "templateConfig": {
+          "templateName": "magazine_c",
+          "clockInfo": {
+            "templateId": "magazine_c",
+            "style": 8
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_magazine_c_style5",
+        "templateConfig": {
+          "templateName": "magazine_c",
+          "clockInfo": {
+            "templateId": "magazine_c",
+            "style": 9
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_magazine_c_style2",
+        "templateConfig": {
+          "templateName": "magazine_c",
+          "clockInfo": {
+            "templateId": "magazine_c",
+            "style": 5
+          }
+        }
+      }
+    ]
+  },
+  {
+    "titleId": "kg_template_title_oversize_time",
+    "hideFlag": 64,
+    "templates": [
+      {
+        "templateRes": "kg_clock_template_pad_c_style1",
+        "templateConfig": {
+          "templateName": "pad_exclusive_c",
+          "clockInfo": {
+            "templateId": "pad_exclusive_c",
+            "style": 1
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_pad_a_style1",
+        "templateConfig": {
+          "templateName": "pad_exclusive_a",
+          "clockInfo": {
+            "templateId": "pad_exclusive_a",
+            "signatureLine1": "Beijing",
+            "signatureLine2": "Qinghe, Haidian",
+            "signatureLine3": "ALWAYS BELIEVE THAT SOMETHINGS WONDERFUL IS\nABOUT TO HAPPEN"
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_pad_b_style1",
+        "templateConfig": {
+          "templateName": "pad_exclusive_b",
+          "clockInfo": {
+            "templateId": "pad_exclusive_b",
+            "style": 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    "titleId": "kg_template_title_oriental_aesthetics",
+    "templates": [
+      {
+        "templateRes": "kg_clock_template_rhombus_style1",
+        "templateConfig": {
+          "templateName": "rhombus",
+          "clockInfo": {
+            "templateId": "rhombus",
+            "style": 4
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_eastern_c_style1",
+        "hideFlag": 1,
+        "templateConfig": {
+          "templateName": "eastern_c",
+          "clockInfo": {
+            "templateId": "eastern_c",
+            "style": 1
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_eastern_a_style1",
+        "templateConfig": {
+          "templateName": "eastern_a",
+          "clockInfo": {
+            "templateId": "eastern_a",
+            "style": 1
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_eastern_b_style1",
+        "templateConfig": {
+          "templateName": "eastern_b",
+          "clockInfo": {
+            "templateId": "eastern_b",
+            "style": 2
+          }
+        }
+      }
+    ]
+  },
+  {
+    "titleId": "kg_template_title_magazine",
+    "hideFlag": 0,
+    "templates": [
+      {
+        "templateRes": "kg_clock_template_magazine_a_style1",
+        "templateConfig": {
+          "templateName": "magazine_a",
+          "clockInfo": {
+            "templateId": "magazine_a",
+            "style": 3
+          },
+          "signatureInfo": {
+            "templateId": "magazine_a",
+            "content": "SMILE",
+            "alignment": 104,
+            "textSize": -1,
+            "templateFontType": 0,
+            "lineSpaceValue": 0,
+            "letterSpaceValue": 0
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_magazine_b_style1",
+        "templateConfig": {
+          "templateName": "magazine_b",
+          "clockInfo": {
+            "templateId": "magazine_b"
+          },
+          "signatureInfo": {
+            "templateId": "magazine_b",
+            "content": "Urban\nStories",
+            "alignment": 104,
+            "templateFontType": 1,
+            "textSize": -1,
+            "lineSpaceValue": 0,
+            "letterSpaceValue": 0
+          }
+        }
+      }
+    ]
+  },
+  {
+    "titleId": "kg_template_title_graffiti_lock",
+    "hideFlag": 0,
+    "templates": [
+      {
+        "templateRes": "kg_clock_template_doodle_style2",
+        "templateConfig": {
+          "templateName": "doodle_style2",
+          "clockInfo": {
+            "templateId": "doodle",
+            "style": 2
+          },
+          "doodle": {
+            "solidColor": -2894893,
+            "isAutoSolidColor": false,
+            "ribbonColor1": -13662,
+            "ribbonColor2": -2590698,
+            "primaryFontColorPanelId": 13
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_doodle_style1",
+        "templateConfig": {
+          "templateName": "doodle_style1",
+          "clockInfo": {
+            "templateId": "doodle",
+            "style": 1
+          },
+          "doodle": {
+            "solidColor": -2894893,
+            "isAutoSolidColor": false,
+            "ribbonColor1": -13662,
+            "ribbonColor2": -2590698,
+            "primaryFontColorPanelId": 13
+          }
+        }
+      },
+      {
+        "templateRes": "kg_clock_template_pets_style1",
+        "hideFlag": 16,
+        "templateConfig": {
+          "templateName": "pets_style1",
+          "clockInfo": {
+            "templateId": "depth_pets"
+          }
+        }
+      }
+    ]
+  }
+]

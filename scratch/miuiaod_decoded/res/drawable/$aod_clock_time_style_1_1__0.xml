@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="610.0dip" android:width="426.0dip" android:viewportWidth="426.0" android:viewportHeight="610.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group android:name="_R_G">
+        <group android:name="_R_G_L_1_G" android:translateX="213.0" android:translateY="305.0">
+            <path android:name="_R_G_L_1_G_D_0_P_0" android:pathData=" M93.2 285.35 C86.71,285.35 81.36,283.23 77.13,279 C72.9,274.77 70.78,269.42 70.78,262.93 C70.78,262.93 70.78,-229.69 70.78,-229.69 C70.78,-230.46 69.98,-230.98 69.29,-230.63 C69.29,-230.63 -83.76,-158.18 -83.76,-158.18 C-91.74,-154.19 -98.82,-154.58 -105.03,-159.29 C-111.24,-164.01 -114.12,-170.36 -113.6,-178.34 C-113.11,-186.29 -108.64,-192.25 -100.17,-196.25 C-100.17,-196.25 79.77,-281.36 79.77,-281.36 C85.74,-284.34 91.46,-285.35 96.94,-284.34 C102.43,-283.34 106.66,-280.84 109.64,-276.88 C112.63,-272.89 114.12,-267.93 114.12,-261.96 C114.12,-261.96 114.12,262.93 114.12,262.93 C114.12,269.42 112.11,274.77 108.15,279 C104.16,283.23 99.2,285.35 93.23,285.35 C93.23,285.35 93.2,285.35 93.2,285.35c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.2" android:trimPathEnd="0.62" android:trimPathOffset="0.5416667" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+        <group android:name="_R_G_L_0_G" android:translateX="213.0" android:translateY="305.0">
+            <path android:name="_R_G_L_0_G_D_0_P_0" android:pathData=" M93.2 285.35 C86.71,285.35 81.36,283.23 77.13,279 C72.9,274.77 70.78,269.42 70.78,262.93 C70.78,262.93 70.78,-229.69 70.78,-229.69 C70.78,-230.46 69.98,-230.98 69.29,-230.63 C69.29,-230.63 -83.76,-158.18 -83.76,-158.18 C-91.74,-154.19 -98.82,-154.58 -105.03,-159.29 C-111.24,-164.01 -114.12,-170.36 -113.6,-178.34 C-113.11,-186.29 -108.64,-192.25 -100.17,-196.25 C-100.17,-196.25 79.77,-281.36 79.77,-281.36 C85.74,-284.34 91.46,-285.35 96.94,-284.34 C102.43,-283.34 106.66,-280.84 109.64,-276.88 C112.63,-272.89 114.12,-267.93 114.12,-261.96 C114.12,-261.96 114.12,262.93 114.12,262.93 C114.12,269.42 112.11,274.77 108.15,279 C104.16,283.23 99.2,285.35 93.23,285.35 C93.23,285.35 93.2,285.35 93.2,285.35c " android:strokeColor="#ffffffff" android:strokeWidth="10.0" android:trimPathStart="0.2" android:trimPathEnd="0.62" android:trimPathOffset="0.041666668" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeAlpha="1.0" />
+        </group>
+    </group>
+    <group android:name="time_group" />
+</vector>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.settings.CustomClockView android:orientation="vertical" android:id="@id/custom_clock" android:clipChildren="false" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="11.0dip" android:id="@id/big_msg_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="-10.0dip" android:maxLines="1" android:includeFontPadding="false" />
+    <TextView android:textSize="42.0dip" android:id="@id/time_view" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:includeFontPadding="false" />
+    <ImageView android:id="@id/iv_aod_notification" android:layout_width="fill_parent" android:layout_height="88.0dip" android:scaleType="fitXY" />
+</com.miui.aod.settings.CustomClockView>

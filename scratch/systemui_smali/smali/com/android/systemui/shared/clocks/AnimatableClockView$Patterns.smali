@@ -1,0 +1,11 @@
+.class public abstract Lcom/android/systemui/shared/clocks/AnimatableClockView$Patterns;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# static fields
+.field public static sCacheKey:Ljava/lang/String;
+
+.field public static sClockView12:Ljava/lang/String;
+
+.field public static sClockView24:Ljava/lang/String;

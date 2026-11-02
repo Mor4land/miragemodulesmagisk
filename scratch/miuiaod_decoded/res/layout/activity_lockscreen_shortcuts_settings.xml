@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent" android:paddingHorizontal="@dimen/keyguard_shortcut_page_padding_horizontal"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:miuix="http://schemas.android.com/apk/res-auto">
+    <FrameLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/keyguard_shortcut_preview_margin_top" android:layoutDirection="ltr">
+        <androidx.cardview.widget.CardView android:layout_width="fill_parent" android:layout_height="@dimen/keyguard_shortcut_wallpaper_preview_height" miuix:cardCornerRadius="@dimen/keyguard_shortcut_wallpaper_preview_radius" miuix:cardElevation="0.0dip">
+            <ImageView android:id="@id/wallpaperPreview" android:layout_width="fill_parent" android:layout_height="fill_parent" android:scaleType="centerCrop" android:clipToOutline="true" />
+        </androidx.cardview.widget.CardView>
+        <ImageView android:layout_gravity="bottom|center|left" android:id="@id/leftImage" android:layout_width="@dimen/keyguard_shortcut_preview_icon_size" android:layout_height="@dimen/keyguard_shortcut_preview_icon_size" android:layout_marginBottom="@dimen/keyguard_shortcut_preview_margin_bottom" android:layout_marginStart="@dimen/keyguard_shortcut_preview_margin_start" />
+        <ImageView android:layout_gravity="bottom|center|right" android:id="@id/rightImage" android:layout_width="@dimen/keyguard_shortcut_preview_icon_size" android:layout_height="@dimen/keyguard_shortcut_preview_icon_size" android:layout_marginBottom="@dimen/keyguard_shortcut_preview_margin_bottom" android:layout_marginEnd="@dimen/keyguard_shortcut_preview_margin_start" />
+    </FrameLayout>
+    <miuix.miuixbasewidget.widget.FilterSortView android:id="@id/filterSortView" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/keyguard_shortcut_filter_sort_margin_top" android:layout_marginBottom="@dimen/keyguard_shortcut_filter_sort_margin_bottom" android:layoutDirection="ltr">
+        <view android:id="@id/leftTab" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/keyguard_shortcut_tab_left" miuix:descending="false" miuix:indicatorVisibility="gone" miuix:layout_constraintEnd_toStartOf="@id/rightTab" miuix:layout_constraintHorizontal_weight="1.0" miuix:layout_constraintStart_toStartOf="parent" class="miuix.miuixbasewidget.widget.FilterSortView$TabView" />
+        <view android:id="@id/rightTab" android:layout_width="0.0dip" android:layout_height="wrap_content" android:text="@string/keyguard_shortcut_tab_right" miuix:descending="false" miuix:indicatorVisibility="gone" miuix:layout_constraintEnd_toEndOf="parent" miuix:layout_constraintHorizontal_weight="1.0" miuix:layout_constraintStart_toEndOf="@id/leftTab" class="miuix.miuixbasewidget.widget.FilterSortView$TabView" />
+    </miuix.miuixbasewidget.widget.FilterSortView>
+    <miuix.springback.view.SpringBackLayout android:id="@id/springBacklayout" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_marginTop="@dimen/keyguard_shortcut_spring_back_margin_top" miuix:scrollOrientation="vertical" miuix:scrollableView="@id/scrollView">
+        <miuix.core.widget.NestedScrollView android:id="@id/scrollView" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="fill_parent">
+            <miuix.recyclerview.widget.RecyclerView android:id="@id/recyclerView" android:background="@drawable/bg_shortcut_container" android:layout_width="fill_parent" android:layout_height="wrap_content" android:nestedScrollingEnabled="false" android:paddingVertical="@dimen/keyguard_shortcut_list_content_padding_vertical" />
+        </miuix.core.widget.NestedScrollView>
+    </miuix.springback.view.SpringBackLayout>
+</LinearLayout>

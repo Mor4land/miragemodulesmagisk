@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="miui_eastern_art_single_margin_top">101.0dip</dimen>
+    <dimen name="miui_eastern_art_time_big_week_time_margin_top">544.0dip</dimen>
+    <dimen name="miui_eastern_art_time_hour1_margin_top">318.0dip</dimen>
+    <dimen name="miui_eastern_art_time_hour2_big_margin_top">389.0dip</dimen>
+    <dimen name="miui_eastern_art_time_hour2_small_margin_top">421.0dip</dimen>
+    <dimen name="miui_eastern_art_time_week_time_margin_top">544.0dip</dimen>
+</resources>

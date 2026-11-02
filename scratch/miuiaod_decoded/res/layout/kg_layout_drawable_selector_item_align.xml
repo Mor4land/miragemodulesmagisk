@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:background="@drawable/kg_selector_drawable_selector_frame_bg_signature_align" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:layout_gravity="center" android:id="@id/align_image" android:background="@drawable/kg_selector_drawable_selector_item_bg_signature_align" android:layout_width="@dimen/kg_align_select_view_size" android:layout_height="@dimen/kg_align_select_view_size" android:layout_margin="@dimen/kg_font_drawable_item_margin" android:scaleType="center" />
+</FrameLayout>

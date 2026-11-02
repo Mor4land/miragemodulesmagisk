@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/dual_color_selector_root_view" android:layout_width="@dimen/kg_editor_container_width_large" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.miui.keyguard.editor.view.SwitchView android:id="@id/switch_view" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/kg_dual_color_editor_switch_view_margin_bottom" app:smallCorner="true" />
+    <com.miui.keyguard.editor.edit.view.StyleSelectorContainer android:orientation="vertical" android:id="@id/dual_color_selector_container" android:paddingTop="@dimen/kg_dual_color_editor_margin_top" android:paddingBottom="@dimen/kg_dual_color_editor_margin_bottom" android:layout_width="fill_parent" android:layout_height="wrap_content">
+        <com.miui.keyguard.editor.edit.view.HighTextContrastCompatContainer android:orientation="vertical" android:id="@id/high_text_contrast_container" android:layout_width="fill_parent" android:layout_height="wrap_content" android:animateLayoutChanges="true">
+            <com.miui.keyguard.editor.edit.view.StyleSelectorView android:id="@id/top_color_select_view" android:layout_width="fill_parent" android:layout_height="wrap_content" android:translationZ="2.0dip" app:labelMarginBottom="@dimen/kg_dual_color_editor_label_gap" />
+            <miuix.androidbasewidget.widget.SeekBar android:id="@id/top_color_editor_lightness_sb" android:layout_width="fill_parent" android:layout_height="@dimen/kg_color_value_editor_seekbar_height" android:layout_marginTop="16.0dip" android:translationZ="1.0dip" android:layout_marginVertical="@null" style="@style/KgColorEditorLightnessSeekbar" />
+            <com.miui.keyguard.editor.edit.view.StyleSelectorView android:id="@id/bottom_color_select_view" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="16.0dip" android:translationZ="2.0dip" app:labelMarginBottom="@dimen/kg_dual_color_editor_label_gap" />
+            <miuix.androidbasewidget.widget.SeekBar android:id="@id/bottom_color_editor_lightness_sb" android:layout_width="fill_parent" android:layout_height="@dimen/kg_color_value_editor_seekbar_height" android:layout_marginTop="16.0dip" android:translationZ="1.0dip" android:layout_marginVertical="@null" style="@style/KgColorEditorLightnessSeekbar" />
+        </com.miui.keyguard.editor.edit.view.HighTextContrastCompatContainer>
+    </com.miui.keyguard.editor.edit.view.StyleSelectorContainer>
+</LinearLayout>

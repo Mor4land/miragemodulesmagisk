@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.keyguard.editor.view.FilterIconLayout android:orientation="vertical" android:id="@id/font_effect_button_container" android:background="@drawable/kg_font_filter_selector_frame_bg_filter_button" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <miuix.smooth.SmoothFrameLayout2 android:layout_width="wrap_content" android:layout_height="wrap_content" android:radius="@dimen/kg_font_filter_effect_title_radius">
+        <Button android:textColor="?clockTemplateTextColor" android:id="@id/filter_title" android:background="@drawable/kg_font_filter_selector_item_bg_filter_button" android:paddingTop="@dimen/kg_editor_dialog_header_padding_vertical" android:paddingBottom="@dimen/kg_editor_dialog_header_padding_vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="@dimen/kg_font_effect_title_button_margin" android:minHeight="@dimen/kg_font_effect_title_button_height" android:paddingStart="@dimen/kg_font_effect_title_button_padding_horizontal" android:paddingEnd="@dimen/kg_font_effect_title_button_padding_horizontal" />
+    </miuix.smooth.SmoothFrameLayout2>
+</com.miui.keyguard.editor.view.FilterIconLayout>

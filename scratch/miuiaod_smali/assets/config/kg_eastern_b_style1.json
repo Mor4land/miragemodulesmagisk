@@ -1,0 +1,36 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "wallpaper_group/01_FlowerTexture/FlowerTexture008.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "rhombus",
+      "primaryColor": -1,
+      "secondaryColor": -382422,
+      "primaryFontColorPanelId": 13,
+      "secondaryFontColorPanelId": 13,
+      "style": 1,
+      "enableDiffusion": false
+    },
+    "wallpaperInfo": {
+      "source": "wallpaper_group/01_FlowerTexture/FlowerTexture008.jpg",
+      "mask": "wallpaper_group/01_FlowerTexture/FlowerTexture008_MASK.jpg",
+      "magicType": 20000,
+      "resourceType": "image",
+      "supportSubject": true,
+      "largeScreenHierarchyEnable": {
+        "smallScreenWithNotificationHierarchyEnable": false,
+        "largeScreenPortWithNotificationHierarchyEnable": false,
+        "largeScreenLandWithNotificationHierarchyEnable": false
+      }
+    },
+    "templateName": "eastern_b_style1",
+    "version": 3
+  }
+}

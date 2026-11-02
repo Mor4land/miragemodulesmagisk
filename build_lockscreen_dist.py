@@ -6,7 +6,7 @@ MODULE_DIR = os.path.join(ROOT, "magisk-module-hyperos3-lockscreen")
 DIST_DIR = os.path.join(ROOT, "dist")
 os.makedirs(DIST_DIR, exist_ok=True)
 
-OUT_ZIP = os.path.join(DIST_DIR, "POCO_M5_HyperOS3_Lockscreen_Port-v3.0.2.zip")
+OUT_ZIP = os.path.join(DIST_DIR, "POCO_M5_HyperOS3_Lockscreen_Port-v3.0.3.zip")
 
 print("Packaging Magisk module from:", MODULE_DIR)
 print("Destination:", OUT_ZIP)

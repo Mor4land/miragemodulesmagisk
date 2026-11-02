@@ -1,0 +1,183 @@
+.class public final Lcom/android/systemui/controlcenter/policy/SlaveWifiHelper$Companion;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# direct methods
+.method public static final access$isOnly24Ghz(Ljava/util/Set;)Z
+    .locals 4
+
+    .line 1
+    const/4 v0, 0x1
+
+    .line 2
+    if-eqz p0, :cond_2
+
+    .line 3
+    .line 4
+    invoke-interface {p0}, Ljava/lang/Iterable;->iterator()Ljava/util/Iterator;
+
+    .line 5
+    .line 6
+    .line 7
+    move-result-object p0
+
+    .line 8
+    :cond_0
+    invoke-interface {p0}, Ljava/util/Iterator;->hasNext()Z
+
+    .line 9
+    .line 10
+    .line 11
+    move-result v1
+
+    .line 12
+    if-eqz v1, :cond_2
+
+    .line 13
+    .line 14
+    invoke-interface {p0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+
+    .line 15
+    .line 16
+    .line 17
+    move-result-object v1
+
+    .line 18
+    check-cast v1, Landroid/net/wifi/ScanResult;
+
+    .line 19
+    .line 20
+    iget v1, v1, Landroid/net/wifi/ScanResult;->frequency:I
+
+    .line 21
+    .line 22
+    const/16 v2, 0x1325
+
+    .line 23
+    .line 24
+    const/4 v3, 0x0
+
+    .line 25
+    if-gt v2, v1, :cond_1
+
+    .line 26
+    .line 27
+    const/16 v2, 0x170c
+
+    .line 28
+    .line 29
+    if-ge v1, v2, :cond_1
+
+    .line 30
+    .line 31
+    move v1, v0
+
+    .line 32
+    goto :goto_0
+
+    .line 33
+    :cond_1
+    move v1, v3
+
+    .line 34
+    :goto_0
+    if-eqz v1, :cond_0
+
+    .line 35
+    .line 36
+    move v0, v3
+
+    .line 37
+    :cond_2
+    return v0
+.end method
+
+.method public static final access$isOnly5Ghz(Ljava/util/Set;)Z
+    .locals 4
+
+    .line 1
+    const/4 v0, 0x1
+
+    .line 2
+    if-eqz p0, :cond_2
+
+    .line 3
+    .line 4
+    invoke-interface {p0}, Ljava/lang/Iterable;->iterator()Ljava/util/Iterator;
+
+    .line 5
+    .line 6
+    .line 7
+    move-result-object p0
+
+    .line 8
+    :cond_0
+    invoke-interface {p0}, Ljava/util/Iterator;->hasNext()Z
+
+    .line 9
+    .line 10
+    .line 11
+    move-result v1
+
+    .line 12
+    if-eqz v1, :cond_2
+
+    .line 13
+    .line 14
+    invoke-interface {p0}, Ljava/util/Iterator;->next()Ljava/lang/Object;
+
+    .line 15
+    .line 16
+    .line 17
+    move-result-object v1
+
+    .line 18
+    check-cast v1, Landroid/net/wifi/ScanResult;
+
+    .line 19
+    .line 20
+    iget v1, v1, Landroid/net/wifi/ScanResult;->frequency:I
+
+    .line 21
+    .line 22
+    const/16 v2, 0x961
+
+    .line 23
+    .line 24
+    const/4 v3, 0x0
+
+    .line 25
+    if-gt v2, v1, :cond_1
+
+    .line 26
+    .line 27
+    const/16 v2, 0x9c4
+
+    .line 28
+    .line 29
+    if-ge v1, v2, :cond_1
+
+    .line 30
+    .line 31
+    move v1, v0
+
+    .line 32
+    goto :goto_0
+
+    .line 33
+    :cond_1
+    move v1, v3
+
+    .line 34
+    :goto_0
+    if-eqz v1, :cond_0
+
+    .line 35
+    .line 36
+    move v0, v3
+
+    .line 37
+    :cond_2
+    return v0
+.end method

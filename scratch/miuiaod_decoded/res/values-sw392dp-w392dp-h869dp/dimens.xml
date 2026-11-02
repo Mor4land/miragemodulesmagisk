@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_main_item_content_drawable_height">518.0dip</dimen>
+    <dimen name="kg_main_item_content_drawable_width">222.0dip</dimen>
+    <dimen name="kg_rhombus_clock_click_hotspot_margin_top">209.0dip</dimen>
+    <dimen name="kg_switch_view_blur_padding_bottom">8.0dip</dimen>
+</resources>

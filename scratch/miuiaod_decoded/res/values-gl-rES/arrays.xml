@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>Fonte do sistema</item>
+        <item>Cadrado ancho</item>
+        <item>Negro simple</item>
+        <item>De dobre capa</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>Orixinal</item>
+        <item>Desenfocar</item>
+        <item>Acanalado</item>
+        <item>Estriado</item>
+        <item>Prisma</item>
+        <item>Canles</item>
+        <item>Ondas</item>
+        <item>Cadrados</item>
+    </string-array>
+</resources>

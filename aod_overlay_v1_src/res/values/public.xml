@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <public type="string" name="config_dozeComponent" id="0x7f020000" />
+    <public type="bool" name="config_dozeAlwaysOnDisplayAvailable" id="0x7f030001" />
+</resources>

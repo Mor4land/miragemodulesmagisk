@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.tiny.pets.ai.AiPetsAodClock android:layout_width="fill_parent" android:layout_height="fill_parent" android:layoutDirection="ltr"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <include android:id="@id/clock_time" android:layout_width="@dimen/tiny_pets_width" android:layout_height="@dimen/tiny_pets_height" layout="@layout/layout_interactive_pets_clock_base_view" />
+    <ImageView android:id="@id/pets_image" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    <androidx.constraintlayout.widget.ConstraintLayout android:id="@id/pets_battery" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <include android:id="@id/battery" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="@id/pets_battery" app:layout_constraintLeft_toLeftOf="@id/pets_battery" app:layout_constraintRight_toRightOf="@id/pets_battery" app:layout_constraintTop_toTopOf="@id/pets_battery" layout="@layout/layout_battery_view" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.miui.clock.tiny.pets.ai.AiPetsAodClock>

@@ -1,0 +1,863 @@
+.class public final Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;
+.super Lcom/miui/keyguard/editor/edit/base/BaseClockView;
+.source "PadCTemplateView.kt"
+
+# interfaces
+.implements Landroid/view/View$OnClickListener;
+
+
+# annotations
+.annotation runtime Lkotlin/Metadata;
+.end annotation
+
+.annotation build Lkotlin/jvm/internal/SourceDebugExtension;
+.end annotation
+
+
+# instance fields
+.field private clockContainer:Landroid/view/View;
+
+.field private final foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+.field private foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+
+# direct methods
+.method public constructor <init>(Landroid/content/Context;)V
+    .locals 1
+    .param p1    # Landroid/content/Context;
+        .annotation build Lorg/jetbrains/annotations/NotNull;
+        .end annotation
+    .end param
+
+    const-string v0, "context"
+
+    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullParameter(Ljava/lang/Object;Ljava/lang/String;)V
+
+    .line 25
+    invoke-direct {p0, p1}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;-><init>(Landroid/content/Context;)V
+
+    .line 27
+    new-instance p1, Lcom/miui/clock/module/ClockBean;
+
+    const-string v0, "pad_exclusive_c_minute"
+
+    invoke-direct {p1, v0}, Lcom/miui/clock/module/ClockBean;-><init>(Ljava/lang/String;)V
+
+    iput-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    return-void
+.end method
+
+
+# virtual methods
+.method protected backContentLayerId()I
+    .locals 0
+
+    .line 29
+    sget p0, Lcom/miui/keyguard/editor/R$layout;->kg_layout_clock_back_content_layer:I
+
+    return p0
+.end method
+
+.method public createAutoColorPicker()Lcom/miui/keyguard/editor/edit/color/picker/AutoColorPicker;
+    .locals 3
+
+    .line 37
+    new-instance v0, Lcom/miui/keyguard/editor/edit/color/picker/AutoColorPicker;
+
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getContext()Landroid/content/Context;
+
+    move-result-object v1
+
+    const-string v2, "getContext(...)"
+
+    invoke-static {v1, v2}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullExpressionValue(Ljava/lang/Object;Ljava/lang/String;)V
+
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->getClockStyleType()Ljava/lang/String;
+
+    move-result-object v2
+
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object p0
+
+    invoke-direct {v0, v1, v2, p0}, Lcom/miui/keyguard/editor/edit/color/picker/AutoColorPicker;-><init>(Landroid/content/Context;Ljava/lang/String;Lcom/miui/clock/module/ClockBean;)V
+
+    return-object v0
+.end method
+
+.method public createColorPickHandler()Lcom/miui/keyguard/editor/edit/color/handler/ColorPickHandler;
+    .locals 3
+
+    .line 45
+    new-instance v0, Lcom/miui/keyguard/editor/edit/color/handler/ColorPickHandler;
+
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v1
+
+    iget-object v2, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-direct {v0, p0, v1, v2}, Lcom/miui/keyguard/editor/edit/color/handler/ColorPickHandler;-><init>(Lcom/miui/keyguard/editor/edit/base/BaseClockView;Lcom/miui/clock/module/ClockBean;Lcom/miui/clock/module/ClockBean;)V
+
+    return-object v0
+.end method
+
+.method public editFrameClickListener()Landroid/view/View$OnClickListener;
+    .locals 0
+
+    .line 0
+    return-object p0
+.end method
+
+.method protected foreContentLayerId()I
+    .locals 0
+
+    .line 28
+    sget p0, Lcom/miui/keyguard/editor/R$layout;->kg_layout_clock_fore_content_layer:I
+
+    return p0
+.end method
+
+.method public getClockStyleType()Ljava/lang/String;
+    .locals 0
+    .annotation build Lorg/jetbrains/annotations/NotNull;
+    .end annotation
+
+    .line 33
+    const-string p0, "pad_exclusive_c"
+
+    return-object p0
+.end method
+
+.method protected getEditFrames(Landroid/widget/FrameLayout;)Ljava/util/List;
+    .locals 12
+
+    const-string/jumbo v0, "templateView"
+
+    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullParameter(Ljava/lang/Object;Ljava/lang/String;)V
+
+    .line 114
+    iget-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->clockContainer:Landroid/view/View;
+
+    const/4 v0, 0x0
+
+    if-eqz p1, :cond_0
+
+    invoke-virtual {p1}, Landroid/view/View;->getLeft()I
+
+    move-result p1
+
+    goto :goto_0
+
+    :cond_0
+    move p1, v0
+
+    .line 115
+    :goto_0
+    iget-object v1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->clockContainer:Landroid/view/View;
+
+    if-eqz v1, :cond_1
+
+    invoke-virtual {v1}, Landroid/view/View;->getTop()I
+
+    move-result v1
+
+    goto :goto_1
+
+    :cond_1
+    move v1, v0
+
+    .line 116
+    :goto_1
+    iget-object v2, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->clockContainer:Landroid/view/View;
+
+    if-eqz v2, :cond_2
+
+    invoke-virtual {v2}, Landroid/view/View;->getRight()I
+
+    move-result v2
+
+    goto :goto_2
+
+    :cond_2
+    move v2, v0
+
+    .line 117
+    :goto_2
+    iget-object v3, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->clockContainer:Landroid/view/View;
+
+    if-eqz v3, :cond_3
+
+    invoke-virtual {v3}, Landroid/view/View;->getHeight()I
+
+    move-result v3
+
+    goto :goto_3
+
+    :cond_3
+    move v3, v0
+
+    .line 118
+    :goto_3
+    new-instance v6, Landroid/graphics/Rect;
+
+    .line 119
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getResources()Landroid/content/res/Resources;
+
+    move-result-object v4
+
+    sget v5, Lcom/miui/keyguard/editor/R$dimen;->kg_pad_c_clock_time_extra_margin_left:I
+
+    invoke-virtual {v4, v5}, Landroid/content/res/Resources;->getDimensionPixelSize(I)I
+
+    move-result v4
+
+    sub-int/2addr p1, v4
+
+    .line 121
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getResources()Landroid/content/res/Resources;
+
+    move-result-object v4
+
+    sget v5, Lcom/miui/keyguard/editor/R$dimen;->kg_pad_c_clock_time_extra_margin_right:I
+
+    invoke-virtual {v4, v5}, Landroid/content/res/Resources;->getDimensionPixelSize(I)I
+
+    move-result v4
+
+    add-int/2addr v2, v4
+
+    .line 118
+    invoke-direct {v6, p1, v1, v2, v3}, Landroid/graphics/Rect;-><init>(IIII)V
+
+    .line 126
+    sget v5, Lcom/miui/keyguard/editor/R$id;->kg_pad_c_clock_area_frame:I
+
+    .line 128
+    sget-object v7, Lcom/miui/keyguard/editor/edit/base/CustomMarginType;->ALL:Lcom/miui/keyguard/editor/edit/base/CustomMarginType;
+
+    new-array v8, v0, [Landroid/view/View;
+
+    const/16 v10, 0x10
+
+    const/4 v11, 0x0
+
+    const/4 v9, 0x0
+
+    move-object v4, p0
+
+    .line 125
+    invoke-static/range {v4 .. v11}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getFixationFrameParam$default(Lcom/miui/keyguard/editor/edit/base/BaseClockView;ILandroid/graphics/Rect;Lcom/miui/keyguard/editor/edit/base/CustomMarginType;[Landroid/view/View;IILjava/lang/Object;)Lcom/miui/keyguard/editor/view/KgFrameParam;
+
+    move-result-object p0
+
+    filled-new-array {p0}, [Lcom/miui/keyguard/editor/view/KgFrameParam;
+
+    move-result-object p0
+
+    .line 124
+    invoke-static {p0}, Lkotlin/collections/CollectionsKt;->mutableListOf([Ljava/lang/Object;)Ljava/util/List;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public getFontFilter()Lcom/miui/keyguard/editor/data/preset/FontFilter;
+    .locals 0
+    .annotation build Lorg/jetbrains/annotations/NotNull;
+    .end annotation
+
+    .line 41
+    invoke-static {}, Lcom/miui/keyguard/editor/data/preset/FontFilterKt;->getPAD_C_FONT_FILTER()Lcom/miui/keyguard/editor/data/preset/FontFilter;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method protected getForeClock()Lcom/miui/clock/MiuiClockView;
+    .locals 0
+    .annotation build Lorg/jetbrains/annotations/Nullable;
+    .end annotation
+
+    .line 89
+    iget-object p0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    return-object p0
+.end method
+
+.method protected getOrCreateClockStyleEditor()Lcom/miui/keyguard/editor/edit/base/AbstractPopupEditor;
+    .locals 3
+    .annotation build Lorg/jetbrains/annotations/NotNull;
+    .end annotation
+
+    .line 172
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getClockStyleEditor()Lcom/miui/keyguard/editor/edit/base/AbstractPopupEditor;
+
+    move-result-object v0
+
+    if-nez v0, :cond_0
+
+    new-instance v0, Lcom/miui/keyguard/editor/edit/style/PadCStyleEditor;
+
+    .line 173
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Lcom/miui/clock/module/ClockBean;->getStyle()I
+
+    move-result v1
+
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getFontStyleEditCallback()Lcom/miui/keyguard/editor/edit/style/FontStyleEditCallback;
+
+    move-result-object v2
+
+    .line 172
+    invoke-direct {v0, p0, p0, v1, v2}, Lcom/miui/keyguard/editor/edit/style/PadCStyleEditor;-><init>(Lcom/miui/keyguard/editor/edit/base/BaseClockView;Lcom/miui/keyguard/editor/edit/base/EditCallback;ILcom/miui/keyguard/editor/edit/style/FontStyleEditCallback;)V
+
+    :cond_0
+    invoke-virtual {p0, v0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->setClockStyleEditor(Lcom/miui/keyguard/editor/edit/base/AbstractPopupEditor;)V
+
+    .line 175
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getClockStyleEditor()Lcom/miui/keyguard/editor/edit/base/AbstractPopupEditor;
+
+    move-result-object p0
+
+    invoke-static {p0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNull(Ljava/lang/Object;)V
+
+    return-object p0
+.end method
+
+.method protected initForeClock(Landroid/widget/FrameLayout;)V
+    .locals 1
+
+    const-string/jumbo v0, "templateView"
+
+    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullParameter(Ljava/lang/Object;Ljava/lang/String;)V
+
+    .line 85
+    sget v0, Lcom/miui/keyguard/editor/R$id;->fore_clock:I
+
+    invoke-virtual {p1, v0}, Landroid/widget/FrameLayout;->findViewById(I)Landroid/view/View;
+
+    move-result-object p1
+
+    check-cast p1, Lcom/miui/clock/MiuiClockView;
+
+    iput-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    return-void
+.end method
+
+.method public initTemplateBean(Lcom/miui/keyguard/editor/data/bean/TemplateConfig;)V
+    .locals 2
+
+    const-string/jumbo v0, "templateConfig"
+
+    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullParameter(Ljava/lang/Object;Ljava/lang/String;)V
+
+    .line 63
+    invoke-super {p0, p1}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->initTemplateBean(Lcom/miui/keyguard/editor/data/bean/TemplateConfig;)V
+
+    .line 64
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/TemplateConfig;->getClockInfo()Lcom/miui/keyguard/editor/data/bean/ClockInfo;
+
+    move-result-object p1
+
+    .line 65
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getStyle()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setStyle(I)V
+
+    .line 66
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getPrimaryColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setPrimaryColor(I)V
+
+    .line 67
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->isAutoPrimaryColor()Z
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setAutoPrimaryColor(Z)V
+
+    .line 68
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getSecondaryColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setSecondaryColor(I)V
+
+    .line 69
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->isAutoSecondaryColor()Z
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setAutoSecondaryColor(Z)V
+
+    .line 70
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getBlendColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setBlendColor(I)V
+
+    .line 71
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getSecondaryBlendColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setSecondaryBlendColor(I)V
+
+    .line 72
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getCurrentClockBean()Lcom/miui/clock/module/ClockBean;
+
+    move-result-object v0
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getClockEffect()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setClockEffect(I)V
+
+    .line 73
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getBlendColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setBlendColor(I)V
+
+    .line 74
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getSecondaryBlendColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setSecondaryBlendColor(I)V
+
+    .line 75
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getClockEffect()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setClockEffect(I)V
+
+    .line 76
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getStyle()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setStyle(I)V
+
+    .line 77
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getPrimaryColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setPrimaryColor(I)V
+
+    .line 78
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->isAutoPrimaryColor()Z
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setAutoPrimaryColor(Z)V
+
+    .line 79
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->getSecondaryColor()I
+
+    move-result v1
+
+    invoke-virtual {v0, v1}, Lcom/miui/clock/module/ClockBean;->setSecondaryColor(I)V
+
+    .line 80
+    iget-object p0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/data/bean/ClockInfo;->isAutoSecondaryColor()Z
+
+    move-result p1
+
+    invoke-virtual {p0, p1}, Lcom/miui/clock/module/ClockBean;->setAutoSecondaryColor(Z)V
+
+    return-void
+.end method
+
+.method public onClick(Landroid/view/View;)V
+    .locals 2
+
+    if-eqz p1, :cond_0
+
+    .line 134
+    invoke-virtual {p1}, Landroid/view/View;->getId()I
+
+    move-result v0
+
+    invoke-static {v0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+
+    move-result-object v0
+
+    goto :goto_0
+
+    :cond_0
+    const/4 v0, 0x0
+
+    .line 135
+    :goto_0
+    sget v1, Lcom/miui/keyguard/editor/R$id;->kg_pad_c_clock_area_frame:I
+
+    if-nez v0, :cond_1
+
+    goto :goto_1
+
+    :cond_1
+    invoke-virtual {v0}, Ljava/lang/Integer;->intValue()I
+
+    move-result v0
+
+    if-ne v0, v1, :cond_2
+
+    .line 136
+    invoke-virtual {p0, p1}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->onClickClockFrame(Landroid/view/View;)V
+
+    :cond_2
+    :goto_1
+    return-void
+.end method
+
+.method public onClockInfoUpdate()V
+    .locals 1
+
+    .line 148
+    invoke-super {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->onClockInfoUpdate()V
+
+    .line 149
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    if-nez v0, :cond_0
+
+    goto :goto_0
+
+    :cond_0
+    iget-object p0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {v0, p0}, Lcom/miui/clock/MiuiClockView;->setClockBean(Lcom/miui/clock/module/ClockBean;)V
+
+    :goto_0
+    return-void
+.end method
+
+.method public onEdited(ILjava/lang/Object;)V
+    .locals 0
+
+    .line 142
+    invoke-super {p0, p1, p2}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->onEdited(ILjava/lang/Object;)V
+
+    return-void
+.end method
+
+.method public onMiuiClockViewCreated(Lcom/miui/keyguard/editor/data/bean/TemplateConfig;)V
+    .locals 3
+
+    const-string/jumbo v0, "templateConfig"
+
+    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullParameter(Ljava/lang/Object;Ljava/lang/String;)V
+
+    .line 93
+    invoke-super {p0, p1}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->onMiuiClockViewCreated(Lcom/miui/keyguard/editor/data/bean/TemplateConfig;)V
+
+    .line 94
+    iget-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    const/4 v0, 0x0
+
+    if-eqz p1, :cond_1
+
+    invoke-virtual {p1}, Lcom/miui/clock/MiuiClockView;->isDualClock()Z
+
+    move-result v1
+
+    if-nez v1, :cond_0
+
+    move v1, v0
+
+    goto :goto_0
+
+    :cond_0
+    const/16 v1, 0x8
+
+    .line 256
+    :goto_0
+    invoke-virtual {p1, v1}, Landroid/view/View;->setVisibility(I)V
+
+    .line 95
+    :cond_1
+    iget-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    const/4 v1, 0x0
+
+    if-nez p1, :cond_2
+
+    goto :goto_2
+
+    :cond_2
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getMiuiClockView()Lcom/miui/clock/MiuiClockView;
+
+    move-result-object v2
+
+    if-eqz v2, :cond_3
+
+    invoke-virtual {v2}, Lcom/miui/clock/MiuiClockView;->getBackgroundBlurContainer()Landroid/view/View;
+
+    move-result-object v2
+
+    goto :goto_1
+
+    :cond_3
+    move-object v2, v1
+
+    :goto_1
+    invoke-virtual {p1, v2}, Lcom/miui/clock/MiuiClockView;->setBackgroundBlurContainer(Landroid/view/View;)V
+
+    .line 96
+    :goto_2
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->isDualClock()Z
+
+    move-result p1
+
+    if-nez p1, :cond_4
+
+    .line 98
+    iget-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    if-eqz p1, :cond_4
+
+    iget-object v2, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreClockBean:Lcom/miui/clock/module/ClockBean;
+
+    invoke-virtual {p1, v2, v0}, Lcom/miui/clock/MiuiClockView;->init(Lcom/miui/clock/module/ClockBean;Z)Lcom/miui/clock/MiuiClockView;
+
+    .line 102
+    :cond_4
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getSuccessUpdateClockView()Z
+
+    move-result p1
+
+    if-nez p1, :cond_5
+
+    .line 103
+    invoke-virtual {p0, v0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->completeWithCacheColor(Z)Z
+
+    .line 105
+    :cond_5
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getMiuiClockView()Lcom/miui/clock/MiuiClockView;
+
+    move-result-object p1
+
+    if-eqz p1, :cond_6
+
+    sget-object v0, Lcom/miui/clock/module/ClockViewType;->FULL_HOUR:Lcom/miui/clock/module/ClockViewType;
+
+    invoke-virtual {p1, v0}, Lcom/miui/clock/MiuiClockView;->getIClockView(Lcom/miui/clock/module/ClockViewType;)Landroid/view/View;
+
+    move-result-object v1
+
+    :cond_6
+    iput-object v1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->clockContainer:Landroid/view/View;
+
+    return-void
+.end method
+
+.method public supportGradientBlur()Z
+    .locals 0
+
+    .line 0
+    const/4 p0, 0x1
+
+    return p0
+.end method
+
+.method public templateHierarchyAvoidRect()Landroid/graphics/Rect;
+    .locals 4
+
+    .line 156
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getResources()Landroid/content/res/Resources;
+
+    move-result-object v0
+
+    sget v1, Lcom/miui/keyguard/editor/R$dimen;->kg_pad_c_style_hierarchy_avoid_check_left:I
+
+    invoke-virtual {v0, v1}, Landroid/content/res/Resources;->getDimensionPixelSize(I)I
+
+    move-result v0
+
+    .line 158
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getResources()Landroid/content/res/Resources;
+
+    move-result-object v1
+
+    sget v2, Lcom/miui/keyguard/editor/R$dimen;->kg_pad_c_style_hierarchy_avoid_check_top:I
+
+    invoke-virtual {v1, v2}, Landroid/content/res/Resources;->getDimensionPixelSize(I)I
+
+    move-result v1
+
+    .line 160
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getResources()Landroid/content/res/Resources;
+
+    move-result-object v2
+
+    sget v3, Lcom/miui/keyguard/editor/R$dimen;->kg_pad_c_style_hierarchy_avoid_check_width:I
+
+    invoke-virtual {v2, v3}, Landroid/content/res/Resources;->getDimensionPixelSize(I)I
+
+    move-result v2
+
+    .line 162
+    invoke-virtual {p0}, Landroid/widget/FrameLayout;->getResources()Landroid/content/res/Resources;
+
+    move-result-object p0
+
+    sget v3, Lcom/miui/keyguard/editor/R$dimen;->kg_pad_c_style_hierarchy_avoid_check_height:I
+
+    invoke-virtual {p0, v3}, Landroid/content/res/Resources;->getDimensionPixelSize(I)I
+
+    move-result p0
+
+    .line 163
+    new-instance v3, Landroid/graphics/Rect;
+
+    add-int/2addr v2, v0
+
+    add-int/2addr p0, v1
+
+    invoke-direct {v3, v0, v1, v2, p0}, Landroid/graphics/Rect;-><init>(IIII)V
+
+    return-object v3
+.end method
+
+.method public unSupportHierarchyTypes()Ljava/util/Set;
+    .locals 0
+
+    .line 152
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->hierarchyWithNotificationTypes()Ljava/util/Set;
+
+    move-result-object p0
+
+    return-object p0
+.end method
+
+.method public updateClockColor(Lcom/miui/keyguard/editor/edit/color/ColorData;)V
+    .locals 4
+
+    const-string v0, "colorData"
+
+    invoke-static {p1, v0}, Lkotlin/jvm/internal/Intrinsics;->checkNotNullParameter(Ljava/lang/Object;Ljava/lang/String;)V
+
+    .line 49
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getMiuiClockView()Lcom/miui/clock/MiuiClockView;
+
+    move-result-object v0
+
+    const/4 v1, 0x0
+
+    if-eqz v0, :cond_0
+
+    .line 51
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/edit/color/ColorData;->getDarkClockArea()Z
+
+    move-result v2
+
+    .line 52
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/edit/color/ColorData;->getClockPalette()Ljava/util/Map;
+
+    move-result-object v3
+
+    .line 49
+    invoke-virtual {v0, v1, v2, v3}, Lcom/miui/clock/MiuiClockView;->setClockPalette(IZLjava/util/Map;)V
+
+    .line 54
+    :cond_0
+    iget-object v0, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    if-eqz v0, :cond_1
+
+    .line 56
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/edit/color/ColorData;->getDarkClockArea()Z
+
+    move-result v2
+
+    .line 57
+    invoke-virtual {p1}, Lcom/miui/keyguard/editor/edit/color/ColorData;->getClockPalette()Ljava/util/Map;
+
+    move-result-object p1
+
+    .line 54
+    invoke-virtual {v0, v1, v2, p1}, Lcom/miui/clock/MiuiClockView;->setClockPalette(IZLjava/util/Map;)V
+
+    .line 59
+    :cond_1
+    invoke-virtual {p0}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->getMiuiClockView()Lcom/miui/clock/MiuiClockView;
+
+    move-result-object p1
+
+    if-eqz p1, :cond_2
+
+    iget-object p1, p0, Lcom/miui/keyguard/editor/edit/padclock/PadCTemplateView;->foreMiuiClockView:Lcom/miui/clock/MiuiClockView;
+
+    if-eqz p1, :cond_2
+
+    const/4 v1, 0x1
+
+    :cond_2
+    invoke-virtual {p0, v1}, Lcom/miui/keyguard/editor/edit/base/BaseClockView;->setSuccessUpdateClockView(Z)V
+
+    return-void
+.end method

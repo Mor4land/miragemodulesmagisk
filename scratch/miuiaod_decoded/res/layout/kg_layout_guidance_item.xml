@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <miuix.smooth.SmoothFrameLayout2 android:gravity="center" android:layout_gravity="center" android:id="@id/video_mask" android:layout_width="@dimen/kg_guidance_video_mask_width" android:layout_height="@dimen/kg_guidance_video_mask_height" android:radius="@dimen/kg_guidance_video_radius">
+        <FrameLayout android:layout_gravity="center" android:id="@id/video_container" android:layout_width="@dimen/kg_guidance_video_container_width" android:layout_height="@dimen/kg_guidance_video_container_height">
+            <TextureView android:layout_gravity="center" android:id="@id/video" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+        </FrameLayout>
+    </miuix.smooth.SmoothFrameLayout2>
+    <androidx.appcompat.widget.AppCompatTextView android:textSize="@dimen/kg_guidance_tip_text_size" android:textColor="?editorFontColor" android:id="@id/text" android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingHorizontal="@dimen/kg_guidance_tip_padding_horizontal" android:paddingVertical="@dimen/kg_guidance_tip_padding_vertical" />
+</androidx.appcompat.widget.LinearLayoutCompat>

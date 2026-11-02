@@ -1,0 +1,106 @@
+.class public final Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRetryWhen;
+.super Lio/reactivex/rxjava3/internal/operators/flowable/AbstractFlowableWithUpstream;
+.source "FlowableRetryWhen.java"
+
+
+# annotations
+.annotation system Ldalvik/annotation/MemberClasses;
+    value = {
+        Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRetryWhen$RetryWhenSubscriber;
+    }
+.end annotation
+
+.annotation system Ldalvik/annotation/Signature;
+    value = {
+        "<T:",
+        "Ljava/lang/Object;",
+        ">",
+        "Lio/reactivex/rxjava3/internal/operators/flowable/AbstractFlowableWithUpstream<",
+        "TT;TT;>;"
+    }
+.end annotation
+
+
+# instance fields
+.field final handler:Lio/reactivex/rxjava3/functions/Function;
+
+
+# virtual methods
+.method public subscribeActual(Lorg/reactivestreams/Subscriber;)V
+    .locals 4
+
+    .line 39
+    new-instance v0, Lio/reactivex/rxjava3/subscribers/SerializedSubscriber;
+
+    invoke-direct {v0, p1}, Lio/reactivex/rxjava3/subscribers/SerializedSubscriber;-><init>(Lorg/reactivestreams/Subscriber;)V
+
+    const/16 v1, 0x8
+
+    .line 41
+    invoke-static {v1}, Lio/reactivex/rxjava3/processors/UnicastProcessor;->create(I)Lio/reactivex/rxjava3/processors/UnicastProcessor;
+
+    move-result-object v1
+
+    invoke-virtual {v1}, Lio/reactivex/rxjava3/processors/FlowableProcessor;->toSerialized()Lio/reactivex/rxjava3/processors/FlowableProcessor;
+
+    move-result-object v1
+
+    .line 46
+    :try_start_0
+    iget-object v2, p0, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRetryWhen;->handler:Lio/reactivex/rxjava3/functions/Function;
+
+    invoke-interface {v2, v1}, Lio/reactivex/rxjava3/functions/Function;->apply(Ljava/lang/Object;)Ljava/lang/Object;
+
+    move-result-object v2
+
+    const-string v3, "handler returned a null Publisher"
+
+    invoke-static {v2, v3}, Ljava/util/Objects;->requireNonNull(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;
+
+    check-cast v2, Lorg/reactivestreams/Publisher;
+    :try_end_0
+    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+
+    .line 53
+    new-instance v3, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRepeatWhen$WhenReceiver;
+
+    iget-object p0, p0, Lio/reactivex/rxjava3/internal/operators/flowable/AbstractFlowableWithUpstream;->source:Lio/reactivex/rxjava3/core/Flowable;
+
+    invoke-direct {v3, p0}, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRepeatWhen$WhenReceiver;-><init>(Lorg/reactivestreams/Publisher;)V
+
+    .line 55
+    new-instance p0, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRetryWhen$RetryWhenSubscriber;
+
+    invoke-direct {p0, v0, v1, v3}, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRetryWhen$RetryWhenSubscriber;-><init>(Lorg/reactivestreams/Subscriber;Lio/reactivex/rxjava3/processors/FlowableProcessor;Lorg/reactivestreams/Subscription;)V
+
+    .line 57
+    iput-object p0, v3, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRepeatWhen$WhenReceiver;->subscriber:Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRepeatWhen$WhenSourceSubscriber;
+
+    .line 59
+    invoke-interface {p1, p0}, Lorg/reactivestreams/Subscriber;->onSubscribe(Lorg/reactivestreams/Subscription;)V
+
+    .line 61
+    invoke-interface {v2, v3}, Lorg/reactivestreams/Publisher;->subscribe(Lorg/reactivestreams/Subscriber;)V
+
+    const/4 p0, 0x0
+
+    .line 63
+    invoke-static {p0}, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+
+    move-result-object p0
+
+    invoke-virtual {v3, p0}, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableRepeatWhen$WhenReceiver;->onNext(Ljava/lang/Object;)V
+
+    return-void
+
+    :catchall_0
+    move-exception p0
+
+    .line 48
+    invoke-static {p0}, Lio/reactivex/rxjava3/exceptions/Exceptions;->throwIfFatal(Ljava/lang/Throwable;)V
+
+    .line 49
+    invoke-static {p0, p1}, Lio/reactivex/rxjava3/internal/subscriptions/EmptySubscription;->error(Ljava/lang/Throwable;Lorg/reactivestreams/Subscriber;)V
+
+    return-void
+.end method

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:layout_gravity="center" android:id="@id/root_view" android:background="@color/kg_transparent" android:clickable="true" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:background="@drawable/bg_aod_setting_dialog" android:paddingBottom="15.0dip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:paddingHorizontal="20.0dip">
+        <RelativeLayout android:layout_width="fill_parent" android:layout_height="56.0dip" android:layout_marginTop="8.0dip" android:contentDescription="@null">
+            <ImageView android:id="@id/iv_close" android:layout_width="40.0dip" android:layout_height="40.0dip" android:src="@drawable/aod_setting_dialog_close" android:layout_centerVertical="true" android:contentDescription="@string/close" />
+            <TextView android:textSize="@dimen/aod_setting_widget_dialog_title_text_size" android:textColor="@color/aod_widget_dialog_title_color" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/aod_component" android:layout_centerInParent="true" android:contentDescription="@string/aod_component" />
+        </RelativeLayout>
+        <LinearLayout android:orientation="vertical" android:background="@drawable/bg_aod_setting_dialog_items" android:layout_width="fill_parent" android:layout_height="wrap_content">
+            <RelativeLayout android:id="@id/aod_widget_notification_container" android:layout_width="fill_parent" android:layout_height="56.0dip" android:paddingHorizontal="16.0dip">
+                <TextView android:textSize="@dimen/aod_setting_widget_dialog_text_size" android:textColor="@color/aod_setting_item_text_color_primary" android:id="@id/aod_widget_notification_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/show_notificaton" android:layout_centerInParent="true" android:contentDescription="@null" android:layout_alignParentStart="true" />
+                <miuix.slidingwidget.widget.SlidingButton android:id="@id/btn_notification" android:focusable="false" android:focusableInTouchMode="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:contentDescription="@null" android:layout_alignParentEnd="true" style="@style/sliding_button_style" />
+            </RelativeLayout>
+            <RelativeLayout android:id="@id/aod_widget_battery_container" android:layout_width="fill_parent" android:layout_height="56.0dip" android:paddingHorizontal="16.0dip">
+                <TextView android:textSize="@dimen/aod_setting_widget_dialog_text_size" android:textColor="@color/aod_setting_item_text_color_primary" android:id="@id/aod_widget_battery_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/show_battery" android:layout_centerInParent="true" android:contentDescription="@null" android:layout_alignParentStart="true" />
+                <miuix.slidingwidget.widget.SlidingButton android:id="@id/btn_battery" android:focusable="false" android:focusableInTouchMode="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:contentDescription="@null" android:layout_alignParentEnd="true" style="@style/sliding_button_style" />
+            </RelativeLayout>
+            <RelativeLayout android:id="@id/aod_widget_date_container" android:layout_width="fill_parent" android:layout_height="56.0dip" android:paddingHorizontal="16.0dip">
+                <TextView android:textSize="@dimen/aod_setting_widget_dialog_text_size" android:textColor="@color/aod_setting_item_text_color_primary" android:id="@id/aod_widget_date_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/aod_show_widget_date" android:layout_centerInParent="true" android:layout_alignParentStart="true" />
+                <miuix.slidingwidget.widget.SlidingButton android:id="@id/btn_date" android:focusable="false" android:focusableInTouchMode="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:contentDescription="@null" android:layout_alignParentEnd="true" style="@style/sliding_button_style" />
+            </RelativeLayout>
+            <RelativeLayout android:id="@id/aod_widget_luna_container" android:layout_width="fill_parent" android:layout_height="56.0dip" android:paddingHorizontal="16.0dip">
+                <TextView android:textSize="@dimen/aod_setting_widget_dialog_text_size" android:textColor="@color/aod_setting_item_text_color_primary" android:id="@id/aod_widget_luna_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/show_lunar" android:layout_centerInParent="true" android:contentDescription="@null" android:layout_alignParentStart="true" />
+                <miuix.slidingwidget.widget.SlidingButton android:id="@id/btn_luna" android:focusable="false" android:focusableInTouchMode="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:contentDescription="@null" android:layout_alignParentEnd="true" style="@style/sliding_button_style" />
+            </RelativeLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

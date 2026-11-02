@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/ll_strong_toast" android:layout_width="@dimen/strong_toast_width_window" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.android.systemui.toast.view.STConstraintLayout android:orientation="horizontal" android:id="@id/cl_strong_toast_msg" android:background="@android:color/transparent" android:layout_width="fill_parent" android:layout_height="58.0dip" android:layout_marginTop="16.0dip">
+        <FrameLayout android:gravity="center" android:id="@id/fl_pad_toast_bg" android:layout_width="fill_parent" android:layout_height="@dimen/strong_toast_height" app:layout_constraintBottom_toBottomOf="0" app:layout_constraintEnd_toEndOf="0" app:layout_constraintStart_toStartOf="0" app:layout_constraintTop_toTopOf="0">
+            <com.android.systemui.toast.view.RoundRect android:layout_gravity="center" android:id="@id/round_rect" android:layout_width="@dimen/strong_toast_width_window" android:layout_height="fill_parent" />
+            <FrameLayout android:layout_gravity="center" android:id="@id/circle_center" android:layout_width="fill_parent" android:layout_height="fill_parent">
+                <ImageView android:layout_gravity="center" android:id="@id/iv_center" android:layout_width="48.0dip" android:layout_height="wrap_content" />
+            </FrameLayout>
+        </FrameLayout>
+        <RelativeLayout android:gravity="center_vertical" android:id="@id/rl_left" android:layout_width="0.0dip" android:layout_height="48.0dip" android:layout_marginStart="@dimen/strong_toast_bg_padding" app:layout_constraintBottom_toBottomOf="0" app:layout_constraintEnd_toStartOf="@id/cut_out" app:layout_constraintHorizontal_weight="1.0" app:layout_constraintStart_toStartOf="0" app:layout_constraintTop_toTopOf="0">
+            <FrameLayout android:id="@id/left_fl" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentStart="true">
+                <ImageView android:id="@id/left_image" android:layout_width="wrap_content" android:layout_height="30.0dip" android:scaleType="centerInside" android:adjustViewBounds="true" />
+                <com.android.systemui.toast.view.TextureVideoView android:id="@id/left_video" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="30.0dip" />
+            </FrameLayout>
+            <TextView android:textSize="16.0sp" android:ellipsize="marquee" android:gravity="center" android:id="@id/left_text" android:focusable="true" android:focusableInTouchMode="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:lines="1" android:layout_centerVertical="true" android:marqueeRepeatLimit="marquee_forever" android:fontFamily="mipro-medium" android:layout_toEndOf="@id/left_fl" />
+        </RelativeLayout>
+        <View android:id="@id/cut_out" android:layout_width="0.0dip" android:layout_height="48.0dip" app:layout_constraintBottom_toBottomOf="0" app:layout_constraintEnd_toStartOf="@id/rl_right" app:layout_constraintStart_toEndOf="@id/rl_left" app:layout_constraintTop_toTopOf="0" />
+        <RelativeLayout android:gravity="end|center" android:id="@id/rl_right" android:clipChildren="false" android:clipToPadding="false" android:layout_width="0.0dip" android:layout_height="48.0dip" android:layout_marginEnd="@dimen/strong_toast_bg_padding" app:layout_constraintBottom_toBottomOf="0" app:layout_constraintEnd_toEndOf="0" app:layout_constraintHorizontal_weight="1.0" app:layout_constraintStart_toEndOf="@id/cut_out" app:layout_constraintTop_toTopOf="0">
+            <FrameLayout android:id="@id/right_fl" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_alignParentEnd="true">
+                <ImageView android:layout_gravity="end|center" android:id="@id/right_image" android:layout_width="wrap_content" android:layout_height="30.0dip" android:scaleType="centerInside" android:adjustViewBounds="true" />
+                <com.android.systemui.toast.view.TextureVideoView android:layout_gravity="end|center" android:id="@id/right_video" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="30.0dip" />
+            </FrameLayout>
+            <TextView android:textSize="16.0sp" android:ellipsize="marquee" android:gravity="center" android:id="@id/right_text" android:focusable="true" android:focusableInTouchMode="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:lines="1" android:layout_centerVertical="true" android:marqueeRepeatLimit="marquee_forever" android:fontFamily="mipro-medium" android:layout_toStartOf="@id/right_fl" />
+        </RelativeLayout>
+    </com.android.systemui.toast.view.STConstraintLayout>
+    <com.android.systemui.toast.view.AntiAliasImageView android:id="@id/strong_toast_bottom_view" android:background="@drawable/strong_toast_down" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+</LinearLayout>

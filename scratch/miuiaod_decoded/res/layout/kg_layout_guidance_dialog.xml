@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat android:layout_gravity="center" android:orientation="vertical" android:paddingBottom="@dimen/kg_guidance_dialog_padding_bottom" android:layout_width="fill_parent" android:layout_height="wrap_content" android:paddingHorizontal="@dimen/kg_guidance_dialog_padding_horizontal"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <miuix.core.widget.NestedScrollView android:layout_width="fill_parent" android:layout_height="fill_parent">
+        <LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent">
+            <androidx.viewpager2.widget.ViewPager2 android:id="@id/viewPager2" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+            <androidx.appcompat.widget.LinearLayoutCompat android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/indicator" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        </LinearLayout>
+    </miuix.core.widget.NestedScrollView>
+</androidx.appcompat.widget.LinearLayoutCompat>

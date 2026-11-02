@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="drawable" name="kg_rhombus_style1_clock_layer">@drawable/kg_rhombus_style1_clock_layer_sw711dp_port</item>
+    <item type="drawable" name="kg_rhombus_style1_clock_layer_zh">@drawable/kg_rhombus_style1_clock_layer_sw711dp_port_zh</item>
+    <item type="drawable" name="kg_rhombus_style3_clock_layer">@drawable/kg_rhombus_style3_clock_layer_sw711dp_port</item>
+    <item type="drawable" name="kg_rhombus_style3_clock_layer_zh">@drawable/kg_rhombus_style3_clock_layer_sw711dp_port_zh</item>
+    <item type="drawable" name="kg_rhombus_style4_clock_layer">@drawable/kg_rhombus_style4_clock_layer_sw711dp_port</item>
+    <item type="drawable" name="kg_rhombus_style4_clock_layer_zh">@drawable/kg_rhombus_style4_clock_layer_sw711dp_port_zh</item>
+    <item type="drawable" name="kg_rhombus_style5_clock_layer">@drawable/kg_rhombus_style5_clock_layer_sw711dp_port</item>
+    <item type="drawable" name="kg_rhombus_style5_clock_layer_zh">@drawable/kg_rhombus_style5_clock_layer_sw711dp_port_zh</item>
+    <item type="drawable" name="kg_rhombus_style6_clock_layer">@drawable/kg_rhombus_style6_clock_layer_sw711dp_port</item>
+    <item type="drawable" name="kg_rhombus_style6_clock_layer_zh">@drawable/kg_rhombus_style6_clock_layer_sw711dp_port_zh</item>
+    <item type="drawable" name="kg_rhombus_style7_clock_layer">@drawable/kg_rhombus_style7_clock_layer_sw711dp_port</item>
+    <item type="drawable" name="kg_rhombus_style7_clock_layer_zh">@drawable/kg_rhombus_style7_clock_layer_sw711dp_port_zh</item>
+    <item type="drawable" name="kg_wallpaper_invalid_placeholder">@drawable/kg_wallpaper_invalid_placeholder_sw711dp_port</item>
+</resources>

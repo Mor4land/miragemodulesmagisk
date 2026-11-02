@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>စနစ်ဖောင့်</item>
+        <item>လေးထောင့်အကျယ်</item>
+        <item>ရိုးရိုးအမည်း</item>
+        <item>အလွှာနှစ်ထပ်</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>မူရင်း</item>
+        <item>မှုန်ဝါး</item>
+        <item>လိုင်းဖော်</item>
+        <item>အစင်းဖော်</item>
+        <item>ရောင်ပြန်ဖန်တုံး</item>
+        <item>မြောင်း</item>
+        <item>လှိုင်း</item>
+        <item>စတုရန်း</item>
+    </string-array>
+</resources>

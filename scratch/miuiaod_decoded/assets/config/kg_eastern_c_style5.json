@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/02_east/east02.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "eastern_c",
+      "primaryColor": -1,
+      "secondaryColor": -11524851,
+      "primaryFontColorPanelId": 13,
+      "secondaryFontColorPanelId": 13,
+      "style": 2,
+      "enableDiffusion": false
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/02_east/east02.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    },
+    "templateName": "eastern_c_style5",
+    "version": 3
+  }
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_area_frame_container_margin_top">109.0dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_height">77.51999dip</dimen>
+    <dimen name="kg_classic_clock_area_frame_margin_start">52.0dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_start">32.00998dip</dimen>
+    <dimen name="kg_classic_clock_frame_margin_top">82.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_frame_margin_top">84.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_margin_top">147.0dip</dimen>
+    <dimen name="kg_function_depth_preset_margin_bottom">110.0dip</dimen>
+    <dimen name="kg_function_depth_preset_margin_right">185.0dip</dimen>
+</resources>

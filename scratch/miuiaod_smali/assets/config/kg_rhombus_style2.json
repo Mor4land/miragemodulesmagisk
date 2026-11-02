@@ -1,0 +1,34 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/02_east/east03.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "rhombus",
+      "primaryColor": -5449,
+      "secondaryColor": -48093,
+      "blendColor": -5449,
+      "secondaryBlendColor": -48093,
+      "isAutoPrimaryColor": false,
+      "isAutoSecondaryColor": false,
+      "primaryFontColorPanelId": 13,
+      "secondaryFontColorPanelId": 13,
+      "clockEffect": 0,
+      "style": 4,
+      "enableDiffusion": false
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/02_east/east03.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    },
+    "templateName": "rhombus_style2",
+    "version": 3
+  }
+}

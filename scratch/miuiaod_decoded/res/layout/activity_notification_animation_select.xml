@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<miuix.springback.view.SpringBackLayout android:layout_width="fill_parent" android:layout_height="fill_parent" app:scrollOrientation="vertical" app:scrollableView="@id/scroll_view"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.core.widget.NestedScrollView android:scrollbarStyle="outsideOverlay" android:gravity="top" android:id="@id/scroll_view" android:layout_width="fill_parent" android:layout_height="fill_parent" android:fillViewport="true">
+        <androidx.constraintlayout.widget.ConstraintLayout android:id="@id/style_select_root" android:layout_width="fill_parent" android:layout_height="fill_parent">
+            <androidx.constraintlayout.widget.ConstraintLayout android:id="@id/preview_content" android:background="@drawable/aod_settings_bg" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="4.0dip" android:layout_marginHorizontal="@dimen/content_horizontal_margin" android:paddingVertical="18.0dip" app:layout_constraintTop_toTopOf="parent">
+                <FrameLayout android:id="@id/layout_aod_notification_screen_off" android:background="@drawable/aod_black_bg" android:layout_width="0.0dip" android:layout_height="0.0dip" app:layout_constraintDimensionRatio="227:486" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent">
+                    <View android:id="@id/black_bg_view" android:visibility="visible" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                    <com.miui.aod.components.view.AodContainerView android:layout_gravity="center|top" android:id="@id/clock_container" android:paddingTop="@dimen/clock_container_margin_top_small" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content">
+                        <ImageView android:layout_gravity="center|top" android:id="@id/aod_bg" android:layout_width="@dimen/aod_bg_width" android:layout_height="@dimen/aod_bg_height" android:layout_marginTop="@dimen/clock_container_margin_top_large" android:scaleType="fitCenter" />
+                        <include layout="@layout/aod_content" />
+                    </com.miui.aod.components.view.AodContainerView>
+                    <com.miui.aod.widget.NotificationAnimationView android:id="@id/animation_view" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+                </FrameLayout>
+                <LinearLayout android:orientation="vertical" android:id="@id/layout_aod_notification_screen_on" android:background="@drawable/aod_notification_normal_bg" android:visibility="gone" android:clipChildren="false" android:clipToPadding="false" android:layout_width="0.0dip" android:layout_height="0.0dip" app:layout_constraintDimensionRatio="227:486" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toTopOf="parent">
+                    <include android:layout_width="wrap_content" android:layout_height="wrap_content" android:layoutDirection="ltr" layout="@layout/custom_clock_layout" />
+                </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+            <FrameLayout android:background="@drawable/aod_settings_bg" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="12.0dip" android:layout_marginHorizontal="@dimen/content_horizontal_margin" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="parent" app:layout_constraintTop_toBottomOf="@id/preview_content">
+                <com.miui.aod.components.widget.NotificationAnimationSelectView android:id="@id/notification_animation_select_view" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/notification_animation_image_select_view_margin_start" android:layout_marginBottom="@dimen/notification_animation_image_select_view_margin_start" android:nestedScrollingEnabled="false" />
+            </FrameLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</miuix.springback.view.SpringBackLayout>

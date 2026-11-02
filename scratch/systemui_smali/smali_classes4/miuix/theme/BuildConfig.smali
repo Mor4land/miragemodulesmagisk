@@ -1,0 +1,21 @@
+.class public final Lmiuix/theme/BuildConfig;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# static fields
+.field public static final BUILD_TYPE:Ljava/lang/String; = "release"
+
+.field public static final DEBUG:Z = false
+
+.field public static final LIBRARY_PACKAGE_NAME:Ljava/lang/String; = "miuix.theme"
+
+
+# direct methods
+.method public constructor <init>()V
+    .locals 0
+
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    return-void
+.end method

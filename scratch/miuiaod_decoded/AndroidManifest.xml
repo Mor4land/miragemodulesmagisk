@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="35" android:compileSdkVersionCodename="15" android:sharedUserId="android.uid.system" package="com.miui.aod" platformBuildVersionCode="35" platformBuildVersionName="15">
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS"/>
+    <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+    <uses-permission android:name="android.permission.BIND_WALLPAPER"/>
+    <uses-permission android:name="android.permission.READ_DREAM_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="com.android.systemui.permission.NOTIFICATION"/>
+    <uses-permission android:name="com.android.thememanager.permission.get_wallpaper"/>
+    <uses-permission android:name="com.android.thememanager.permission.AOD_RECEIVE"/>
+    <uses-permission android:name="android.permission.BROADCAST_PACKAGE_REMOVED"/>
+    <uses-permission android:name="com.mi.health.permission.DEFAULT_READ_DATA"/>
+    <uses-permission android:name="com.android.systemui.permission.PLUGIN"/>
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL"/>
+    <uses-permission android:name="android.permission.BIND_ATTENTION_SERVICE"/>
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_PROFILES"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.ACCESS_HIDDEN_PROFILES"/>
+    <permission android:name="com.miui.aod.EDIT_AOD_SETTING" android:protectionLevel="signature"/>
+    <protected-broadcast android:name="miui.miwallpaper.action.ACTION_AOD_OFFSET"/>
+    <queries>
+        <provider android:authorities="aod.part"/>
+        <package android:name="com.miui.aod"/>
+        <package android:name="com.xiaomi.aiservice"/>
+        <package android:name="com.xiaomi.aicr"/>
+    </queries>
+    <uses-permission android:name="com.miui.weather2.permission.WRITE_DB"/>
+    <uses-permission android:name="com.mi.health.permission.DEFAULT_WRITE_DATA"/>
+    <meta-data android:name="miui.supportFlipFullScreen" android:value="0"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"/>
+    <uses-permission android:name="com.android.settings.permission.CLOUD_SETTINGS_PROVIDER"/>
+    <protected-broadcast android:name="miui.keyguard.editor.action.LINKAGE_STYLE_APPLY_STATE_CHANGED"/>
+    <permission android:name="miui.keyguard.editor.WRITE_EDITOR_FILE" android:protectionLevel="signature"/>
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES"/>
+    <permission android:name="com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" android:protectionLevel="signature"/>
+    <uses-permission android:name="com.miui.aod.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"/>
+    <uses-permission android:name="com.miui.bugreport.permission.DUMP_CACHED_LOG"/>
+    <uses-permission android:name="com.xiaomi.aiservice.permission.AI_ABILITY"/>
+    <uses-permission android:name="android.permission.SET_WALLPAPER"/>
+    <permission android:name="com.miui.miwallpaper.permission.BROADCAST" android:protectionLevel="signature"/>
+    <application android:allowBackup="true" android:appComponentFactory="com.miui.aod.AODAppComponentFactory" android:backupAgent="com.miui.aod.backup.AodFullBackupAgent" android:defaultToDeviceProtectedStorage="true" android:directBootAware="true" android:extractNativeLibs="true" android:fullBackupOnly="true" android:icon="@drawable/aod" android:label="@string/aod_app_name" android:name="com.miui.aod.AODApplication" android:process="com.miui.aod" android:resizeableActivity="false" android:supportsRtl="true" android:theme="@style/BaseTheme">
+        <uses-library android:name="micloud-sdk"/>
+        <meta-data android:name="ai_app_code" android:value="61MW/INbFIc5NqnxOZuhbhsn98lAMHwCsjbJUZE0gY1TuBKO8Ddtrx6vl7AQlEtsPfDenU0ni/cGAzrqFoLl9Z1XVhiOhaU7UCewIYGZtouxWmE4OqXiW+F1Q/9qjGmRzcE4wF3dtsgJNd2wb9rxhGlJDJbPjI6KqMTAYkoJGvQ"/>
+        <meta-data android:name="notch.config" android:value="portrait"/>
+        <meta-data android:name="miui.supportAppContinuity" android:value="true"/>
+        <meta-data android:name="aodPackageChanged" android:value="true"/>
+        <uses-library android:name="com.miui.system" android:required="false"/>
+        <property android:name="android.view.PROPERTY_MIUI_SMOOTH_CORNER_ENABLED" android:value="true"/>
+        <property android:name="android.window.PROPERTY_ACTIVITY_EMBEDDING_SPLITS_ENABLED" android:value="true"/>
+        <activity android:exported="true" android:label="@string/aod_show_style_title" android:launchMode="singleTop" android:name="com.miui.aod.settings.AodShowModeSettingActivity" android:screenOrientation="portrait" android:theme="@style/Theme.Settings">
+            <meta-data android:name="miui.screenOrientation" android:value="1.unspecified,2.portrait"/>
+            <intent-filter>
+                <action android:name="com.miui.aod.Setting"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:excludeFromRecents="true" android:label="@string/aod_mode_title" android:name="com.miui.aod.settings.AODStyleActivity" android:screenOrientation="portrait" android:theme="@style/Dark.NoTitle"/>
+        <activity android:excludeFromRecents="true" android:label="@string/aod_mode_title" android:launchMode="singleInstance" android:name="com.miui.aod.settings.AODStyleCategoryActivity" android:screenOrientation="portrait" android:theme="@style/Dark.NoTitle"/>
+        <activity android:configChanges="screenLayout|screenSize|smallestScreenSize|uiMode" android:excludeFromRecents="true" android:exported="true" android:label="@string/aod_mode_title" android:name="com.miui.aod.settings.AodStyleCategoriesActivity" android:screenOrientation="portrait" android:theme="@style/Dark">
+            <intent-filter>
+                <action android:name="com.miui.aod.style_list"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="switchanimationtype" android:value="true"/>
+            <meta-data android:name="miui.screenOrientation" android:value="1.unspecified,2.portrait"/>
+            <property android:name="miui.continuity.policy" android:value="4"/>
+        </activity>
+        <activity android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize" android:excludeFromRecents="true" android:exported="true" android:label="@string/aod_mode_title" android:name="com.miui.aod.settings.AodStyleCategoriesActivityForPad" android:screenOrientation="portrait" android:theme="@style/theme_for_aod_pad">
+            <intent-filter>
+                <action android:name="com.miui.aod.style_list_pad"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="switchanimationtype" android:value="true"/>
+            <meta-data android:name="miui.screenOrientation" android:value="1.unspecified,2.portrait"/>
+        </activity>
+        <activity android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize" android:excludeFromRecents="true" android:exported="false" android:name="com.miui.aod.settings.AodWidgetComponentActivity" android:theme="@style/theme_for_aod_widget"/>
+        <activity android:excludeFromRecents="true" android:label="@string/my_style_title" android:name="com.miui.aod.settings.HistoryListActivity" android:screenOrientation="portrait" android:theme="@style/Dark">
+            <meta-data android:name="miui.screenOrientation" android:value="1.unspecified,2.portrait"/>
+        </activity>
+        <activity android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:excludeFromRecents="true" android:label="@string/aod_mode_title" android:name="com.miui.aod.settings.AodStyleSelectActivity" android:screenOrientation="portrait" android:theme="@style/Dark.NoTitle" android:windowSoftInputMode="adjustPan">
+            <meta-data android:name="miui.screenOrientation" android:value="1.unspecified,2.portrait"/>
+        </activity>
+        <activity android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:excludeFromRecents="true" android:exported="true" android:label="@string/personalize_notify_style_title" android:name="com.miui.aod.settings.NotificationAnimationSelectActivity" android:screenOrientation="portrait" android:theme="@style/Theme.Dark">
+            <meta-data android:name="switchanimationtype" android:value="true"/>
+            <meta-data android:name="miui.screenOrientation" android:value="1.unspecified,2.portrait"/>
+        </activity>
+        <activity android:excludeFromRecents="true" android:exported="true" android:label="@string/aod_mode_title" android:name="com.miui.aod.settings.RouterActivity" android:theme="@style/Theme.Dark.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="miui.aod.action.router"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:host="com.miui.aod" android:pathPrefix="/style_select/custom_image" android:scheme="aod"/>
+            </intent-filter>
+        </activity>
+        <service android:directBootAware="true" android:exported="true" android:name="com.miui.aod.doze.DozeServicePluginImpl">
+            <intent-filter>
+                <action android:name="com.android.systemui.action.PLUGIN_DOZE"/>
+            </intent-filter>
+        </service>
+        <service android:name="com.miui.aod.analy.AnalyticalDataCollectorJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <service android:name="com.miui.aod.theme.ThemeResourceClearJobService" android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <provider android:authorities="com.miui.aod.settings" android:exported="true" android:name="com.miui.aod.settings.SettingsProvider"/>
+        <provider android:authorities="com.miui.aod.superwallpaper" android:exported="true" android:name="com.miui.aod.superwallpaper.SuperWallpaperProvider" android:permission="com.miui.aod.EDIT_AOD_SETTING"/>
+        <provider android:authorities="com.miui.aod.fileprovider" android:exported="false" android:grantUriPermissions="true" android:name="androidx.core.content.FileProvider">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths"/>
+        </provider>
+        <provider android:authorities="com.miui.aod.StyleDataProvider" android:exported="true" android:name="com.miui.aod.db.StyleDataProvider" android:permission="com.miui.aod.EDIT_AOD_SETTING"/>
+        <provider android:authorities="aod.part" android:exported="true" android:name="com.miui.aod.part.PartProvider" android:permission="com.miui.aod.EDIT_AOD_SETTING"/>
+        <provider android:authorities="com.miui.aod.SettingsSearchProvider" android:exported="true" android:grantUriPermissions="true" android:name="com.miui.aod.SettingsSearchProvider">
+            <intent-filter>
+                <action android:name="miui.intent.action.SETTINGS_SEARCH_PROVIDER"/>
+            </intent-filter>
+        </provider>
+        <receiver android:enabled="true" android:exported="true" android:name="com.miui.aod.theme.ThemeReceiver" android:permission="miui.permission.USE_INTERNAL_GENERAL_API">
+            <intent-filter>
+                <action android:name="com.android.thememanager.AOD_CHANGED"/>
+            </intent-filter>
+        </receiver>
+        <meta-data android:name="com.hyperos.AI_ACTION_DESCRIPTION" android:resource="@raw/aod_ddf"/>
+        <provider android:authorities="com.miui.aod.aiaction.AiActionAodProvider" android:exported="true" android:name="com.miui.aod.aiaction.AiActionAodProvider">
+            <meta-data android:name="com.hyperos.AI_ACTION_PROPERTY" android:resource="@xml/aod_action"/>
+        </provider>
+        <meta-data android:name="com.miui.clock.version_name" android:value="1.3.4.4"/>
+        <meta-data android:name="com.miui.clock.version_code" android:value="1344"/>
+        <meta-data android:name="com.miui.keyguardtemplate.version_name" android:value="1.2.0.0"/>
+        <meta-data android:name="com.miui.keyguardtemplate.version_code" android:value="1200"/>
+        <activity android:configChanges="density|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:exported="true" android:label="@string/keyguard_shortcut_title" android:name="com.miui.keyguard.shortcuts.list.LockScreenShortcutsSettingsActivity" android:screenOrientation="portrait" android:theme="@style/FilterSortView2Secondary">
+            <meta-data android:name="switchanimationtype" android:value="true"/>
+        </activity>
+        <service android:directBootAware="true" android:exported="true" android:name="com.miui.keyguard.shortcuts.ShortcutPluginImpl">
+            <intent-filter>
+                <action android:name="com.android.systemui.action.PLUGIN_MIUI_SHORTCUT"/>
+            </intent-filter>
+        </service>
+        <meta-data android:name="ignore_rro_relaunch" android:value="true"/>
+        <activity android:configChanges="density|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:excludeFromRecents="true" android:exported="true" android:label="@string/kg_activity_label" android:launchMode="singleTask" android:name="com.miui.keyguard.editor.CommonEditorActivity" android:process=":keyguardeditor" android:resizeableActivity="false" android:screenOrientation="locked" android:showWhenLocked="true" android:theme="@style/KgEditorActivityForSettingsThemeLight" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="miui.keyguard.editor.common"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:host="com.android.thememanager.fileprovider"/>
+                <data android:host="com.miui.gallery.open"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="miui.keyguard.editor.common"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:configChanges="density|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:exported="true" android:label="@string/kg_activity_label" android:name="com.miui.keyguard.editor.CommonDialogActivity" android:process=":keyguardeditor" android:resizeableActivity="false" android:theme="@style/KgDialogActivityTheme" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="miui.keyguard.editor.common_dialog"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="miui.keyguard.editor.common_dialog"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="*/*"/>
+            </intent-filter>
+        </activity>
+        <meta-data android:name="android.supports_size_changes" android:value="true"/>
+        <meta-data android:name="support_wallpaper_stream" android:value="true"/>
+        <meta-data android:name="editor_os_version" android:value="0x00000033"/>
+        <activity android:configChanges="density|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:excludeFromRecents="true" android:exported="true" android:label="@string/kg_activity_label" android:name="com.miui.keyguard.editor.EditorActivity" android:process=":keyguardeditor" android:resizeableActivity="false" android:screenOrientation="locked" android:showWhenLocked="true" android:theme="@style/KgEditorActivityThemeLight" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="miui.keyguard.editor"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:configChanges="density|orientation|screenLayout|screenSize|smallestScreenSize|uiMode" android:excludeFromRecents="true" android:exported="true" android:label="@string/kg_activity_label" android:launchMode="singleTask" android:name="com.miui.keyguard.editor.EditorActivityForSettings" android:process=":keyguardeditor" android:resizeableActivity="false" android:screenOrientation="locked" android:theme="@style/KgEditorActivityForSettingsThemeLight" android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="miui.keyguard.editor.settings"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize" android:exported="true" android:label="@string/kg_activity_label" android:name="com.miui.keyguard.editor.settings.HistoryActivity" android:process=":keyguardeditor" android:theme="@style/Theme.Light.NoTitle">
+            <intent-filter>
+                <action android:name="miui.keyguard.editor.history"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+        <service android:enabled="true" android:exported="true" android:name="com.miui.keyguard.editor.KeyguardEditorService" android:process=":keyguardeditor">
+            <intent-filter>
+                <action android:name="com.android.systemui.action.KEYGUARD_EDITOR"/>
+            </intent-filter>
+        </service>
+        <provider android:authorities="miui.keyguard.editor.templatefileprovider" android:exported="true" android:name="com.miui.keyguard.editor.data.template.TemplateFileProvider" android:permission="miui.keyguard.editor.WRITE_EDITOR_FILE" android:process=":keyguardeditor"/>
+        <uses-native-library android:name="libSEGModel.so" android:required="false"/>
+        <meta-data android:name="miuixpreference" android:value="3.1"/>
+        <meta-data android:name="os_private_label" android:value="PRIVATE_OS030"/>
+        <meta-data android:name="appcompat" android:value="3.1"/>
+        <meta-data android:name="com.miui.maml.sdk" android:value="true"/>
+        <meta-data android:name="miuixstretchablewidget" android:value="1.0"/>
+        <meta-data android:name="pickerwidget" android:value="1.0"/>
+        <meta-data android:name="miuixbasewidget" android:value="1.0"/>
+        <meta-data android:name="viewpager2" android:value="2.0"/>
+        <meta-data android:name="recyclerview" android:value="2.0"/>
+        <meta-data android:name="recyclerview_card" android:value="1.0"/>
+        <meta-data android:name="recyclerview_animator" android:value="2.0"/>
+        <uses-library android:name="androidx.window.extensions" android:required="false"/>
+        <uses-library android:name="androidx.window.sidecar" android:required="false"/>
+        <meta-data android:name="flexible" android:value="1.0"/>
+        <meta-data android:name="nestedheader" android:value="3.1"/>
+        <meta-data android:name="transition" android:value="1.0"/>
+        <meta-data android:name="bottomsheet" android:value="3.0"/>
+        <meta-data android:name="slidingwidget" android:value="1.0"/>
+        <meta-data android:name="popupwidget" android:value="1.0"/>
+        <meta-data android:name="springback" android:value="3.1"/>
+        <meta-data android:name="androidbasewidget" android:value="1.0"/>
+        <meta-data android:name="cardview" android:value="1.0"/>
+        <meta-data android:name="visualcheck" android:value="1.0"/>
+        <meta-data android:name="theme" android:value="1.0"/>
+        <meta-data android:name="nest" android:value="2.0"/>
+        <meta-data android:name="smooth" android:value="1.0"/>
+        <meta-data android:name="haptic" android:value="1.0"/>
+        <meta-data android:name="graphics" android:value="2.0"/>
+        <meta-data android:name="core" android:value="2.0"/>
+        <meta-data android:name="viewpager" android:value="2.0"/>
+        <meta-data android:name="spring" android:value="1.0"/>
+        <provider android:authorities="com.miui.aod.androidx-startup" android:exported="false" android:name="androidx.startup.InitializationProvider">
+            <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.lifecycle.ProcessLifecycleInitializer" android:value="androidx.startup"/>
+            <meta-data android:name="androidx.profileinstaller.ProfileInstallerInitializer" android:value="androidx.startup"/>
+        </provider>
+        <meta-data android:name="dynamicoverscroller" android:value="2.0"/>
+        <meta-data android:name="folme" android:value="2.0"/>
+        <service android:directBootAware="true" android:exported="false" android:name="androidx.room.MultiInstanceInvalidationService"/>
+        <uses-library android:name="libcdsprpc.so" android:required="false"/>
+        <meta-data android:name="com.miui.bugreport.DEFAULT_LOG_DIR" android:resource="@xml/default_log_paths"/>
+        <provider android:authorities="com.miui.aod.provider.bugreport" android:exported="true" android:name="com.miui.bugreport.logprovider.DumpLogProvider" android:permission="com.miui.bugreport.permission.DUMP_CACHED_LOG">
+            <intent-filter>
+                <action android:name="com.miui.bugreport.intent.ACTION_DUMP_CACHED_LOG"/>
+            </intent-filter>
+        </provider>
+        <meta-data android:name="log" android:value="1.0"/>
+        <meta-data android:name="animation" android:value="1.0"/>
+        <receiver android:directBootAware="false" android:enabled="true" android:exported="true" android:name="androidx.profileinstaller.ProfileInstallReceiver" android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SKIP_FILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION"/>
+            </intent-filter>
+        </receiver>
+        <meta-data android:name="ai_sdk_code" android:value="100"/>
+        <meta-data android:name="ai_sdk_name" android:value="1.0.0"/>
+        <meta-data android:name="devicebaseinfo" android:value="1.0"/>
+        <meta-data android:name="effectSupportContent" android:value="0,10000,10001,10002,10003,10004,20000,30000,60000"/>
+    </application>
+</manifest>

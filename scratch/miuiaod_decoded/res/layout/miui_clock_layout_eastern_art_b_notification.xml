@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.eastern.b.EasternArtBNotificationClock android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:id="@id/clock_container" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_eastern_art_b_vertical_notification_data_margin_top" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <TextView android:textSize="@dimen/miui_eastern_art_b_vertical_notification_date_text_size" android:layout_gravity="center_horizontal" android:id="@id/date_and_week" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="12月15日 周四上午" android:lineHeight="@dimen/miui_eastern_art_b_vertical_notification_date_text_height" />
+        <LinearLayout android:layout_gravity="center_horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:textSize="@dimen/miui_eastern_art_b_vertical_notification_time_text_size" android:id="@id/time_hour" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="08" android:lineHeight="@dimen/miui_eastern_art_b_vertical_notification_time_text_height" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+            <TextView android:textSize="@dimen/miui_eastern_art_b_vertical_notification_time_text_size" android:id="@id/time_minute" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="35" android:lineHeight="@dimen/miui_eastern_art_b_vertical_notification_time_text_height" app:layout_constraintStart_toEndOf="@id/time_hour" app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
+    </LinearLayout>
+    <FrameLayout android:id="@id/magazine_info_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_eastern_art_single_magazine_margin_top" android:layout_centerHorizontal="true" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+</com.miui.clock.eastern.b.EasternArtBNotificationClock>

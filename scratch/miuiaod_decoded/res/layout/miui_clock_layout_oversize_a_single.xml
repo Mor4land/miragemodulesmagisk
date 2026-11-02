@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.oversize.a.OversizeASingleClock android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:id="@id/clock_container" android:clipChildren="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_oversize_a_single_margin_top" android:layoutDirection="ltr" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <LinearLayout android:orientation="horizontal" android:id="@id/hour_view" android:clipChildren="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:importantForAccessibility="no">
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/hour1" android:layout_width="@dimen/miui_oversize_a_time_w" android:layout_height="@dimen/miui_oversize_a_time_h" />
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/hour2" android:layout_width="@dimen/miui_oversize_a_time_w" android:layout_height="@dimen/miui_oversize_a_time_h" />
+        </LinearLayout>
+        <LinearLayout android:orientation="horizontal" android:id="@id/minute_view" android:clipChildren="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_oversize_a_single_minute_margin_top" android:importantForAccessibility="no">
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/minute1" android:layout_width="@dimen/miui_oversize_a_time_w" android:layout_height="@dimen/miui_oversize_a_time_h" />
+            <com.miui.clock.oversize.OversizeSvgView android:id="@id/minute2" android:layout_width="@dimen/miui_oversize_a_time_w" android:layout_height="@dimen/miui_oversize_a_time_h" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:textSize="@dimen/miui_oversize_a_date_size" android:textColor="@color/classic_color_white" android:gravity="center_horizontal" android:id="@id/current_date" android:layout_width="@dimen/miui_oversize_a_date_width" android:layout_height="wrap_content" android:includeFontPadding="false" android:layout_marginStart="@dimen/miui_oversize_a_single_date_margin_left" android:lineHeight="@dimen/miui_oversize_a_date_line_height" app:layout_constraintStart_toEndOf="@id/clock_container" app:layout_constraintTop_toTopOf="@id/clock_container" />
+    <FrameLayout android:id="@id/full_week" android:layout_width="@dimen/miui_oversize_a_date_width" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_oversize_a_single_week_margin_top" android:paddingVertical="@dimen/miui_oversize_a_week_padding_top" app:layout_constraintStart_toStartOf="@id/current_date" app:layout_constraintTop_toBottomOf="@id/current_date">
+        <TextView android:textSize="@dimen/miui_oversize_a_date_size" android:textColor="#ff000000" android:gravity="center" android:id="@id/current_week" android:layout_width="@dimen/miui_oversize_a_date_width" android:layout_height="wrap_content" android:includeFontPadding="false" android:paddingHorizontal="@dimen/miui_oversize_a_week_padding_left" android:lineHeight="@dimen/miui_oversize_a_date_line_height" />
+        <com.miui.clock.oversize.a.RotatedTextView android:textSize="@dimen/miui_oversize_a_date_size" android:textColor="#ff000000" android:gravity="center" android:layout_gravity="center" android:id="@id/current_week_rote" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:letterSpacing="0.2" android:lineHeight="@dimen/miui_oversize_a_date_line_height" />
+    </FrameLayout>
+    <FrameLayout android:id="@id/magazine_info_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</com.miui.clock.oversize.a.OversizeASingleClock>

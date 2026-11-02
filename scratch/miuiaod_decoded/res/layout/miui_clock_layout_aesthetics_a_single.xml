@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.aesthetics.MiuiAestheticsASingleClock android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.constraintlayout.widget.ConstraintLayout android:id="@id/li_clock_container" android:layout_width="wrap_content" android:layout_height="wrap_content">
+        <androidx.constraintlayout.widget.Guideline android:orientation="vertical" android:id="@id/guideline" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:id="@id/tv_hour" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:id="@id/tv_data" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:id="@id/tv_data_week" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:id="@id/tv_minute" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:id="@id/tv_weather" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:id="@id/tv_weather_unit" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.miui.clock.aesthetics.MiuiAestheticsASingleClock>

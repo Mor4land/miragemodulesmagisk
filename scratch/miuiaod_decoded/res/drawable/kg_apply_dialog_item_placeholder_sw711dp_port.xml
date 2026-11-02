@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="234.0dip" android:width="146.0dip" android:viewportWidth="146.0" android:viewportHeight="234.0"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <group>
+        <clip-path android:pathData="M146,0.12l-0,233.48l-146,0l-0,-233.48z" />
+        <path android:fillColor="#ff000000" android:pathData="M146,0.12l-0,233.48l-146,0l-0,-233.48z" />
+        <path android:fillColor="@drawable/$kg_apply_dialog_item_placeholder_sw711dp_port__0" android:pathData="M146,0.12l-0,233.48l-146,0l-0,-233.48z" />
+        <group>
+            <clip-path android:pathData="M60,104h26v26h-26z" />
+            <path android:fillColor="?indicatorColorNormal" android:pathData="M86,117C86,124.18 80.18,130 73,130C65.82,130 60,124.18 60,117C60,109.82 65.82,104 73,104C80.18,104 86,109.82 86,117ZM83.5,117C83.5,122.8 78.8,127.5 73,127.5C67.2,127.5 62.5,122.8 62.5,117C62.5,111.2 67.2,106.5 73,106.5C78.8,106.5 83.5,111.2 83.5,117ZM67.5,119.5C68.88,119.5 70,118.38 70,117C70,115.62 68.88,114.5 67.5,114.5C66.12,114.5 65,115.62 65,117C65,118.38 66.12,119.5 67.5,119.5Z" android:fillType="evenOdd" />
+        </group>
+    </group>
+</vector>

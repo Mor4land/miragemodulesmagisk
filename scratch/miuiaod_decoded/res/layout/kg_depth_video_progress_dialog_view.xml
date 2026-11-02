@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <RelativeLayout android:id="@id/depthVideoProgressDialogTitleLayout" android:layout_width="fill_parent" android:layout_height="wrap_content" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <TextView android:textSize="18.0sp" android:textColor="@color/kg_dlg_txt_color" android:id="@id/depthVideoProgressDialogLabel" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_depth_produce_video_progress_dialog_label" android:layout_centerVertical="true" android:layout_marginStart="24.0dip" android:layout_toStartOf="@id/depthVideoProgressDialogPercent" android:layout_alignParentStart="true" android:textFontWeight="380" />
+        <TextView android:textSize="18.0sp" android:textColor="#ff3482ff" android:id="@id/depthVideoProgressDialogPercent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerVertical="true" android:layout_marginEnd="24.0dip" android:layout_alignParentEnd="true" android:textFontWeight="380" />
+    </RelativeLayout>
+    <miuix.androidbasewidget.widget.ProgressBar android:id="@id/depthVideoProgressDialogProgress" android:layout_width="fill_parent" android:layout_height="6.0dip" android:layout_marginTop="17.0dip" android:layout_marginStart="24.0dip" android:layout_marginEnd="24.0dip" app:layout_constraintTop_toBottomOf="@id/depthVideoProgressDialogTitleLayout" style="@style/KgVideoProgress" />
+    <View android:layout_width="fill_parent" android:layout_height="37.0dip" app:layout_constraintTop_toBottomOf="@id/depthVideoProgressDialogProgress" />
+</androidx.constraintlayout.widget.ConstraintLayout>

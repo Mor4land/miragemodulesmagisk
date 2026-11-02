@@ -1,0 +1,65 @@
+.class public final Lcom/android/systemui/statusbar/NotificationShadeDepthController$2;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lcom/android/systemui/statusbar/policy/ConfigurationController$ConfigurationListener;
+
+
+# instance fields
+.field public final synthetic this$0:Lcom/android/systemui/statusbar/NotificationShadeDepthController;
+
+
+# direct methods
+.method public constructor <init>(Lcom/android/systemui/statusbar/NotificationShadeDepthController;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lcom/android/systemui/statusbar/NotificationShadeDepthController$2;->this$0:Lcom/android/systemui/statusbar/NotificationShadeDepthController;
+
+    .line 2
+    .line 3
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 4
+    .line 5
+    .line 6
+    return-void
+.end method
+
+
+# virtual methods
+.method public final onConfigChanged(Landroid/content/res/Configuration;)V
+    .locals 0
+
+    .line 1
+    iget-object p0, p0, Lcom/android/systemui/statusbar/NotificationShadeDepthController$2;->this$0:Lcom/android/systemui/statusbar/NotificationShadeDepthController;
+
+    .line 2
+    .line 3
+    iget-object p1, p0, Lcom/android/systemui/statusbar/NotificationShadeDepthController;->context:Landroid/content/Context;
+
+    .line 4
+    .line 5
+    invoke-virtual {p1}, Landroid/content/Context;->getResources()Landroid/content/res/Resources;
+
+    .line 6
+    .line 7
+    .line 8
+    move-result-object p1
+
+    .line 9
+    invoke-static {p1}, Lcom/android/systemui/util/LargeScreenUtils;->shouldUseSplitNotificationShade(Landroid/content/res/Resources;)Z
+
+    .line 10
+    .line 11
+    .line 12
+    move-result p1
+
+    .line 13
+    iput-boolean p1, p0, Lcom/android/systemui/statusbar/NotificationShadeDepthController;->inSplitShade:Z
+
+    .line 14
+    .line 15
+    return-void
+.end method

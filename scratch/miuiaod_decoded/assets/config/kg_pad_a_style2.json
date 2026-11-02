@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine04.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "pad_exclusive_a",
+      "primaryColor": -5444609,
+      "secondaryColor": -42219,
+      "primaryFontColorPanelId": 13,
+      "secondaryFontColorPanelId": 13,
+      "enableDiffusion": false,
+      "signatureLine1": "Ultra Speed",
+      "signatureLine2": "Xiaomi SU7",
+      "signatureLine3": "ALWAYS BELIEVE THAT SOMETHINGS WONDERFUL IS\nABOUT TO HAPPEN"
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine04.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    },
+    "templateName": "pad_a_style2",
+    "version": 3
+  }
+}

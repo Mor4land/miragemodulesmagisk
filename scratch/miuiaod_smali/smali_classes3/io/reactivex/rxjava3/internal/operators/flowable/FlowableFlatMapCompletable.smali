@@ -1,0 +1,52 @@
+.class public final Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable;
+.super Lio/reactivex/rxjava3/internal/operators/flowable/AbstractFlowableWithUpstream;
+.source "FlowableFlatMapCompletable.java"
+
+
+# annotations
+.annotation system Ldalvik/annotation/MemberClasses;
+    value = {
+        Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable$FlatMapCompletableMainSubscriber;
+    }
+.end annotation
+
+.annotation system Ldalvik/annotation/Signature;
+    value = {
+        "<T:",
+        "Ljava/lang/Object;",
+        ">",
+        "Lio/reactivex/rxjava3/internal/operators/flowable/AbstractFlowableWithUpstream<",
+        "TT;TT;>;"
+    }
+.end annotation
+
+
+# instance fields
+.field final delayErrors:Z
+
+.field final mapper:Lio/reactivex/rxjava3/functions/Function;
+
+.field final maxConcurrency:I
+
+
+# virtual methods
+.method protected subscribeActual(Lorg/reactivestreams/Subscriber;)V
+    .locals 4
+
+    .line 53
+    iget-object v0, p0, Lio/reactivex/rxjava3/internal/operators/flowable/AbstractFlowableWithUpstream;->source:Lio/reactivex/rxjava3/core/Flowable;
+
+    new-instance v1, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable$FlatMapCompletableMainSubscriber;
+
+    iget-object v2, p0, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable;->mapper:Lio/reactivex/rxjava3/functions/Function;
+
+    iget-boolean v3, p0, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable;->delayErrors:Z
+
+    iget p0, p0, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable;->maxConcurrency:I
+
+    invoke-direct {v1, p1, v2, v3, p0}, Lio/reactivex/rxjava3/internal/operators/flowable/FlowableFlatMapCompletable$FlatMapCompletableMainSubscriber;-><init>(Lorg/reactivestreams/Subscriber;Lio/reactivex/rxjava3/functions/Function;ZI)V
+
+    invoke-virtual {v0, v1}, Lio/reactivex/rxjava3/core/Flowable;->subscribe(Lio/reactivex/rxjava3/core/FlowableSubscriber;)V
+
+    return-void
+.end method

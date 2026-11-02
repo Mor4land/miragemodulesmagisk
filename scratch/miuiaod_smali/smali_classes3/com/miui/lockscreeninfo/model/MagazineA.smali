@@ -1,0 +1,42 @@
+.class public Lcom/miui/lockscreeninfo/model/MagazineA;
+.super Lcom/miui/lockscreeninfo/model/SignatureInfo;
+.source "MagazineA.java"
+
+
+# direct methods
+.method public constructor <init>(Ljava/lang/String;)V
+    .locals 0
+
+    .line 9
+    invoke-direct {p0, p1}, Lcom/miui/lockscreeninfo/model/SignatureInfo;-><init>(Ljava/lang/String;)V
+
+    return-void
+.end method
+
+
+# virtual methods
+.method protected initData()V
+    .locals 1
+
+    .line 15
+    iget-boolean v0, p0, Lcom/miui/lockscreeninfo/model/SignatureInfo;->verticalMode:Z
+
+    if-eqz v0, :cond_0
+
+    const/4 v0, 0x4
+
+    goto :goto_0
+
+    :cond_0
+    const/4 v0, 0x3
+
+    :goto_0
+    iput v0, p0, Lcom/miui/lockscreeninfo/model/SignatureInfo;->lines:I
+
+    .line 17
+    const-string v0, "miclock-qinghe-75w"
+
+    iput-object v0, p0, Lcom/miui/lockscreeninfo/model/SignatureInfo;->fontFamily:Ljava/lang/String;
+
+    return-void
+.end method

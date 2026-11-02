@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="classic_plus_classic_max_text_area_text_size">17.0dip</dimen>
+    <dimen name="classic_plus_text_area_height">33.0dip</dimen>
+    <dimen name="classic_text_signature_text_size">12.0dip</dimen>
+    <dimen name="miui_classic_max_time_area_margin_top">30.0dip</dimen>
+    <dimen name="miui_eastern_art_b_horizontal_textview_margin_top">0.0dip</dimen>
+    <dimen name="miui_eastern_art_time_date_margin_top">28.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_air_quality_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_air_quality_margin_bottom">53.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_air_quality_value_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_local_name_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_local_temperature_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_local_temperature_margin_top">40.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_uv_text_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_uv_text_margin_bottom">53.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_uv_value_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_weather_description_height">50.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_weather_description_margin_top">40.0dip</dimen>
+    <dimen name="miui_pad_exclusive_b_view_weather_range_height">50.0dip</dimen>
+    <dimen name="notification_bottom_classic_plus">231.0dip</dimen>
+    <dimen name="notification_bottom_classic_plus_fold">229.0dip</dimen>
+    <dimen name="notification_bottom_classic_plus_fold_land">231.0dip</dimen>
+    <dimen name="notification_bottom_classic_plus_pad">251.0dip</dimen>
+    <dimen name="notification_bottom_classic_plus_pad_land">231.0dip</dimen>
+</resources>

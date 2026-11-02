@@ -1,0 +1,145 @@
+.class public abstract Lcom/miui/miwallpaper/material/utils/MathUtils;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# direct methods
+.method public static matrixMultiply([D[[D)[D
+    .locals 17
+
+    .line 1
+    const/4 v0, 0x0
+
+    .line 2
+    aget-wide v1, p0, v0
+
+    .line 3
+    .line 4
+    aget-object v3, p1, v0
+
+    .line 5
+    .line 6
+    aget-wide v4, v3, v0
+
+    .line 7
+    .line 8
+    mul-double/2addr v4, v1
+
+    .line 9
+    const/4 v6, 0x1
+
+    .line 10
+    aget-wide v7, p0, v6
+
+    .line 11
+    .line 12
+    aget-wide v9, v3, v6
+
+    .line 13
+    .line 14
+    mul-double/2addr v9, v7
+
+    .line 15
+    add-double/2addr v9, v4
+
+    .line 16
+    const/4 v4, 0x2
+
+    .line 17
+    aget-wide v11, p0, v4
+
+    .line 18
+    .line 19
+    aget-wide v13, v3, v4
+
+    .line 20
+    .line 21
+    mul-double/2addr v13, v11
+
+    .line 22
+    add-double/2addr v13, v9
+
+    .line 23
+    aget-object v3, p1, v6
+
+    .line 24
+    .line 25
+    aget-wide v9, v3, v0
+
+    .line 26
+    .line 27
+    mul-double/2addr v9, v1
+
+    .line 28
+    aget-wide v15, v3, v6
+
+    .line 29
+    .line 30
+    mul-double/2addr v15, v7
+
+    .line 31
+    add-double/2addr v15, v9
+
+    .line 32
+    aget-wide v9, v3, v4
+
+    .line 33
+    .line 34
+    mul-double/2addr v9, v11
+
+    .line 35
+    add-double/2addr v9, v15
+
+    .line 36
+    aget-object v3, p1, v4
+
+    .line 37
+    .line 38
+    aget-wide v15, v3, v0
+
+    .line 39
+    .line 40
+    mul-double/2addr v1, v15
+
+    .line 41
+    aget-wide v15, v3, v6
+
+    .line 42
+    .line 43
+    mul-double/2addr v7, v15
+
+    .line 44
+    add-double/2addr v7, v1
+
+    .line 45
+    aget-wide v1, v3, v4
+
+    .line 46
+    .line 47
+    mul-double/2addr v11, v1
+
+    .line 48
+    add-double/2addr v11, v7
+
+    .line 49
+    const/4 v1, 0x3
+
+    .line 50
+    new-array v1, v1, [D
+
+    .line 51
+    .line 52
+    aput-wide v13, v1, v0
+
+    .line 53
+    .line 54
+    aput-wide v9, v1, v6
+
+    .line 55
+    .line 56
+    aput-wide v11, v1, v4
+
+    .line 57
+    .line 58
+    return-object v1
+.end method

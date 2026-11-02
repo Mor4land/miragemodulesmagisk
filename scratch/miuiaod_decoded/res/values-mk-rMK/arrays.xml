@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>Системски фонт</item>
+        <item>Широк квадрат</item>
+        <item>Едноставен црн</item>
+        <item>Двослоен</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>Оригинал</item>
+        <item>Замаглено</item>
+        <item>Ребрено</item>
+        <item>Ребресто</item>
+        <item>Призма</item>
+        <item>Жлебови</item>
+        <item>Бранови</item>
+        <item>Квадрати</item>
+    </string-array>
+</resources>

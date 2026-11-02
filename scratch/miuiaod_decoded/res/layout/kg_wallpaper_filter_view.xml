@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <include android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/kg_filter_bottom_sheet_head_margin_top" android:layout_marginBottom="@dimen/kg_filter_bottom_sheet_head_margin_bottom" layout="@layout/kg_filter_bottom_sheet_head" />
+    <com.miui.keyguard.editor.view.SmoothAlignHorizontalListView android:id="@id/filter_icons" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginBottom="@dimen/kg_wallpaper_filter_extra_container_margin_top" android:paddingHorizontal="@dimen/kg_wallpaper_filter_view_margin_horizontal" />
+    <RelativeLayout android:orientation="horizontal" android:id="@id/matte_container" android:focusable="true" android:focusableInTouchMode="true" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="wrap_content" android:importantForAccessibility="yes" android:layout_marginStart="@dimen/kg_wallpaper_filter_extra_container_margin_start" android:layout_marginEnd="@dimen/kg_wallpaper_filter_extra_container_margin_end">
+        <TextView android:textSize="@dimen/kg_wallpaper_filter_extra_title_text_size" android:textColor="?clockTemplateTitleColor" android:id="@id/matte_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/kg_enable_blur" android:layout_centerVertical="true" android:fontFamily="@string/kg_font_mi_sans_medium" android:layout_alignParentStart="true" />
+    </RelativeLayout>
+</merge>

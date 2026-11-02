@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.ClockPanelView android:gravity="center" android:layout_gravity="center" android:id="@id/clock_panel" android:tag="@string/animatable_view_tag" android:layout_width="@dimen/clock_panel_animation_size" android:layout_height="@dimen/clock_panel_animation_size"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.miui.aod.widget.GradientImageView android:layout_gravity="center" android:id="@id/panel_iv" android:layout_width="fill_parent" android:layout_height="fill_parent" android:scaleType="fitCenter" />
+    <com.miui.aod.components.view.AntiAliasImageView android:layout_gravity="center" android:id="@id/hour_hand" android:layout_width="fill_parent" android:layout_height="fill_parent" android:src="@drawable/clock_panel_hour_hand" android:scaleType="fitCenter" />
+    <com.miui.aod.components.view.AntiAliasImageView android:layout_gravity="center" android:id="@id/minute_hand" android:layout_width="fill_parent" android:layout_height="fill_parent" android:src="@drawable/clock_panel_minute_hand" android:scaleType="fitCenter" />
+    <com.miui.aod.components.view.AntiAliasImageView android:layout_gravity="center" android:id="@id/clock_panel_center_dot" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/clock_panel_center_dot" android:scaleType="fitCenter" />
+</com.miui.aod.widget.ClockPanelView>

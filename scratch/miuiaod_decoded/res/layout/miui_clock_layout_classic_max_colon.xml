@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:id="@id/colon_container" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <com.miui.clock.MiuiTextGlassView android:textSize="@dimen/miui_classic_max_time_area_text_size" android:textColor="@color/classic_color_white" android:gravity="center_horizontal" android:id="@id/colon_view" android:layout_width="fill_parent" android:layout_height="@dimen/miui_classic_max_time_area_text_height" android:layout_marginTop="@dimen/miui_classic_max_time_area_margin_top" android:importantForAccessibility="no" android:letterSpacing="-0.04" app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

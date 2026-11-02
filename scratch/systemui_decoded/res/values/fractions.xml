@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <fraction name="config_one_handed_offset">39.999996%</fraction>
+    <fraction name="config_pipShortestEdgePercent">39.999996%</fraction>
+    <fraction name="controls_toggle_bg_intensity">4.999995%</fraction>
+    <fraction name="docked_stack_divider_fixed_ratio">34.150005%</fraction>
+    <fraction name="immersion_menu_anim_pivot_x">100.0%</fraction>
+    <fraction name="lb_search_bar_speech_orb_max_level_zoom">143.9972%</fraction>
+    <fraction name="lb_search_orb_focused_zoom">119.99817%</fraction>
+    <fraction name="lb_view_active_level">0.0%</fraction>
+    <fraction name="lb_view_dimmed_level">60.000004%</fraction>
+    <fraction name="task_ratio_of_minimized_mode">13.0%</fraction>
+</resources>

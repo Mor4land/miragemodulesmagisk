@@ -1,0 +1,36 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine05.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "doodle",
+      "style": 2,
+      "primaryColor": -14342616,
+      "primaryFontColorPanelId": 13,
+      "isDarkClockArea": true
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine05.jpg",
+      "mask": "sysui_editor_wallpaper_group/01_magazine/magazine05_mask.jpg",
+      "magicType": 20000,
+      "resourceType": "image",
+      "supportSubject": true
+    },
+    "doodle": {
+      "solidColor": -2894893,
+      "isAutoSolidColor": false,
+      "ribbonColor1": -13662,
+      "ribbonColor2": -2590698,
+      "primaryFontColorPanelId": 13
+    },
+    "templateName": "doodle_style1",
+    "version": 3
+  }
+}

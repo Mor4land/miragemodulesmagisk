@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.aod.widget.SmartCoverClockView android:layout_gravity="center|top" android:orientation="vertical" android:id="@id/smart_cover_clock_container" android:layout_width="60.0dip" android:layout_height="wrap_content" android:layout_marginRight="10.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <include android:layout_gravity="right" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_marginRight="3.0dip" layout="@layout/signature_aod_icons" />
+    <com.miui.aod.widget.GradientLinearLayout android:layout_gravity="right" android:orientation="vertical" android:id="@id/gradient_layout" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5.0dip">
+        <TextView android:layout_gravity="right" android:id="@id/clock_hour" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" style="@style/Aod_widget_vertical" />
+        <TextView android:layout_gravity="right" android:id="@id/clock_minute" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/aod_clock_min_top_margin_hour" android:includeFontPadding="true" style="@style/Aod_widget_vertical" />
+        <TextView android:gravity="right" android:layout_gravity="right" android:id="@id/date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3.0dip" android:layout_marginRight="1.0dip" android:lineSpacingExtra="-4.0px" android:fontFamily="mipro-medium" style="@style/Aod_date_vertical" />
+        <include android:layout_gravity="right" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1.7999878dip" layout="@layout/aod_battery" />
+    </com.miui.aod.widget.GradientLinearLayout>
+</com.miui.aod.widget.SmartCoverClockView>

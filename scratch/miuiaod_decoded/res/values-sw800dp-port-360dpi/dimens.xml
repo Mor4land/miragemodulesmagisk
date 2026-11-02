@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_main_item_container_height">834.2969dip</dimen>
+    <dimen name="kg_main_item_container_width">527.89844dip</dimen>
+    <dimen name="kg_main_item_container_width_minus">-527.89844dip</dimen>
+</resources>

@@ -1,0 +1,92 @@
+.class Lmiuix/animation/controller/FolmeState$3;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Ljava/lang/Runnable;
+
+
+# instance fields
+.field final synthetic this$0:Lmiuix/animation/controller/FolmeState;
+
+.field final synthetic val$propertyAndValues:[Ljava/lang/Object;
+
+
+# direct methods
+.method public constructor <init>(Lmiuix/animation/controller/FolmeState;[Ljava/lang/Object;)V
+    .locals 0
+
+    .line 1
+    iput-object p1, p0, Lmiuix/animation/controller/FolmeState$3;->this$0:Lmiuix/animation/controller/FolmeState;
+
+    .line 2
+    .line 3
+    iput-object p2, p0, Lmiuix/animation/controller/FolmeState$3;->val$propertyAndValues:[Ljava/lang/Object;
+
+    .line 4
+    .line 5
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 6
+    .line 7
+    .line 8
+    return-void
+.end method
+
+
+# virtual methods
+.method public run()V
+    .locals 4
+
+    .line 1
+    iget-object v0, p0, Lmiuix/animation/controller/FolmeState$3;->this$0:Lmiuix/animation/controller/FolmeState;
+
+    .line 2
+    .line 3
+    invoke-static {v0}, Lmiuix/animation/controller/FolmeState;->access$100(Lmiuix/animation/controller/FolmeState;)Lmiuix/animation/base/AnimConfigLink;
+
+    .line 4
+    .line 5
+    .line 6
+    move-result-object v0
+
+    .line 7
+    iget-object v1, p0, Lmiuix/animation/controller/FolmeState$3;->this$0:Lmiuix/animation/controller/FolmeState;
+
+    .line 8
+    .line 9
+    iget-object v2, v1, Lmiuix/animation/controller/FolmeState;->mStateMgr:Lmiuix/animation/controller/StateManager;
+
+    .line 10
+    .line 11
+    invoke-virtual {v1}, Lmiuix/animation/controller/FolmeState;->getTarget()Lmiuix/animation/IAnimTarget;
+
+    .line 12
+    .line 13
+    .line 14
+    move-result-object v1
+
+    .line 15
+    iget-object v3, p0, Lmiuix/animation/controller/FolmeState$3;->val$propertyAndValues:[Ljava/lang/Object;
+
+    .line 16
+    .line 17
+    invoke-virtual {v2, v1, v0, v3}, Lmiuix/animation/controller/StateManager;->getSetToState(Lmiuix/animation/IAnimTarget;Lmiuix/animation/base/AnimConfigLink;[Ljava/lang/Object;)Lmiuix/animation/controller/AnimState;
+
+    .line 18
+    .line 19
+    .line 20
+    move-result-object v1
+
+    .line 21
+    iget-object p0, p0, Lmiuix/animation/controller/FolmeState$3;->this$0:Lmiuix/animation/controller/FolmeState;
+
+    .line 22
+    .line 23
+    invoke-static {p0, v1, v0}, Lmiuix/animation/controller/FolmeState;->access$000(Lmiuix/animation/controller/FolmeState;Ljava/lang/Object;Lmiuix/animation/base/AnimConfigLink;)V
+
+    .line 24
+    .line 25
+    .line 26
+    return-void
+.end method

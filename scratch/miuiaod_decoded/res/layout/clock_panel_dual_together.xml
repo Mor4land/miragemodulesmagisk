@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center_horizontal" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewStub android:id="@id/clock_panel_container_vs" android:layout="@layout/clock_panel" android:inflatedId="@id/clock_panel_container" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="1.0" />
+    <ViewStub android:id="@id/clock_panel_container_dual_vs" android:layout="@layout/clock_panel" android:inflatedId="@id/clock_panel_container_dual" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="1.0" />
+</LinearLayout>

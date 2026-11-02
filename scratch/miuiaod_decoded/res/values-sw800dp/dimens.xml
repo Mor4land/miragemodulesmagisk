@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_style_frame_pad_extra_width">466.0dip</dimen>
+    <item type="dimen" name="kg_main_neighboring_item_min_scale">0.66</item>
+    <item type="dimen" name="kg_template_view_aod_dialog_preview_scale">0.192</item>
+</resources>

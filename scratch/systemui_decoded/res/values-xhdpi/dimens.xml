@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="battery_margin_bottom">0.0dip</dimen>
+    <dimen name="battery_meter_charging_height">19.0dip</dimen>
+    <dimen name="battery_meter_charging_width">6.447998dip</dimen>
+    <dimen name="battery_meter_height">19.0dip</dimen>
+    <dimen name="battery_meter_progress_center_left_offset">0.75dip</dimen>
+    <dimen name="battery_meter_progress_height">5.0dip</dimen>
+    <dimen name="battery_meter_progress_width">15.5dip</dimen>
+    <dimen name="battery_meter_quick_charging_height">19.0dip</dimen>
+    <dimen name="battery_meter_quick_charging_width">6.1123962dip</dimen>
+    <dimen name="battery_meter_width">28.5dip</dimen>
+    <dimen name="qs_brightness_dialog_height">40.0dip</dimen>
+    <dimen name="qs_brightness_icon_margin">10.0dip</dimen>
+    <dimen name="qs_brightness_top_margin">9.329987dip</dimen>
+    <dimen name="qs_control_header_button_size">22.666656dip</dimen>
+    <dimen name="qs_control_title_margin_end">57.333313dip</dimen>
+    <dimen name="qs_detail_header_image_height">56.0dip</dimen>
+    <dimen name="qs_detail_header_image_padding">16.0dip</dimen>
+    <dimen name="qs_detail_header_image_width">56.0dip</dimen>
+    <dimen name="qs_tile_icon_bg_size">46.0dip</dimen>
+    <dimen name="qs_tile_label_text_size">10.669983sp</dimen>
+</resources>

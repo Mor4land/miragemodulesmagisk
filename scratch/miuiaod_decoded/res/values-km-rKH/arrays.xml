@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>ពុម្ពអក្សរ​ប្រព័ន្ធ</item>
+        <item>ការ៉េធំ</item>
+        <item>ពណ៌ខ្មៅសាមញ្ញ</item>
+        <item>ស្រទាប់ទ្វេ</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>ដើម</item>
+        <item>ព្រាល</item>
+        <item>ឆ្នូតៗ</item>
+        <item>ការចាក់</item>
+        <item>ព្រិស</item>
+        <item>ចង្អូរ</item>
+        <item>រលក</item>
+        <item>ការ៉េ</item>
+    </string-array>
+</resources>

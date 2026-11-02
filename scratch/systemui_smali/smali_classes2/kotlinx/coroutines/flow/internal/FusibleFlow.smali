@@ -1,0 +1,11 @@
+.class public interface abstract Lkotlinx/coroutines/flow/internal/FusibleFlow;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+# interfaces
+.implements Lkotlinx/coroutines/flow/Flow;
+
+
+# virtual methods
+.method public abstract fuse(Lkotlin/coroutines/CoroutineContext;ILkotlinx/coroutines/channels/BufferOverflow;)Lkotlinx/coroutines/flow/Flow;
+.end method

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape android:shape="rectangle"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="@dimen/kg_font_effect_title_button_frame_bg_radius" />
+    <stroke android:width="@dimen/kg_style_selector_container_outline_width" android:color="@color/kg_style_selector_container_outline_color" />
+</shape>

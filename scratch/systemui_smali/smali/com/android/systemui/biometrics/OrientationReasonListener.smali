@@ -1,0 +1,73 @@
+.class public final Lcom/android/systemui/biometrics/OrientationReasonListener;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# instance fields
+.field public final orientationListener:Lcom/android/systemui/biometrics/BiometricDisplayListener;
+
+.field public reason:I
+
+
+# direct methods
+.method public constructor <init>(Landroid/content/Context;Landroid/hardware/display/DisplayManager;Landroid/os/Handler;Landroid/hardware/fingerprint/FingerprintSensorPropertiesInternal;Lkotlin/jvm/functions/Function1;)V
+    .locals 7
+
+    .line 1
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+
+    .line 2
+    .line 3
+    .line 4
+    const/4 v0, 0x0
+
+    .line 5
+    iput v0, p0, Lcom/android/systemui/biometrics/OrientationReasonListener;->reason:I
+
+    .line 6
+    .line 7
+    new-instance v0, Lcom/android/systemui/biometrics/BiometricDisplayListener;
+
+    .line 8
+    .line 9
+    new-instance v5, Lcom/android/systemui/biometrics/BiometricDisplayListener$SensorType$SideFingerprint;
+
+    .line 10
+    .line 11
+    invoke-direct {v5, p4}, Lcom/android/systemui/biometrics/BiometricDisplayListener$SensorType$SideFingerprint;-><init>(Landroid/hardware/fingerprint/FingerprintSensorPropertiesInternal;)V
+
+    .line 12
+    .line 13
+    .line 14
+    new-instance v6, Lcom/android/systemui/biometrics/OrientationReasonListener$orientationListener$1;
+
+    .line 15
+    .line 16
+    invoke-direct {v6, p5, p0}, Lcom/android/systemui/biometrics/OrientationReasonListener$orientationListener$1;-><init>(Lkotlin/jvm/functions/Function1;Lcom/android/systemui/biometrics/OrientationReasonListener;)V
+
+    .line 17
+    .line 18
+    .line 19
+    move-object v1, v0
+
+    .line 20
+    move-object v2, p1
+
+    .line 21
+    move-object v3, p2
+
+    .line 22
+    move-object v4, p3
+
+    .line 23
+    invoke-direct/range {v1 .. v6}, Lcom/android/systemui/biometrics/BiometricDisplayListener;-><init>(Landroid/content/Context;Landroid/hardware/display/DisplayManager;Landroid/os/Handler;Lcom/android/systemui/biometrics/BiometricDisplayListener$SensorType;Lkotlin/jvm/functions/Function0;)V
+
+    .line 24
+    .line 25
+    .line 26
+    iput-object v0, p0, Lcom/android/systemui/biometrics/OrientationReasonListener;->orientationListener:Lcom/android/systemui/biometrics/BiometricDisplayListener;
+
+    .line 27
+    .line 28
+    return-void
+.end method

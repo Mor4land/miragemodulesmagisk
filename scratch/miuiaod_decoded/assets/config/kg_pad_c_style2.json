@@ -1,0 +1,29 @@
+{
+  "version": 3,
+  "homeInfo": {
+    "followStatus": 2,
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine02.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    }
+  },
+  "lockscreenInfo": {
+    "clockInfo": {
+      "templateId": "pad_exclusive_c",
+      "primaryColor": -658708,
+      "secondaryColor": -8005,
+      "primaryFontColorPanelId": 13,
+      "secondaryFontColorPanelId": 13,
+      "style": 1,
+      "enableDiffusion": false
+    },
+    "wallpaperInfo": {
+      "source": "sysui_editor_wallpaper_group/01_magazine/magazine02.jpg",
+      "magicType": 0,
+      "resourceType": "image"
+    },
+    "templateName": "pad_c_style2",
+    "version": 3
+  }
+}

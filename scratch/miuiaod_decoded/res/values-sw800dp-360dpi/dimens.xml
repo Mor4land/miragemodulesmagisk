@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="kg_classic_clock_frame_padding">13.0dip</dimen>
+    <dimen name="kg_classic_plus_clock_time_area_frame_height">190.0dip</dimen>
+    <item type="dimen" name="kg_main_neighboring_item_min_scale">0.66</item>
+</resources>

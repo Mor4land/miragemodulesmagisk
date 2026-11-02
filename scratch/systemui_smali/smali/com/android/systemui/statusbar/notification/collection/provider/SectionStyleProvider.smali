@@ -1,0 +1,9 @@
+.class public final Lcom/android/systemui/statusbar/notification/collection/provider/SectionStyleProvider;
+.super Ljava/lang/Object;
+.source "go/retraceme ed4b5b79fd4a0d9d74a4ca9b93ccc521571b707144a6bce466c7c5d32770ee41"
+
+
+# instance fields
+.field public lowPrioritySections:Ljava/util/Set;
+
+.field public silentSections:Ljava/util/Set;

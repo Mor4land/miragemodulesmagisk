@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.oversize.a.OversizeAHourClock android:clipChildren="false" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView android:id="@id/blur_view" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_oversize_a_hour_margin_top" app:layout_constraintEnd_toEndOf="@id/time_view" app:layout_constraintStart_toStartOf="@id/time_view" app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout android:orientation="horizontal" android:id="@id/time_view" android:clipChildren="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/miui_oversize_a_hour_margin_top" android:layoutDirection="ltr" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <com.miui.clock.oversize.OversizeSvgView android:id="@id/hour1" android:layout_width="@dimen/miui_oversize_a_time_w" android:layout_height="@dimen/miui_oversize_a_time_h" android:importantForAccessibility="no" />
+        <com.miui.clock.oversize.OversizeSvgView android:id="@id/hour2" android:layout_width="@dimen/miui_oversize_a_time_w" android:layout_height="@dimen/miui_oversize_a_time_h" android:importantForAccessibility="no" />
+    </LinearLayout>
+    <FrameLayout android:id="@id/magazine_info_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+</com.miui.clock.oversize.a.OversizeAHourClock>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.miui.clock.oversize.b.OversizeBMinuteClock android:clipChildren="false" android:clipToPadding="false" android:layout_width="fill_parent" android:layout_height="fill_parent" android:clipToOutline="false"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Space android:id="@id/space" android:layout_width="0.0dip" android:layout_height="0.0dip" android:layoutDirection="ltr" android:layout_marginStart="@dimen/miui_oversize_b_space_margin_start" app:layout_constraintStart_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <TextView android:id="@id/blur_view" android:layout_width="0.0dip" android:layout_height="@dimen/oversize_b_clock_blur_height" app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintRight_toRightOf="@id/oversize_b_minute" app:layout_constraintTop_toTopOf="@id/oversize_b_minute" />
+    <LinearLayout android:gravity="end" android:orientation="horizontal" android:id="@id/oversize_b_minute" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/oversize_b_time_margin_top" android:layoutDirection="ltr" android:layout_marginEnd="@dimen/oversize_b_time_margin_start" android:clipToOutline="false" app:layout_constraintRight_toRightOf="@id/space" app:layout_constraintTop_toTopOf="parent">
+        <com.miui.clock.oversize.OversizeSvgView android:id="@id/minute1" android:layout_width="@dimen/miui_oversize_b_time_w" android:layout_height="@dimen/miui_oversize_b_time_h" android:importantForAccessibility="no" />
+        <com.miui.clock.oversize.OversizeSvgView android:id="@id/minute2" android:layout_width="@dimen/miui_oversize_b_time_w" android:layout_height="@dimen/miui_oversize_b_time_h" android:importantForAccessibility="no" android:layout_marginStart="@dimen/miui_oversize_b_time_overlapping" />
+    </LinearLayout>
+    <FrameLayout android:id="@id/magazine_info_container" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintStart_toStartOf="@id/oversize_b_minute" app:layout_constraintTop_toBottomOf="@id/oversize_b_minute" />
+</com.miui.clock.oversize.b.OversizeBMinuteClock>

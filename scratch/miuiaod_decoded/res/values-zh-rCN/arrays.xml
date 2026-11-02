@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="big_time_clock_title_array">
+        <item>系统字体</item>
+        <item>方形宽体</item>
+        <item>简约黑体</item>
+        <item>双层字型</item>
+    </string-array>
+    <string-array name="kg_glass_filters">
+        <item>效果 | 原图</item>
+        <item>效果 | 模糊</item>
+        <item>效果 | 细条纹</item>
+        <item>效果 | 粗条纹</item>
+        <item>效果 | 棱镜</item>
+        <item>效果 | 细线</item>
+        <item>效果 | 波纹</item>
+        <item>效果 | 方格</item>
+    </string-array>
+</resources>
