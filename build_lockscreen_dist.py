@@ -1,4 +1,5 @@
 import os
+import shutil
 import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -6,7 +7,9 @@ MODULE_DIR = os.path.join(ROOT, "magisk-module-hyperos3-lockscreen")
 DIST_DIR = os.path.join(ROOT, "dist")
 os.makedirs(DIST_DIR, exist_ok=True)
 
-OUT_ZIP = os.path.join(DIST_DIR, "POCO_M5_HyperOS3_Lockscreen_Port-v3.0.3.zip")
+ZIP_NAME = "POCO_M5_HyperOS3_Lockscreen_Port-v3.0.5.zip"
+OUT_ZIP = os.path.join(DIST_DIR, ZIP_NAME)
+ROOT_ZIP = os.path.join(ROOT, ZIP_NAME)
 
 print("Packaging Magisk module from:", MODULE_DIR)
 print("Destination:", OUT_ZIP)
@@ -29,4 +32,6 @@ with zipfile.ZipFile(OUT_ZIP, "w", compression=zipfile.ZIP_DEFLATED) as z:
                 z.write(full_path, rel_path)
                 print(f"  [RAW] {rel_path} ({os.path.getsize(full_path)} bytes)")
 
+shutil.copyfile(OUT_ZIP, ROOT_ZIP)
 print(f"\nCreated: {OUT_ZIP} ({os.path.getsize(OUT_ZIP)} bytes)")
+print(f"Copied to: {ROOT_ZIP}")

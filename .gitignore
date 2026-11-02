@@ -12,3 +12,7 @@ dist/
 __pycache__/
 AntigravityClient/
 screen_empty_response.png
+scratch/
+*.png
+POCO_M5_HyperOS3_Lockscreen_Port-*.zip
+*.idsig

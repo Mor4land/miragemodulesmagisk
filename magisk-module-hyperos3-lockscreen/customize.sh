@@ -20,31 +20,35 @@ HYPER_NAME=$(getprop ro.mi.os.version.name)
 ui_print "- Устройство: $MODEL_NAME ($DEVICE_CODENAME)"
 ui_print "- Android $ANDROID_VER • HyperOS $HYPER_NAME (Код: $HYPER_CODE)"
 
-# 2. Setup Partition Target
-# Consistent staging to avoid KernelSU/Magisk SAR partition collision
-if [ -d "/product" ]; then
-    PART_DIR="$MODPATH/product"
-else
-    PART_DIR="$MODPATH/system/product"
-fi
+# 2. Setup Staging Directories (Both product and system/product for total Magisk/KSU compatibility)
+mkdir -p "$MODPATH/product/priv-app/MIUIAod"
+mkdir -p "$MODPATH/system/product/priv-app/MIUIAod"
+mkdir -p "$MODPATH/product/overlay"
+mkdir -p "$MODPATH/system/product/overlay"
+mkdir -p "$MODPATH/product/media/wallpaper/sysui_editor_wallpaper_group"
+mkdir -p "$MODPATH/system/product/media/wallpaper/sysui_editor_wallpaper_group"
+mkdir -p "$MODPATH/product/etc/device_features"
+mkdir -p "$MODPATH/system/product/etc/device_features"
+mkdir -p "$MODPATH/system/etc/device_features"
+mkdir -p "$MODPATH/system/etc/permissions"
+mkdir -p "$MODPATH/product/etc/permissions"
 
-PRIV_APP_DIR="$PART_DIR/priv-app/MIUIAod"
-OVERLAY_DIR="$PART_DIR/overlay"
-WALL_BASE="$PART_DIR/media/wallpaper/sysui_editor_wallpaper_group"
-FEAT_TARGET="$PART_DIR/etc/device_features"
-FEAT_SYS_TARGET="$MODPATH/system/etc/device_features"
-
-mkdir -p "$PRIV_APP_DIR" "$OVERLAY_DIR" "$WALL_BASE" "$FEAT_TARGET" "$FEAT_SYS_TARGET"
+# Hide stock OAT directory by replacing priv-app/MIUIAod
+touch "$MODPATH/product/priv-app/MIUIAod/.replace"
+touch "$MODPATH/system/product/priv-app/MIUIAod/.replace"
 
 # 3. Extract and stage Depth Wallpapers
 ui_print "- Интеграция пресетов обоев с эффектом глубины..."
 if [ -d "$MODPATH/files/04_pets" ]; then
-    cp -r "$MODPATH/files/04_pets" "$WALL_BASE/"
+    cp -rf "$MODPATH/files/04_pets" "$MODPATH/product/media/wallpaper/sysui_editor_wallpaper_group/"
+    cp -rf "$MODPATH/files/04_pets" "$MODPATH/system/product/media/wallpaper/sysui_editor_wallpaper_group/"
     ui_print "  + Набор питомцев (04_pets) с масками глубины добавлен"
 fi
 if [ -d "$MODPATH/files/01_magazine" ]; then
-    mkdir -p "$WALL_BASE/01_magazine"
-    cp -f "$MODPATH/files/01_magazine/"* "$WALL_BASE/01_magazine/" 2>/dev/null
+    mkdir -p "$MODPATH/product/media/wallpaper/sysui_editor_wallpaper_group/01_magazine"
+    mkdir -p "$MODPATH/system/product/media/wallpaper/sysui_editor_wallpaper_group/01_magazine"
+    cp -rf "$MODPATH/files/01_magazine/"* "$MODPATH/product/media/wallpaper/sysui_editor_wallpaper_group/01_magazine/" 2>/dev/null
+    cp -rf "$MODPATH/files/01_magazine/"* "$MODPATH/system/product/media/wallpaper/sysui_editor_wallpaper_group/01_magazine/" 2>/dev/null
     ui_print "  + Набор журнала (01_magazine) добавлен"
 fi
 
@@ -53,8 +57,8 @@ PACKAGE_NAME="com.miui.aod"
 ui_print "- Подготовка компонента $PACKAGE_NAME..."
 pm uninstall-system-updates "$PACKAGE_NAME" >/dev/null 2>&1
 
-module_app_path="$PRIV_APP_DIR/MIUIAod.apk"
-cp -f "$MODPATH/files/MIUIAod.apk" "$module_app_path"
+cp -f "$MODPATH/files/MIUIAod.apk" "$MODPATH/product/priv-app/MIUIAod/MIUIAod.apk"
+cp -f "$MODPATH/files/MIUIAod.apk" "$MODPATH/system/product/priv-app/MIUIAod/MIUIAod.apk"
 
 # Extract 64-bit native libraries
 CPU_ABI=$(getprop ro.product.cpu.abi)
@@ -63,19 +67,24 @@ case "$CPU_ABI" in
     *)      Type=arm   Libs=armeabi-v7a ;;
 esac
 
-LIBS_DIR="$PRIV_APP_DIR/lib/$Type"
-mkdir -p "$LIBS_DIR"
-unzip -o -j "$module_app_path" "lib/$Libs/*" -d "$LIBS_DIR" >/dev/null 2>&1
-ui_print "- Библиотеки $Libs успешно распакованы в $LIBS_DIR"
+mkdir -p "$MODPATH/product/priv-app/MIUIAod/lib/$Type"
+mkdir -p "$MODPATH/system/product/priv-app/MIUIAod/lib/$Type"
+unzip -o -j "$MODPATH/files/MIUIAod.apk" "lib/$Libs/*" -d "$MODPATH/product/priv-app/MIUIAod/lib/$Type" >/dev/null 2>&1
+unzip -o -j "$MODPATH/files/MIUIAod.apk" "lib/$Libs/*" -d "$MODPATH/system/product/priv-app/MIUIAod/lib/$Type" >/dev/null 2>&1
+ui_print "- Библиотеки $Libs успешно распакованы"
 
-# Pre-install APK into Package Manager
-pm install -r "$MODPATH/files/MIUIAod.apk" >/dev/null 2>&1
+# 5. Privapp Whitelist installation
+if [ -f "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" ]; then
+    cp -f "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" "$MODPATH/product/etc/permissions/privapp-permissions-com.miui.aod.xml"
+    cp -f "$MODPATH/system/etc/permissions/privapp_whitelist_com.miui.aod.xml" "$MODPATH/product/etc/permissions/privapp_whitelist_com.miui.aod.xml"
+fi
 
-# 5. IPS LCD Display Overlay Installation
+# 6. IPS LCD Display Overlay Installation
 ui_print "- Настройка оверлея пробуждения и Doze для IPS экрана..."
-cp -f "$MODPATH/files/ElderlyNavigationBarOverlay.apk" "$OVERLAY_DIR/"
+cp -f "$MODPATH/files/ElderlyNavigationBarOverlay.apk" "$MODPATH/product/overlay/"
+cp -f "$MODPATH/files/ElderlyNavigationBarOverlay.apk" "$MODPATH/system/product/overlay/"
 
-# 6. Device Features Patcher (rock.xml / stone.xml)
+# 7. Device Features Patcher (rock.xml / stone.xml)
 ui_print "- Патчинг флагов редактора экрана блокировки (device_features)..."
 BASE_XML=""
 for p in \
@@ -93,10 +102,10 @@ done
 
 if [ -n "$BASE_XML" ]; then
     ui_print "  База найдена: $BASE_XML"
-    cp -f "$BASE_XML" "$FEAT_TARGET/$DEVICE_CODENAME.xml"
+    cp -f "$BASE_XML" "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml"
 else
     ui_print "  Создаем базовый конфигурационный файл"
-    echo '<?xml version="1.0" encoding="utf-8"?><features></features>' > "$FEAT_TARGET/$DEVICE_CODENAME.xml"
+    echo '<?xml version="1.0" encoding="utf-8"?><features></features>' > "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml"
 fi
 
 # Insert HyperOS 3 features before </features>
@@ -113,19 +122,20 @@ sed -i '/<\/features>/ i\
     <bool name="support_screen_color_persist">true</bool>\
     <bool name="doze_display_state_supported">true</bool>\
     <bool name="doze_proximity_check_before_pulse_intent">true</bool>\
-    <bool name="config_displayBlanksAfterDoze">false</bool>' "$FEAT_TARGET/$DEVICE_CODENAME.xml"
+    <bool name="config_displayBlanksAfterDoze">false</bool>' "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml"
 
-# Mirror to both rock.xml and stone.xml and system_target
-cp -f "$FEAT_TARGET/$DEVICE_CODENAME.xml" "$FEAT_TARGET/rock.xml"
-cp -f "$FEAT_TARGET/$DEVICE_CODENAME.xml" "$FEAT_TARGET/stone.xml"
-cp -f "$FEAT_TARGET/$DEVICE_CODENAME.xml" "$FEAT_SYS_TARGET/rock.xml"
-cp -f "$FEAT_TARGET/$DEVICE_CODENAME.xml" "$FEAT_SYS_TARGET/stone.xml"
+# Mirror to both rock.xml and stone.xml across product and system targets
+for tgt in "$MODPATH/product/etc/device_features" "$MODPATH/system/product/etc/device_features" "$MODPATH/system/etc/device_features"; do
+    cp -f "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml" "$tgt/rock.xml"
+    cp -f "$MODPATH/product/etc/device_features/$DEVICE_CODENAME.xml" "$tgt/stone.xml"
+done
 ui_print "  + Флаги support_keyguard_editor и depth_wallpaper активированы!"
 
-# 7. Set Permissions & Clean Caches
+# 8. Set Permissions & Clean Caches
 ui_print "- Настройка прав доступа (0755 / 0644)..."
 set_perm_recursive "$MODPATH" 0 0 0755 0644
-set_perm "$module_app_path" 0 0 0644
+set_perm "$MODPATH/product/priv-app/MIUIAod/MIUIAod.apk" 0 0 0644
+set_perm "$MODPATH/system/product/priv-app/MIUIAod/MIUIAod.apk" 0 0 0644
 
 ui_print "- Очистка кэша пакетов для применения..."
 find /data/system/package_cache -type f -iname "*aod*" -exec rm -f {} \; 2>/dev/null
