@@ -29342,7 +29342,7 @@
 .end method
 
 .method public writeTemplateInfo(Ljava/lang/String;Ljava/lang/String;)V
-    .locals 5
+    .locals 8
 
     const-string v0, "jsonStr"
 
@@ -29419,10 +29419,71 @@
 
     invoke-static {p2, v0, p1}, Landroid/provider/Settings$Secure;->putString(Landroid/content/ContentResolver;Ljava/lang/String;Ljava/lang/String;)Z
 
-    # Dual-write to constant_lockscreen_info
+    # Dual-write to constant_lockscreen_info with flattened lockscreenInfo for HyperOS 1 SystemUI
+    move-object v5, p1
+
+    :try_start_flatten
+    new-instance v6, Lorg/json/JSONObject;
+
+    invoke-direct {v6, p1}, Lorg/json/JSONObject;-><init>(Ljava/lang/String;)V
+
+    const-string v7, "lockscreenInfo"
+
+    invoke-virtual {v6, v7}, Lorg/json/JSONObject;->has(Ljava/lang/String;)Z
+
+    move-result v7
+
+    if-eqz v7, :cond_flat_end
+
+    const-string v7, "lockscreenInfo"
+
+    invoke-virtual {v6, v7}, Lorg/json/JSONObject;->getJSONObject(Ljava/lang/String;)Lorg/json/JSONObject;
+
+    move-result-object v6
+
+    invoke-virtual {v6}, Lorg/json/JSONObject;->toString()Ljava/lang/String;
+
+    move-result-object v5
+
+    :cond_flat_end
+    :try_end_flatten
+    .catch Ljava/lang/Exception; {:try_start_flatten .. :try_end_flatten} :catch_flatten
+
+    goto :goto_write_lock
+
+    :catch_flatten
+    move-exception v6
+
+    const-string v7, "Keyguard-Editor-TemplateApiImpl"
+
+    const-string/jumbo v3, "failed to flatten lockscreenInfo"
+
+    invoke-static {v7, v3, v6}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
+
+    move-object v5, p1
+
+    :goto_write_lock
     const-string v1, "constant_lockscreen_info"
 
-    invoke-static {p2, v1, p1}, Landroid/provider/Settings$Secure;->putString(Landroid/content/ContentResolver;Ljava/lang/String;Ljava/lang/String;)Z
+    invoke-static {p2, v1, v5}, Landroid/provider/Settings$Secure;->putString(Landroid/content/ContentResolver;Ljava/lang/String;Ljava/lang/String;)Z
+
+    const-string v7, "Keyguard-Editor-TemplateApiImpl"
+
+    new-instance v6, Ljava/lang/StringBuilder;
+
+    invoke-direct {v6}, Ljava/lang/StringBuilder;-><init>()V
+
+    const-string/jumbo v3, "writeTemplateInfo: successfully wrote constant_lockscreen_info: "
+
+    invoke-virtual {v6, v3}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    invoke-virtual {v6, v5}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+
+    invoke-virtual {v6}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+
+    move-result-object v6
+
+    invoke-static {v7, v6}, Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I
 
     .line 1785
     iget-object p0, p0, Lcom/miui/keyguard/editor/data/template/TemplateApiImpl;->context:Landroid/content/Context;
@@ -29440,6 +29501,14 @@
     const v2, 0x8000
 
     invoke-virtual {p0, p2, v0, v2}, Landroid/content/ContentResolver;->notifyChange(Landroid/net/Uri;Landroid/database/ContentObserver;I)V
+
+    const-string v1, "constant_lockscreen_info"
+
+    invoke-static {v1}, Landroid/provider/Settings$Secure;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
+
+    move-result-object v1
+
+    invoke-virtual {p0, v1, v0, v2}, Landroid/content/ContentResolver;->notifyChange(Landroid/net/Uri;Landroid/database/ContentObserver;I)V
 
     invoke-static {v1}, Landroid/provider/Settings$Secure;->getUriFor(Ljava/lang/String;)Landroid/net/Uri;
 
