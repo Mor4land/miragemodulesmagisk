@@ -133,6 +133,17 @@ ui_print "- Очистка кэша пакетов для применения..
 find /data/system/package_cache -type f -iname "*aod*" -exec rm -f {} \; 2>/dev/null
 find /data/dalvik-cache -type f -iname "*aod*" -exec rm -f {} \; 2>/dev/null
 
+
+# 4.5. Inject LockscreenSystemUIOverlay.apk (Notification Padding RRO Fix)
+ui_print "- Установка SystemUI оверлея отступов уведомлений..."
+mkdir -p "$MODPATH/product/overlay"
+mkdir -p "$MODPATH/system/product/overlay"
+cp -f "$MODPATH/files/LockscreenSystemUIOverlay.apk" "$MODPATH/product/overlay/LockscreenSystemUIOverlay.apk"
+cp -f "$MODPATH/files/LockscreenSystemUIOverlay.apk" "$MODPATH/system/product/overlay/LockscreenSystemUIOverlay.apk"
+set_perm "$MODPATH/product/overlay/LockscreenSystemUIOverlay.apk" 0 0 0644
+set_perm "$MODPATH/system/product/overlay/LockscreenSystemUIOverlay.apk" 0 0 0644
+ui_print "  + LockscreenSystemUIOverlay успешно установлен"
+
 rm -rf "$MODPATH/files"
 ui_print "*************************************************"
 ui_print "  Установка успешно завершена!                  "
